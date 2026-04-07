@@ -28,6 +28,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   bool _isSelfEdit = false;
   bool _isAdmin = false;
   bool _hasPendingRequest = false;
+  bool _pendingCheckDone = false;
 
   bool get _canEditPersonalData => _isAdmin || _member.isVisitor;
 
@@ -77,8 +78,15 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
       // Check if there's a pending approval request for this visitor
       if (_member.isVisitor && !_isAdmin) {
         FirestoreService().hasPendingRequest(_member.id).then((hasPending) {
-          if (mounted) setState(() => _hasPendingRequest = hasPending);
+          if (mounted) {
+            setState(() {
+              _hasPendingRequest = hasPending;
+              _pendingCheckDone = true;
+            });
+          }
         });
+      } else {
+        _pendingCheckDone = true;
       }
     }
   }
@@ -1302,7 +1310,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ),
 
                   // ── Promover visitante a membro ──
-                  if (_member.isVisitor) ...[
+                  if (_member.isVisitor && _pendingCheckDone) ...[
                     const SizedBox(height: 20),
                     if (_hasPendingRequest && !_isAdmin) ...[
                       Card(
