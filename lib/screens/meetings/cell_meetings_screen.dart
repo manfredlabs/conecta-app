@@ -182,7 +182,7 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
                           final meetingIndex =
                               canEdit ? index - 1 : index;
                           final meeting = meetings[meetingIndex];
-                          final activeIds = cellProvider.members
+                          final activeIds = cellProvider.cellMembers
                               .where((m) => m.isActive)
                               .map((m) => m.id)
                               .toSet();
