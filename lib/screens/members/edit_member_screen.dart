@@ -1338,10 +1338,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.pending_rounded,
-                                color: Colors.orange[300],
-                              ),
+
                             ],
                           ),
                         ),
