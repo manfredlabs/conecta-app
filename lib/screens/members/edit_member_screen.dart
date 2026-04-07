@@ -27,6 +27,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   bool _isSelfEdit = false;
   bool _isAdmin = false;
 
+  bool get _canEditPersonalData => _isAdmin || _member.isVisitor;
+
   bool get _canPromoteToLeader {
     final user = context.read<AuthProvider>().appUser;
     final cell = context.read<CellProvider>().selectedCell;
@@ -956,7 +958,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       child: TextFormField(
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
-                        readOnly: !_isAdmin,
+                        readOnly: !_canEditPersonalData,
                         decoration: InputDecoration(
                           hintText: 'Nome completo',
                           hintStyle: TextStyle(
@@ -968,7 +970,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                           focusedBorder: InputBorder.none,
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 14),
-                          suffixIcon: !_isAdmin
+                          suffixIcon: !_canEditPersonalData
                               ? Icon(Icons.lock_outline,
                                   size: 18, color: Colors.grey[400])
                               : null,
@@ -995,9 +997,9 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ),
                   const SizedBox(height: 8),
                   IgnorePointer(
-                    ignoring: !_isAdmin,
+                    ignoring: !_canEditPersonalData,
                     child: Opacity(
-                      opacity: !_isAdmin ? 0.6 : 1.0,
+                      opacity: !_canEditPersonalData ? 0.6 : 1.0,
                       child: Row(
                         children: [
                           Expanded(
@@ -1036,9 +1038,9 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ),
                   const SizedBox(height: 8),
                   IgnorePointer(
-                    ignoring: !_isAdmin,
+                    ignoring: !_canEditPersonalData,
                     child: Opacity(
-                      opacity: !_isAdmin ? 0.6 : 1.0,
+                      opacity: !_canEditPersonalData ? 0.6 : 1.0,
                       child: Card(
                         clipBehavior: Clip.antiAlias,
                         child: Column(
@@ -1399,7 +1401,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             ),
 
             // ── Botão Salvar (fixo no bottom, só admin) ──
-            if (_isAdmin)
+            if (_canEditPersonalData)
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               decoration: BoxDecoration(
