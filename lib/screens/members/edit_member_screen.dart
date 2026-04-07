@@ -27,6 +27,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   late CellMember _member;
   bool _isSelfEdit = false;
   bool _isAdmin = false;
+  bool _hasPendingRequest = false;
 
   bool get _canEditPersonalData => _isAdmin || _member.isVisitor;
 
@@ -70,6 +71,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               _birthDate = _member.birthDate;
             });
           }
+        });
+      }
+
+      // Check if there's a pending approval request for this visitor
+      if (_member.isVisitor && !_isAdmin) {
+        FirestoreService().hasPendingRequest(_member.id).then((hasPending) {
+          if (mounted) setState(() => _hasPendingRequest = hasPending);
         });
       }
     }
@@ -1288,11 +1296,9 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   // ── Promover visitante a membro ──
                   if (_member.isVisitor) ...[
                     const SizedBox(height: 20),
-                    Card(
-                      color: primaryColor.withValues(alpha: 0.08),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _confirmPromoteToMember,
+                    if (_hasPendingRequest && !_isAdmin) ...[
+                      Card(
+                        color: Colors.orange.withValues(alpha: 0.08),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Row(
@@ -1301,35 +1307,89 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: primaryColor
-                                      .withValues(alpha: 0.1),
+                                  color: Colors.orange.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
-                                  Icons.arrow_upward_rounded,
-                                  color: primaryColor,
+                                  Icons.hourglass_top_rounded,
+                                  color: Colors.orange[700],
                                   size: 22,
                                 ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
-                                child: Text(
-                                  'Promover a Membro',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryColor,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Aguardando Aprovação',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Solicitação enviada ao administrador',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Icon(
-                                Icons.chevron_right_rounded,
-                                color: primaryColor,
+                                Icons.pending_rounded,
+                                color: Colors.orange[300],
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
+                    ] else ...[
+                      Card(
+                        color: primaryColor.withValues(alpha: 0.08),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _confirmPromoteToMember,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: primaryColor
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_upward_rounded,
+                                    color: primaryColor,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    'Promover a Membro',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: primaryColor,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
 
                   // ── Tornar/Remover Auxiliar ──
