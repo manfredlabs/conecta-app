@@ -17,7 +17,6 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   final _nameController = TextEditingController();
   final _searchController = TextEditingController();
   String _gender = 'M';
-  bool _baptized = false;
   DateTime? _birthDate;
   bool _birthDateExpanded = false;
   bool _isVisitor = true;
@@ -115,83 +114,6 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     return null;
   }
 
-  void _confirmBaptizedChange() {
-    final willBeBaptized = !_baptized;
-    final message = willBeBaptized
-        ? 'Tem certeza que deseja marcar como batizado(a)?'
-        : 'Tem certeza que deseja marcar como não batizado(a)?';
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Icon(
-              Icons.water_drop_outlined,
-              size: 40,
-              color: willBeBaptized
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Cancelar'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      setState(() => _baptized = willBeBaptized);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Confirmar'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _save() async {
     if (_isVisitor) {
@@ -220,7 +142,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         name: _nameController.text.trim(),
         congregationId: cell.congregationId,
         gender: _gender,
-        baptized: _baptized,
+        baptized: false,
         birthDate: _birthDate,
       );
       await cellProvider.addPersonAndCellMember(
@@ -388,66 +310,6 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Batizado ──
-                    Text(
-                      'Batizado(a)',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Card(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => _confirmBaptizedChange(),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: (_baptized
-                                          ? primaryColor
-                                          : Colors.grey)
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.water_drop_rounded,
-                                  color: _baptized
-                                      ? primaryColor
-                                      : Colors.grey[400],
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  _baptized ? 'Sim' : 'Não',
-                                  style: theme.textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              Icon(
-                                _baptized
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: _baptized
-                                    ? primaryColor
-                                    : Colors.grey[300],
-                                size: 26,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 20),

@@ -12,7 +12,6 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   String _gender = 'M';
-  bool _baptized = false;
   DateTime? _birthDate;
   bool _birthDateExpanded = false;
 
@@ -28,7 +27,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
     final visitor = Visitor(
       name: _nameController.text.trim(),
       gender: _gender,
-      baptized: _baptized,
+      baptized: false,
       birthDate: _birthDate,
     );
 
@@ -121,66 +120,6 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                         ),
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Batizado ──
-                  Text(
-                    'Batizado(a)',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => setState(() => _baptized = !_baptized),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: (_baptized
-                                        ? primaryColor
-                                        : Colors.grey)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.water_drop_rounded,
-                                color: _baptized
-                                    ? primaryColor
-                                    : Colors.grey[400],
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                _baptized ? 'Sim' : 'Não',
-                                style: theme.textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            Icon(
-                              _baptized
-                                  ? Icons.check_circle_rounded
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: _baptized
-                                  ? primaryColor
-                                  : Colors.grey[300],
-                              size: 26,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
 
                   const SizedBox(height: 20),

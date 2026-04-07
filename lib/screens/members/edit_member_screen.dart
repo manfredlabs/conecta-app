@@ -18,7 +18,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   String _gender = 'M';
-  bool _baptized = false;
   DateTime? _birthDate;
   bool _birthDateExpanded = false;
   bool _initialized = false;
@@ -47,7 +46,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
       _member = ModalRoute.of(context)!.settings.arguments as CellMember;
       _nameController.text = _member.name;
       _gender = _member.gender ?? 'M';
-      _baptized = _member.isLeader ? true : (_member.baptized ?? false);
       _birthDate = _member.birthDate;
 
       final user = context.read<AuthProvider>().appUser;
@@ -63,7 +61,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             setState(() {
               _member.person = person;
               _gender = _member.gender ?? 'M';
-              _baptized = _member.isLeader ? true : (_member.baptized ?? false);
               _birthDate = _member.birthDate;
             });
           }
@@ -84,121 +81,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     if (_member.isVisitor) return 'Editar Visitante';
     if (!_member.isActive) return 'Editar Inativo';
     return 'Editar Membro';
-  }
-
-  void _confirmBaptizedChange() {
-    final willBeBaptized = !_baptized;
-    final firstName = _nameController.text.trim().split(' ').first;
-    final willBecomeVisitor = !willBeBaptized && !_member.isVisitor && !_member.isLeader;
-    final message = willBeBaptized
-        ? 'Tem certeza que deseja marcar $firstName como batizado(a)?'
-        : willBecomeVisitor
-            ? '$firstName será marcado(a) como não batizado(a) e voltará a ser visitante.'
-            : 'Tem certeza que deseja marcar $firstName como não batizado(a)?';
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final primaryColor = Theme.of(context).colorScheme.primary;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: (willBeBaptized ? primaryColor : Colors.grey)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.water_drop_rounded,
-                  size: 28,
-                  color: willBeBaptized ? primaryColor : Colors.grey[400],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
-                        side: BorderSide(color: Colors.grey[300]!),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        Navigator.pop(ctx);
-                        setState(() => _baptized = willBeBaptized);
-                        if (willBecomeVisitor) {
-                          final cellProvider = context.read<CellProvider>();
-                          await cellProvider.updateCellMember(_member.id, {
-                            'baptized': false,
-                            'isVisitor': true,
-                            'isHelper': false,
-                          });
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('$firstName agora é visitante'),
-                              ),
-                            );
-                            Navigator.pop(context);
-                          }
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor:
-                            willBeBaptized ? primaryColor : Colors.grey[600],
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Confirmar'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   void _confirmPromoteToMember() {
@@ -277,7 +159,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       final cellProvider = context.read<CellProvider>();
                       await cellProvider.updateCellMember(_member.id, {
                         'isVisitor': false,
-                        'baptized': true,
                       });
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -999,7 +880,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         await cellProvider.updatePersonAndSync(_member.personId, {
           'name': _nameController.text.trim(),
           'gender': _gender,
-          'baptized': _baptized,
           'birthDate': _birthDate,
         });
       } else {
@@ -1130,77 +1010,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ── Batizado ──
-                  Text(
-                    'Batizado(a)',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: _member.isLeader ? null : () => _confirmBaptizedChange(),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: (_baptized
-                                        ? primaryColor
-                                        : Colors.grey)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.water_drop_rounded,
-                                color: _baptized
-                                    ? primaryColor
-                                    : Colors.grey[400],
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _baptized ? 'Sim' : 'Não',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                  if (_member.isLeader)
-                                    Text(
-                                      'Líder é sempre batizado(a)',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(color: Colors.grey[500]),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              _baptized
-                                  ? Icons.check_circle_rounded
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: _baptized
-                                  ? primaryColor
-                                  : Colors.grey[300],
-                              size: 26,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
                   // ── Data de Nascimento ──
                   Text(
                     'Data de Nascimento',
@@ -1313,12 +1122,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   if (_member.isVisitor) ...[
                     const SizedBox(height: 20),
                     Card(
-                      color: _baptized
-                          ? primaryColor.withValues(alpha: 0.08)
-                          : null,
+                      color: primaryColor.withValues(alpha: 0.08),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
-                        onTap: _baptized ? _confirmPromoteToMember : null,
+                        onTap: _confirmPromoteToMember,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Row(
@@ -1327,17 +1134,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: (_baptized
-                                          ? primaryColor
-                                          : Colors.grey)
+                                  color: primaryColor
                                       .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   Icons.arrow_upward_rounded,
-                                  color: _baptized
-                                      ? primaryColor
-                                      : Colors.grey[400],
+                                  color: primaryColor,
                                   size: 22,
                                 ),
                               ),
@@ -1347,41 +1150,19 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   'Promover a Membro',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: _baptized
-                                        ? primaryColor
-                                        : Colors.grey[400],
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                color: _baptized
-                                    ? primaryColor
-                                    : Colors.grey[300],
+                                color: primaryColor,
                               ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    if (!_baptized)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info_outline,
-                                size: 14, color: Colors.grey[500]),
-                            const SizedBox(width: 6),
-                            Text(
-                              'É necessário ser batizado(a) para ser membro',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                   ],
 
                   // ── Tornar/Remover Auxiliar ──
