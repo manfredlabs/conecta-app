@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
+import '../../providers/hierarchy_provider.dart';
 import '../../models/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,22 +23,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _loadData() {
     final auth = context.read<AuthProvider>();
-    final cellProvider = context.read<CellProvider>();
     final user = auth.appUser;
     if (user == null) return;
 
     switch (user.role) {
       case UserRole.admin:
-        cellProvider.listenToCells();
+        context.read<HierarchyProvider>().listenToCongregations();
         break;
       case UserRole.pastor:
-        cellProvider.listenToCells(congregationId: user.congregationId);
+        context
+            .read<HierarchyProvider>()
+            .listenToSupervisions(congregationId: user.congregationId);
         break;
       case UserRole.supervisor:
-        cellProvider.listenToCells(supervisionId: user.supervisionId);
+        context
+            .read<CellProvider>()
+            .listenToCells(supervisionId: user.supervisionId);
         break;
       case UserRole.leader:
-        cellProvider.listenToCells(leaderId: user.id);
+        context.read<CellProvider>().listenToCells(leaderId: user.id);
         break;
     }
   }
@@ -70,10 +74,22 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           _buildUserHeader(user),
-          Expanded(child: _buildCellList()),
+          Expanded(child: _buildContent(user)),
         ],
       ),
     );
+  }
+
+  Widget _buildContent(AppUser user) {
+    switch (user.role) {
+      case UserRole.admin:
+        return _buildCongregationList();
+      case UserRole.pastor:
+        return _buildSupervisionList();
+      case UserRole.supervisor:
+      case UserRole.leader:
+        return _buildCellList();
+    }
   }
 
   Widget _buildUserHeader(AppUser user) {
@@ -99,6 +115,112 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCongregationList() {
+    return Consumer<HierarchyProvider>(
+      builder: (context, hierarchy, _) {
+        final congregations = hierarchy.congregations;
+
+        if (congregations.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.account_balance, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Nenhuma congregação encontrada',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: congregations.length,
+          itemBuilder: (context, index) {
+            final congregation = congregations[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.tertiary,
+                  child: const Icon(Icons.account_balance, color: Colors.white),
+                ),
+                title: Text(
+                  congregation.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(congregation.pastorName ?? 'Sem pastor'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  hierarchy.selectCongregation(congregation);
+                  Navigator.pushNamed(context, '/supervision-list');
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSupervisionList() {
+    return Consumer<HierarchyProvider>(
+      builder: (context, hierarchy, _) {
+        final supervisions = hierarchy.supervisions;
+
+        if (supervisions.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.workspaces_outline, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Nenhuma supervisão encontrada',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: supervisions.length,
+          itemBuilder: (context, index) {
+            final supervision = supervisions[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  child: const Icon(Icons.group_work, color: Colors.white),
+                ),
+                title: Text(
+                  supervision.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                    supervision.supervisorName ?? 'Sem supervisor definido'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  hierarchy.selectSupervision(supervision);
+                  context
+                      .read<CellProvider>()
+                      .listenToCells(supervisionId: supervision.id);
+                  Navigator.pushNamed(context, '/cell-list');
+                },
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -143,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   cellProvider.selectCell(cell);
-                  Navigator.pushNamed(context, '/cell-detail');
+                  Navigator.pushNamed(context, '/cell-hub');
                 },
               ),
             );

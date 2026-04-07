@@ -53,6 +53,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshUser() async {
+    final user = _authService.currentUser;
+    if (user != null) {
+      _appUser = await _authService.getAppUser(user.uid);
+      notifyListeners();
+    }
+  }
+
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':

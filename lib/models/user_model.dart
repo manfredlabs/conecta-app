@@ -10,6 +10,8 @@ class AppUser {
   final String? congregationId;
   final String? supervisionId;
   final String? cellId;
+  final String? gender;
+  final DateTime? birthDate;
 
   AppUser({
     required this.id,
@@ -19,6 +21,8 @@ class AppUser {
     this.congregationId,
     this.supervisionId,
     this.cellId,
+    this.gender,
+    this.birthDate,
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -34,6 +38,10 @@ class AppUser {
       congregationId: data['congregationId'],
       supervisionId: data['supervisionId'],
       cellId: data['cellId'],
+      gender: data['gender'],
+      birthDate: data['birthDate'] != null
+          ? (data['birthDate'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -45,6 +53,8 @@ class AppUser {
       'congregationId': congregationId,
       'supervisionId': supervisionId,
       'cellId': cellId,
+      'gender': gender,
+      'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
     };
   }
 

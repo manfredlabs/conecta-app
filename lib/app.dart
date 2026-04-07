@@ -5,6 +5,7 @@ import 'config/theme.dart';
 import 'config/routes.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cell_provider.dart';
+import 'providers/hierarchy_provider.dart';
 
 class ConectaApp extends StatelessWidget {
   const ConectaApp({super.key});
@@ -15,6 +16,7 @@ class ConectaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (_) => CellProvider()),
+        ChangeNotifierProvider(create: (_) => HierarchyProvider()),
       ],
       child: MaterialApp(
         title: 'Conecta',

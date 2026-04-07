@@ -40,6 +40,7 @@ dependencies:
   provider: ^6.1.5+1
   flutter_localizations:
     sdk: flutter
+  google_fonts: ^8.0.2
 
 dev_dependencies:
   flutter_test:

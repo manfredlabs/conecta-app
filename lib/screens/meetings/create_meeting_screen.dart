@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
-import '../../models/member_model.dart';
+import '../../models/cell_member_model.dart';
+import '../../models/person_model.dart';
 import '../../models/meeting_model.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
@@ -14,8 +15,8 @@ class CreateMeetingScreen extends StatefulWidget {
 
 class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
   DateTime _selectedDate = DateTime.now();
+  bool _dateExpanded = false;
   final Set<String> _presentMemberIds = {};
-  final List<Visitor> _visitors = [];
   final _observationsController = TextEditingController();
 
   @override
@@ -24,79 +25,67 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     super.dispose();
   }
 
-  void _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      locale: const Locale('pt', 'BR'),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
+  void _addVisitor() async {
+    final visitor = await Navigator.pushNamed(context, '/add-visitor');
+    if (!mounted) return;
+    if (visitor != null && visitor is Visitor) {
+      final cellProvider = context.read<CellProvider>();
+      final cell = cellProvider.selectedCell!;
+
+      final person = Person(
+        id: '',
+        name: visitor.name,
+        congregationId: cell.congregationId,
+        gender: visitor.gender,
+        baptized: visitor.baptized,
+        birthDate: visitor.birthDate,
+      );
+
+      final cmId = await cellProvider.addPersonAndCellMember(
+        person: person,
+        cellId: cell.id,
+        supervisionId: cell.supervisionId,
+        congregationId: cell.congregationId,
+        isVisitor: true,
+      );
+      if (cmId != null && mounted) {
+        setState(() {
+          _presentMemberIds.add(cmId);
+        });
+      }
     }
   }
 
-  void _addVisitor() {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Adicionar Visitante'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Nome',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Telefone (opcional)',
-                prefixIcon: Icon(Icons.phone),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                setState(() {
-                  _visitors.add(Visitor(
-                    name: nameController.text.trim(),
-                    phone: phoneController.text.trim().isEmpty
-                        ? null
-                        : phoneController.text.trim(),
-                  ));
-                });
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Adicionar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _save() async {
+    // Validar presença mínima
+    if (_presentMemberIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione pelo menos 1 membro presente.'),
+        ),
+      );
+      return;
+    }
+
     final cellProvider = context.read<CellProvider>();
     final authProvider = context.read<AuthProvider>();
     final cell = cellProvider.selectedCell!;
+
+    // Validar data duplicada
+    final hasDuplicate = cellProvider.meetings.any((m) =>
+        m.date.year == _selectedDate.year &&
+        m.date.month == _selectedDate.month &&
+        m.date.day == _selectedDate.day);
+
+    if (hasDuplicate) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Já existe uma reunião registrada nesta data.'),
+        ),
+      );
+      return;
+    }
 
     final meeting = Meeting(
       id: '',
@@ -105,7 +94,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       congregationId: cell.congregationId,
       date: _selectedDate,
       presentMemberIds: _presentMemberIds.toList(),
-      visitors: _visitors,
+      visitors: const [],
       observations: _observationsController.text.trim().isEmpty
           ? null
           : _observationsController.text.trim(),
@@ -124,181 +113,409 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Registrar Reunião')),
       body: Consumer<CellProvider>(
         builder: (context, cellProvider, _) {
-          final members = cellProvider.members;
+          final members = List<CellMember>.from(
+            cellProvider.cellMembers.where((m) => m.isActive),
+          )..sort((a, b) {
+              int priority(CellMember m) =>
+                  m.isLeader ? 0 : m.isHelper ? 1 : m.isVisitor ? 3 : 2;
+              final p = priority(a).compareTo(priority(b));
+              if (p != 0) return p;
+              return a.name.compareTo(b.name);
+            });
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date picker
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: const Text('Data da Reunião'),
-                    subtitle: Text(
-                      '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    trailing: const Icon(Icons.edit),
-                    onTap: _selectDate,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Members presence
-                Text(
-                  'Presença dos Membros (${_presentMemberIds.length}/${members.length})',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-
-                if (members.isEmpty)
-                  const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Nenhum membro cadastrado. Adicione membros primeiro.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  )
-                else
-                  _buildSelectAllRow(members),
-
-                ...members.map((member) => _buildMemberCheckbox(member)),
-
-                const SizedBox(height: 16),
-
-                // Visitors
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                   children: [
-                    Text(
-                      'Visitantes (${_visitors.length})',
-                      style:
-                          Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                    // ── Data da Reunião ──
+                    Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () =>
+                            setState(() => _dateExpanded = !_dateExpanded),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.calendar_today_rounded,
+                                    color: primaryColor, size: 22),
                               ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Data da Reunião',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: Colors.grey[500]),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year}',
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                _dateExpanded
+                                    ? Icons.keyboard_arrow_up_rounded
+                                    : Icons.keyboard_arrow_down_rounded,
+                                color: Colors.grey[400],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    TextButton.icon(
-                      onPressed: _addVisitor,
-                      icon: const Icon(Icons.person_add),
-                      label: const Text('Adicionar'),
+                    AnimatedCrossFade(
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Card(
+                        child: CalendarDatePicker(
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          onDateChanged: (date) {
+                            setState(() {
+                              _selectedDate = date;
+                              _dateExpanded = false;
+                            });
+                          },
+                        ),
+                      ),
+                      crossFadeState: _dateExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 200),
                     ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Presença ──
+                    Row(
+                      children: [
+                        Text(
+                          'Presença',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_presentMemberIds.length}/${members.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: _addVisitor,
+                          icon: const Icon(Icons.person_add_rounded, size: 18),
+                          label: const Text('Visitante'),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (members.isEmpty)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              Icon(Icons.people_outline,
+                                  size: 48, color: Colors.grey[300]),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Nenhum membro cadastrado',
+                                style: TextStyle(
+                                    color: Colors.grey[400], fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else ...[
+                      // Select all
+                      _buildSelectAllRow(members),
+                      const SizedBox(height: 4),
+                      // Member list
+                      ...members.map((m) => _buildMemberTile(m)),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Observações ──
+                    Text(
+                      'Observações',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: TextFormField(
+                          controller: _observationsController,
+                          maxLines: 4,
+                          minLines: 3,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            hintText:
+                                'Pedidos de oração, testemunhos, observações...',
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                            filled: false,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
-                ..._visitors.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final v = entry.value;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.person_outline),
-                      ),
-                      title: Text(v.name),
-                      subtitle: v.phone != null ? Text(v.phone!) : null,
-                      trailing: IconButton(
-                        icon:
-                            const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          setState(() => _visitors.removeAt(i));
-                        },
-                      ),
-                    ),
-                  );
-                }),
+              ),
 
-                const SizedBox(height: 16),
-
-                // Observations
-                TextFormField(
-                  controller: _observationsController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Observações (opcional)',
-                    prefixIcon: Icon(Icons.notes),
-                    alignLabelWithHint: true,
+              // ── Botão Salvar (fixo no bottom) ──
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackgroundColor,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[200]!, width: 1),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Save button
-                SizedBox(
+                child: SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
+                  height: 52,
+                  child: FilledButton.icon(
                     onPressed: cellProvider.isLoading ? null : _save,
                     icon: cellProvider.isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
-                        : const Icon(Icons.save),
-                    label: const Text('Salvar Reunião'),
+                        : const Icon(Icons.check_rounded),
+                    label: const Text(
+                      'Salvar Reunião',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 16),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildSelectAllRow(List<Member> members) {
-    final allSelected = _presentMemberIds.length == members.length;
+  Widget _buildSelectAllRow(List<CellMember> members) {
+    final allSelected =
+        members.isNotEmpty && _presentMemberIds.length == members.length;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 4),
-      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-      child: CheckboxListTile(
-        title: const Text(
-          'Selecionar todos',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        value: allSelected,
-        onChanged: (value) {
+      margin: EdgeInsets.zero,
+      color: primaryColor.withValues(alpha: 0.04),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: primaryColor.withValues(alpha: 0.15)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
           setState(() {
-            if (value == true) {
-              _presentMemberIds.addAll(members.map((m) => m.id));
-            } else {
+            if (allSelected) {
               _presentMemberIds.clear();
+            } else {
+              _presentMemberIds.addAll(members.map((m) => m.id));
             }
           });
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                allSelected
+                    ? Icons.check_box_rounded
+                    : Icons.check_box_outline_blank_rounded,
+                color: primaryColor,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Selecionar todos',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMemberCheckbox(Member member) {
+  Widget _buildMemberTile(CellMember member) {
+    final isPresent = _presentMemberIds.contains(member.id);
+    final roleColor = member.isLeader
+        ? Theme.of(context).colorScheme.primary
+        : member.isHelper
+            ? Colors.teal
+            : member.isVisitor
+                ? Colors.orange
+                : Colors.blue;
+    final roleLabel = member.isLeader
+        ? 'Líder'
+        : member.isHelper
+            ? 'Auxiliar'
+            : member.isVisitor
+                ? 'Visitante'
+                : 'Membro';
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: CheckboxListTile(
-        title: Text(member.name),
-        value: _presentMemberIds.contains(member.id),
-        onChanged: (value) {
+      margin: const EdgeInsets.only(top: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
           setState(() {
-            if (value == true) {
-              _presentMemberIds.add(member.id);
-            } else {
+            if (isPresent) {
               _presentMemberIds.remove(member.id);
+            } else {
+              _presentMemberIds.add(member.id);
             }
           });
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: (isPresent ? roleColor : Colors.grey)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Center(
+                  child: Text(
+                    member.name.isNotEmpty
+                        ? member.name[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: isPresent ? roleColor : Colors.grey[400],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isPresent ? null : Colors.grey[500],
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (isPresent ? roleColor : Colors.grey)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        roleLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isPresent ? roleColor : Colors.grey[400],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                isPresent
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: isPresent
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey[300],
+                size: 26,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

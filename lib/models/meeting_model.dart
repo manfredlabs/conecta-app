@@ -2,13 +2,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Visitor {
   final String name;
+  final String gender;
+  final bool baptized;
+  final DateTime? birthDate;
   final String? phone;
 
-  Visitor({required this.name, this.phone});
+  Visitor({
+    required this.name,
+    required this.gender,
+    required this.baptized,
+    this.birthDate,
+    this.phone,
+  });
 
   factory Visitor.fromMap(Map<String, dynamic> map) {
     return Visitor(
       name: map['name'] ?? '',
+      gender: map['gender'] ?? 'M',
+      baptized: map['baptized'] ?? false,
+      birthDate: map['birthDate'] != null
+          ? (map['birthDate'] as Timestamp).toDate()
+          : null,
       phone: map['phone'],
     );
   }
@@ -16,6 +30,10 @@ class Visitor {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
+      'gender': gender,
+      'baptized': baptized,
+      'birthDate':
+          birthDate != null ? Timestamp.fromDate(birthDate!) : null,
       'phone': phone,
     };
   }
