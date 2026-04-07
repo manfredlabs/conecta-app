@@ -474,6 +474,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       await cellProvider.updateCellMember(_member.id, {
                         'isHelper': willBeHelper,
                       });
+                      if (willBeHelper && _member.personId.isNotEmpty) {
+                        await cellProvider.updatePersonAndSync(
+                            _member.personId, {'baptized': true});
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -581,6 +585,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         'isLeader': true,
                         'isHelper': false,
                       });
+                      if (_member.personId.isNotEmpty) {
+                        await cellProvider.updatePersonAndSync(
+                            _member.personId, {'baptized': true});
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
