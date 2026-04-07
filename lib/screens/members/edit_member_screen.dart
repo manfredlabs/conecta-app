@@ -62,21 +62,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
 
       _initialized = true;
 
-      // Load person data if not populated
-      if (_member.person == null && _member.personId.isNotEmpty) {
-        FirestoreService().getPerson(_member.personId).then((person) {
-          if (mounted && person != null) {
-            setState(() {
-              _member.person = person;
-              _gender = _member.gender ?? 'M';
-              _birthDate = _member.birthDate;
-            });
-          }
-        });
-      }
-
-      // Check if there's a pending approval request for this visitor
+      // For visitors (non-admin): check pending BEFORE allowing render
+      // so the correct card shows immediately without flicker
       if (_member.isVisitor && !_isAdmin) {
+        _pendingCheckDone = false;
         FirestoreService().hasPendingRequest(_member.id).then((hasPending) {
           if (mounted) {
             setState(() {
@@ -87,6 +76,22 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         });
       } else {
         _pendingCheckDone = true;
+      }
+
+      _initAsync();
+    }
+  }
+
+  Future<void> _initAsync() async {
+    // Load person data if not populated
+    if (_member.person == null && _member.personId.isNotEmpty) {
+      final person = await FirestoreService().getPerson(_member.personId);
+      if (mounted && person != null) {
+        setState(() {
+          _member.person = person;
+          _gender = _member.gender ?? 'M';
+          _birthDate = _member.birthDate;
+        });
       }
     }
   }
