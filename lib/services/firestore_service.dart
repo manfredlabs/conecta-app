@@ -463,10 +463,13 @@ class FirestoreService {
     return _db
         .collection('approval_requests')
         .where('status', isEqualTo: 'pending')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => ApprovalRequest.fromFirestore(d)).toList());
+        .map((snap) {
+      final list =
+          snap.docs.map((d) => ApprovalRequest.fromFirestore(d)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 
   Future<bool> hasPendingRequest(String cellMemberId) async {
