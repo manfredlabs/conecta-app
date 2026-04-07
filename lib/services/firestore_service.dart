@@ -516,4 +516,19 @@ class FirestoreService {
       'resolvedAt': FieldValue.serverTimestamp(),
     });
   }
+
+  /// Cancel all pending requests for a cell member (e.g. when inactivated/deleted)
+  Future<void> cancelPendingRequests(String cellMemberId) async {
+    final snap = await _db
+        .collection('approval_requests')
+        .where('cellMemberId', isEqualTo: cellMemberId)
+        .where('status', isEqualTo: 'pending')
+        .get();
+    for (final doc in snap.docs) {
+      await doc.reference.update({
+        'status': 'cancelled',
+        'resolvedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
 }

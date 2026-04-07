@@ -428,6 +428,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      // Cancel pending approval requests when inactivating a visitor
+                      if (isActive && _member.isVisitor) {
+                        await FirestoreService().cancelPendingRequests(_member.id);
+                      }
                       await cellProvider.updateCellMember(_member.id, {
                         'isActive': !isActive,
                       });
@@ -518,6 +522,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      // Cancel pending approval requests when deleting a visitor
+                      if (_member.isVisitor) {
+                        await FirestoreService().cancelPendingRequests(_member.id);
+                      }
                       await cellProvider.deleteCellMember(_member.id);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
