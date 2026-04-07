@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/approval_request_model.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/cell_model.dart';
 import '../../models/user_model.dart';
@@ -88,10 +89,34 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     return 'Editar Membro';
   }
 
-  void _confirmPromoteToMember() {
+  void _confirmPromoteToMember() async {
     final firstName = _nameController.text.trim().split(' ').first;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
+    // Admin promotes directly
+    if (_isAdmin) {
+      _showPromoteModal(firstName, primaryColor);
+      return;
+    }
+
+    // Non-admin: check if already has pending request
+    final hasPending =
+        await FirestoreService().hasPendingRequest(_member.id);
+    if (hasPending) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Já existe uma solicitação pendente para este visitante')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    _showRequestApprovalModal(firstName, primaryColor);
+  }
+
+  void _showPromoteModal(String firstName, Color primaryColor) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -165,7 +190,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       await cellProvider.updateCellMember(_member.id, {
                         'isVisitor': false,
                       });
-                      // Membro é sempre batizado
                       if (_member.personId.isNotEmpty) {
                         await cellProvider.updatePersonAndSync(
                             _member.personId, {'baptized': true});
@@ -186,6 +210,125 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       ),
                     ),
                     child: const Text('Promover'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRequestApprovalModal(String firstName, Color primaryColor) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.send_rounded,
+                size: 28,
+                color: Colors.orange[700],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Solicitar promoção de $firstName?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'A solicitação será enviada ao administrador para aprovação.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final user = context.read<AuthProvider>().appUser;
+                      final cell = context.read<CellProvider>().selectedCell;
+                      if (user == null || cell == null) return;
+
+                      final request = ApprovalRequest(
+                        id: '',
+                        type: 'promote_to_member',
+                        personId: _member.personId,
+                        personName: _member.name,
+                        cellMemberId: _member.id,
+                        cellId: cell.id,
+                        cellName: cell.name,
+                        requestedBy: user.id,
+                        requestedByName: user.name,
+                        status: ApprovalStatus.pending,
+                        createdAt: DateTime.now(),
+                      );
+
+                      await FirestoreService().createApprovalRequest(request);
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Solicitação enviada! Aguardando aprovação do admin.'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange[700],
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Enviar Solicitação'),
                   ),
                 ),
               ],

@@ -165,6 +165,12 @@ class _HomeTabState extends State<HomeTab> {
 
       final membersSnap = await _db.collection('cell_members').get();
       stats['adminMembers'] = membersSnap.size;
+
+      final pendingSnap = await _db
+          .collection('approval_requests')
+          .where('status', isEqualTo: 'pending')
+          .get();
+      stats['pendingApprovals'] = pendingSnap.size;
     }
 
     if (mounted) {
@@ -666,7 +672,18 @@ class _HomeTabState extends State<HomeTab> {
     // Admin
     if (user.role == UserRole.admin) {
       final color = Theme.of(context).colorScheme.primary;
+      final pendingCount = _stats['pendingApprovals'] ?? 0;
       sections.addAll([
+        if (pendingCount > 0) ...[
+          _StatTile(
+            icon: Icons.pending_actions_rounded,
+            color: Colors.orange[700]!,
+            title: '$pendingCount Solicitaç${pendingCount == 1 ? 'ão' : 'ões'}',
+            subtitle: 'Aguardando aprovação',
+            onTap: () => Navigator.pushNamed(context, '/approval-requests'),
+          ),
+          const SizedBox(height: 8),
+        ],
         _StatTile(
           icon: Icons.account_balance_rounded,
           color: color,

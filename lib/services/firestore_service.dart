@@ -5,6 +5,7 @@ import '../models/cell_model.dart';
 import '../models/member_model.dart';
 import '../models/person_model.dart';
 import '../models/cell_member_model.dart';
+import '../models/approval_request_model.dart';
 import '../models/meeting_model.dart';
 import '../models/user_model.dart';
 
@@ -454,5 +455,62 @@ class FirestoreService {
         await doc.reference.update({'leaderName': userData['name']});
       }
     }
+  }
+
+  // ─── Approval Requests ───
+
+  Stream<List<ApprovalRequest>> getPendingApprovalRequests() {
+    return _db
+        .collection('approval_requests')
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => ApprovalRequest.fromFirestore(d)).toList());
+  }
+
+  Future<bool> hasPendingRequest(String cellMemberId) async {
+    final snap = await _db
+        .collection('approval_requests')
+        .where('cellMemberId', isEqualTo: cellMemberId)
+        .where('status', isEqualTo: 'pending')
+        .limit(1)
+        .get();
+    return snap.docs.isNotEmpty;
+  }
+
+  Future<void> createApprovalRequest(ApprovalRequest request) async {
+    await _db.collection('approval_requests').add(request.toMap());
+  }
+
+  Future<void> approveRequest(String requestId) async {
+    final doc = await _db.collection('approval_requests').doc(requestId).get();
+    if (!doc.exists) return;
+
+    final request = ApprovalRequest.fromFirestore(doc);
+
+    // Execute promotion: visitor → member + baptized
+    await _db.collection('cell_members').doc(request.cellMemberId).update({
+      'isVisitor': false,
+    });
+
+    if (request.personId.isNotEmpty) {
+      await _db.collection('people').doc(request.personId).update({
+        'baptized': true,
+      });
+    }
+
+    // Mark as approved
+    await _db.collection('approval_requests').doc(requestId).update({
+      'status': 'approved',
+      'resolvedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> rejectRequest(String requestId) async {
+    await _db.collection('approval_requests').doc(requestId).update({
+      'status': 'rejected',
+      'resolvedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

@@ -23,6 +23,7 @@ import '../screens/meetings/congregation_meetings_screen.dart';
 import '../screens/profile/edit_profile_screen.dart';
 import '../screens/members/supervision_members_screen.dart';
 import '../screens/members/congregation_members_screen.dart';
+import '../screens/approvals/approval_requests_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -49,6 +50,7 @@ class AppRoutes {
   static const String editProfile = '/edit-profile';
   static const String supervisionMembers = '/supervision-members';
   static const String congregationMembers = '/congregation-members';
+  static const String approvalRequests = '/approval-requests';
 
   static Map<String, WidgetBuilder> get routes => {
         login: (_) => const LoginScreen(),
@@ -75,5 +77,6 @@ class AppRoutes {
         editProfile: (_) => const EditProfileScreen(),
         supervisionMembers: (_) => const SupervisionMembersScreen(),
         congregationMembers: (_) => const CongregationMembersScreen(),
+        approvalRequests: (_) => const ApprovalRequestsScreen(),
       };
 }
