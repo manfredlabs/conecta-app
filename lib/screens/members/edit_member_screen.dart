@@ -160,6 +160,11 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       await cellProvider.updateCellMember(_member.id, {
                         'isVisitor': false,
                       });
+                      // Membro é sempre batizado
+                      if (_member.personId.isNotEmpty) {
+                        await cellProvider.updatePersonAndSync(
+                            _member.personId, {'baptized': true});
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

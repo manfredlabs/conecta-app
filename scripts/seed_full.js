@@ -396,7 +396,7 @@ async function main() {
         isLeader: false,
         isActive: true,
         gender,
-        baptized: true,
+        baptized: false,
         birthDate: Timestamp.fromDate(birthDate),
         email: null,
       });
@@ -412,7 +412,7 @@ async function main() {
           name,
           phone,
           gender,
-          baptized: true,
+          baptized: false,
           birthDate: Timestamp.fromDate(birthDate),
           email: null,
           congregationId: congId,
