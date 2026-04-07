@@ -30,7 +30,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   bool _hasPendingRequest = false;
   bool _pendingCheckDone = false;
 
-  bool get _canEditPersonalData => _isAdmin || _member.isVisitor;
+  bool get _canEditPersonalData =>
+      _isAdmin || (_member.isVisitor && !_hasPendingRequest);
 
   bool get _canPromoteToLeader {
     final user = context.read<AuthProvider>().appUser;
@@ -1569,7 +1570,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ],
 
                   // ── Inativar/Reativar ──
-                  if (!_member.isLeader) ...[
+                  if (!_member.isLeader && !_hasPendingRequest) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
