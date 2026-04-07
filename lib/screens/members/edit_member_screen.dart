@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/cell_model.dart';
+import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../services/firestore_service.dart';
@@ -24,6 +25,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   bool _saving = false;
   late CellMember _member;
   bool _isSelfEdit = false;
+  bool _isAdmin = false;
 
   bool get _canPromoteToLeader {
     final user = context.read<AuthProvider>().appUser;
@@ -51,6 +53,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
       final user = context.read<AuthProvider>().appUser;
       final cell = context.read<CellProvider>().selectedCell;
       _isSelfEdit = _member.isLeader && cell?.leaderId == user?.id;
+      _isAdmin = user?.role == UserRole.admin;
 
       _initialized = true;
 
@@ -953,7 +956,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       child: TextFormField(
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
-                        readOnly: _member.isLeader && !_isSelfEdit,
+                        readOnly: !_isAdmin,
                         decoration: InputDecoration(
                           hintText: 'Nome completo',
                           hintStyle: TextStyle(
@@ -965,7 +968,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                           focusedBorder: InputBorder.none,
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 14),
-                          suffixIcon: _member.isLeader && !_isSelfEdit
+                          suffixIcon: !_isAdmin
                               ? Icon(Icons.lock_outline,
                                   size: 18, color: Colors.grey[400])
                               : null,
@@ -992,9 +995,9 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ),
                   const SizedBox(height: 8),
                   IgnorePointer(
-                    ignoring: _member.isLeader && !_isSelfEdit,
+                    ignoring: !_isAdmin,
                     child: Opacity(
-                      opacity: _member.isLeader && !_isSelfEdit ? 0.6 : 1.0,
+                      opacity: !_isAdmin ? 0.6 : 1.0,
                       child: Row(
                         children: [
                           Expanded(
@@ -1032,9 +1035,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
+                  IgnorePointer(
+                    ignoring: !_isAdmin,
+                    child: Opacity(
+                      opacity: !_isAdmin ? 0.6 : 1.0,
+                      child: Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
                       children: [
                         InkWell(
                           onTap: () => setState(
@@ -1129,6 +1136,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         ),
                       ],
                     ),
+                  ),
+                  ),
                   ),
 
                   // ── Promover visitante a membro ──
@@ -1389,7 +1398,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               ),
             ),
 
-            // ── Botão Salvar (fixo no bottom) ──
+            // ── Botão Salvar (fixo no bottom, só admin) ──
+            if (_isAdmin)
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               decoration: BoxDecoration(
