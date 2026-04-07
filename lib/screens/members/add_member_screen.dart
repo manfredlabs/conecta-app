@@ -142,7 +142,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         name: _nameController.text.trim(),
         congregationId: cell.congregationId,
         gender: _gender,
-        baptized: false,
+        baptized: true,
         birthDate: _birthDate,
       );
       await cellProvider.addPersonAndCellMember(

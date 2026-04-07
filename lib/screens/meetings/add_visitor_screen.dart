@@ -27,7 +27,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
     final visitor = Visitor(
       name: _nameController.text.trim(),
       gender: _gender,
-      baptized: false,
+      baptized: true,
       birthDate: _birthDate,
     );
 

@@ -374,7 +374,6 @@ async function main() {
   console.log('══════════════════════════════════════\n');
 
   let totalVisitors = 0;
-  let baptizedVisitors = 0;
 
   for (const cell of cells) {
     const numVisitors = rand(2, 5);
@@ -382,7 +381,6 @@ async function main() {
     for (let v = 0; v < numVisitors; v++) {
       const name = gerarNomeUnico();
       const gender = pick(['M', 'F']);
-      const isBaptized = Math.random() < 0.4; // 40% batizados
       const birthDate = gerarDataNascimento();
       const phone = Math.random() > 0.4 ? gerarTelefone() : null;
 
@@ -398,7 +396,7 @@ async function main() {
         isLeader: false,
         isActive: true,
         gender,
-        baptized: isBaptized,
+        baptized: true,
         birthDate: Timestamp.fromDate(birthDate),
         email: null,
       });
@@ -414,7 +412,7 @@ async function main() {
           name,
           phone,
           gender,
-          baptized: isBaptized,
+          baptized: true,
           birthDate: Timestamp.fromDate(birthDate),
           email: null,
           congregationId: congId,
@@ -438,7 +436,6 @@ async function main() {
       });
 
       totalVisitors++;
-      if (isBaptized) baptizedVisitors++;
       batchCount += 3;
 
       if (batchCount >= 380) {
@@ -456,7 +453,7 @@ async function main() {
     batchCount = 0;
   }
 
-  console.log(`\n  ✓ ${totalVisitors} visitantes criados (${baptizedVisitors} batizados, ${totalVisitors - baptizedVisitors} não batizados)`);
+  console.log(`\n  ✓ ${totalVisitors} visitantes criados`);
 
   // ─── FASE 5: USUÁRIOS DE LOGIN ───
   console.log('\n══════════════════════════════════════');
@@ -596,7 +593,7 @@ async function main() {
   console.log(`  🔷  ${supervisions.length} Supervisões (10 células cada)`);
   console.log(`  🟢  ${cells.length} Células`);
   console.log(`  👤  ${totalMembers} Membros (todos batizados)`);
-  console.log(`  👋  ${totalVisitors} Visitantes (${baptizedVisitors} batizados)`);
+  console.log(`  👋  ${totalVisitors} Visitantes`);
   console.log(`  🧑  ${personMap.size} People (nova collection)`);
   console.log(`  🔗  ${totalMembers + totalVisitors} Cell Members (nova collection)`);
   console.log(`  🔑  ${createdUsers.length} Logins criados`);
