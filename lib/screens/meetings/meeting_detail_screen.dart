@@ -265,10 +265,9 @@ class MeetingDetailScreen extends StatelessWidget {
           // ── Presentes ──
           if (presentMembers.isNotEmpty) ...[
             _SectionHeader(
-              icon: Icons.check_circle_outline_rounded,
-              iconColor: Colors.green[600]!,
               title: 'Presentes',
               count: presentMembers.length,
+              countColor: Colors.green[600]!,
             ),
             const SizedBox(height: 8),
             Card(
@@ -300,10 +299,9 @@ class MeetingDetailScreen extends StatelessWidget {
           // ── Ausentes ──
           if (absentMembers.isNotEmpty) ...[
             _SectionHeader(
-              icon: Icons.cancel_outlined,
-              iconColor: Colors.red[400]!,
               title: 'Ausentes',
               count: absentMembers.length,
+              countColor: Colors.red[400]!,
             ),
             const SizedBox(height: 8),
             Card(
@@ -480,24 +478,29 @@ class _StatItem extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
+  final IconData? icon;
+  final Color? iconColor;
+  final Color? countColor;
   final String title;
   final int? count;
 
   const _SectionHeader({
-    required this.icon,
-    required this.iconColor,
+    this.icon,
+    this.iconColor,
+    this.countColor,
     required this.title,
     this.count,
   });
 
   @override
   Widget build(BuildContext context) {
+    final badgeColor = countColor ?? iconColor ?? Colors.grey[600]!;
     return Row(
       children: [
-        Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 8),
+        if (icon != null) ...[
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(width: 8),
+        ],
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -510,7 +513,7 @@ class _SectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
+              color: badgeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -518,7 +521,7 @@ class _SectionHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: iconColor,
+                color: badgeColor,
               ),
             ),
           ),
