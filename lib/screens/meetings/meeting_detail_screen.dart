@@ -115,13 +115,6 @@ class MeetingDetailScreen extends StatelessWidget {
     return Colors.grey[600]!;
   }
 
-  IconData _roleIcon(CellMember m) {
-    if (m.isLeader) return Icons.star_rounded;
-    if (m.isHelper) return Icons.volunteer_activism;
-    if (m.isVisitor) return Icons.person_add_alt_1;
-    return Icons.person_rounded;
-  }
-
   @override
   Widget build(BuildContext context) {
     final argMeeting = ModalRoute.of(context)!.settings.arguments as Meeting;
@@ -279,7 +272,6 @@ class MeetingDetailScreen extends StatelessWidget {
                       name: presentMembers[i].name,
                       role: _roleLabel(presentMembers[i]),
                       roleColor: _roleColor(presentMembers[i], theme),
-                      icon: _roleIcon(presentMembers[i]),
                       isPresent: true,
                     ),
                     if (i < presentMembers.length - 1)
@@ -313,7 +305,6 @@ class MeetingDetailScreen extends StatelessWidget {
                       name: absentMembers[i].name,
                       role: _roleLabel(absentMembers[i]),
                       roleColor: _roleColor(absentMembers[i], theme),
-                      icon: _roleIcon(absentMembers[i]),
                       isPresent: false,
                     ),
                     if (i < absentMembers.length - 1)
@@ -535,57 +526,70 @@ class _MemberRow extends StatelessWidget {
   final String name;
   final String role;
   final Color roleColor;
-  final IconData icon;
   final bool isPresent;
 
   const _MemberRow({
     required this.name,
     required this.role,
     required this.roleColor,
-    required this.icon,
     required this.isPresent,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = isPresent ? roleColor : Colors.grey;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: roleColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(11),
             ),
-            child: Icon(icon, size: 16, color: roleColor),
+            child: Center(
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: isPresent ? roleColor : Colors.grey[400],
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isPresent ? null : Colors.grey[400],
-                decoration: isPresent ? null : TextDecoration.lineThrough,
-                decorationColor: Colors.grey[300],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: roleColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              role,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: roleColor,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: isPresent ? null : Colors.grey[400],
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    role,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isPresent ? roleColor : Colors.grey[400],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
