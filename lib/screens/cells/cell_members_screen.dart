@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../../utils/permissions.dart';
 import '../../utils/role_colors.dart';
 import '../../models/cell_member_model.dart';
@@ -21,7 +22,7 @@ class CellMembersScreen extends StatelessWidget {
           );
         }
 
-        final canManage = Permissions.canManageMembers(user, cell);
+        final canManage = Permissions.canManageMembers(user, cell, cellMembers: cellProvider.cellMembers);
 
         final allMembers = List<CellMember>.from(cellProvider.cellMembers)
           ..sort((a, b) {
@@ -75,6 +76,8 @@ class CellMembersScreen extends StatelessWidget {
                   children: [
                     if (canManage) ...[
                       Card(
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                         elevation: 0,
                         child: InkWell(
@@ -82,27 +85,26 @@ class CellMembersScreen extends StatelessWidget {
                           onTap: () =>
                               Navigator.pushNamed(context, '/add-member'),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                            padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 36,
-                                  height: 36,
+                                  width: 44,
+                                  height: 44,
                                   decoration: BoxDecoration(
                                     color: Theme.of(context).colorScheme.primary
                                         .withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(Icons.person_add_rounded,
-                                      color: Theme.of(context).colorScheme.primary, size: 20),
+                                      color: Theme.of(context).colorScheme.primary, size: 24),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 16),
                                 Text(
                                   'Adicionar Participante',
                                   style: Theme.of(context)
                                       .textTheme
-                                      .titleSmall
+                                      .titleMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: Theme.of(context).colorScheme.primary,
@@ -122,7 +124,7 @@ class CellMembersScreen extends StatelessWidget {
                     ...activeMembers.map((member) => _MemberCard(
                           member: member,
                           canManage: canManage,
-                          locked: member.isLeader && cell.leaderId == user.id,
+                          locked: false,
                         )),
                     if (inactiveMembers.isNotEmpty) ...[
                       Padding(
@@ -189,11 +191,14 @@ class _MemberCard extends StatelessWidget {
     final theme = Theme.of(context);
     final color = inactive ? Colors.grey[400]! : _roleColor(theme);
 
-    return Opacity(
-      opacity: inactive ? 0.6 : 1.0,
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Opacity(
+        opacity: inactive ? 0.6 : 1.0,
+        child: Card(
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: canManage && !locked
               ? () {
@@ -287,6 +292,7 @@ class _MemberCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

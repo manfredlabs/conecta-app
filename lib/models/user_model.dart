@@ -10,6 +10,7 @@ class AppUser {
   final String? congregationId;
   final String? supervisionId;
   final String? cellId;
+  final String? personId;
   final String? gender;
   final DateTime? birthDate;
 
@@ -21,6 +22,7 @@ class AppUser {
     this.congregationId,
     this.supervisionId,
     this.cellId,
+    this.personId,
     this.gender,
     this.birthDate,
   });

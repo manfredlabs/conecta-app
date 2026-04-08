@@ -50,46 +50,117 @@ class _HomeTabState extends State<HomeTab> {
 
     final stats = <String, dynamic>{};
 
-    // ── Minha Célula (qualquer usuário com cellId) ──
-    if (user.cellId != null) {
-      final cellDoc = await _db.collection('cells').doc(user.cellId).get();
-      if (cellDoc.exists) {
-        final cellData = cellDoc.data() as Map<String, dynamic>;
-        stats['cellName'] = cellData['name'] ?? 'Célula';
-        stats['cellMeetingDay'] = cellData['meetingDay'];
-        stats['cellMeetingTime'] = cellData['meetingTime'];
-        stats['cellAddress'] = cellData['address'];
-      }
-
-      final membersSnap = await _db
+    // ── Minhas Células (busca por personId onde é líder) ──
+    final myCells = <Map<String, dynamic>>[];
+    if (user.personId != null) {
+      final leaderSnap = await _db
           .collection('cell_members')
-          .where('cellId', isEqualTo: user.cellId)
+          .where('personId', isEqualTo: user.personId)
+          .where('isLeader', isEqualTo: true)
+          .where('isActive', isEqualTo: true)
           .get();
-      final allMembers = membersSnap.docs.map((d) => d.data()).toList();
-      final active = allMembers.where((m) => m['isActive'] != false).toList();
-      final visitors = active.where((m) => m['isVisitor'] == true).length;
-      stats['cellTotal'] = active.length;
-      stats['cellMembers'] = active.length - visitors;
-      stats['cellVisitors'] = visitors;
 
-      final meetingsSnap = await _db
-          .collection('meetings')
-          .where('cellId', isEqualTo: user.cellId)
-          .get();
-      if (meetingsSnap.docs.isNotEmpty) {
-        DateTime latest = DateTime(2000);
-        for (final doc in meetingsSnap.docs) {
-          final date = (doc.data()['date'] as Timestamp).toDate();
-          if (date.isAfter(latest)) latest = date;
+      for (final doc in leaderSnap.docs) {
+        final cmData = doc.data();
+        final cellId = cmData['cellId'] as String? ?? '';
+        if (cellId.isEmpty) continue;
+
+        final cellDoc = await _db.collection('cells').doc(cellId).get();
+        if (!cellDoc.exists) continue;
+        final cellData = cellDoc.data() as Map<String, dynamic>;
+
+        final membersSnap = await _db
+            .collection('cell_members')
+            .where('cellId', isEqualTo: cellId)
+            .get();
+        final allMembers = membersSnap.docs.map((d) => d.data()).toList();
+        final active = allMembers.where((m) => m['isActive'] != false).toList();
+        final visitors = active.where((m) => m['isVisitor'] == true).length;
+
+        final meetingsSnap = await _db
+            .collection('meetings')
+            .where('cellId', isEqualTo: cellId)
+            .get();
+
+        String lastMeeting = 'Nunca';
+        int lastMeetingDays = -1;
+        if (meetingsSnap.docs.isNotEmpty) {
+          DateTime latest = DateTime(2000);
+          for (final mDoc in meetingsSnap.docs) {
+            final date = (mDoc.data()['date'] as Timestamp).toDate();
+            if (date.isAfter(latest)) latest = date;
+          }
+          lastMeetingDays = DateTime.now().difference(latest).inDays;
+          lastMeeting = _formatDaysAgo(lastMeetingDays);
         }
-        final daysAgo = DateTime.now().difference(latest).inDays;
-        stats['cellLastMeeting'] = _formatDaysAgo(daysAgo);
-        stats['cellLastMeetingDays'] = daysAgo;
-      } else {
-        stats['cellLastMeeting'] = 'Nunca';
-        stats['cellLastMeetingDays'] = -1;
+
+        myCells.add({
+          'cellId': cellId,
+          'cellName': cellData['name'] ?? 'Célula',
+          'cellMeetingDay': cellData['meetingDay'],
+          'cellMeetingTime': cellData['meetingTime'],
+          'cellAddress': cellData['address'],
+          'cellMembers': active.length - visitors,
+          'cellVisitors': visitors,
+          'cellTotal': active.length,
+          'cellLastMeeting': lastMeeting,
+          'cellLastMeetingDays': lastMeetingDays,
+        });
       }
     }
+
+    // Fallback: se não achou por personId, busca cells onde leaderId == user.id
+    if (myCells.isEmpty) {
+      final leaderCellsSnap = await _db
+          .collection('cells')
+          .where('leaderId', isEqualTo: user.id)
+          .get();
+
+      for (final cellDoc in leaderCellsSnap.docs) {
+        final cellData = cellDoc.data();
+        final cellId = cellDoc.id;
+
+        final membersSnap = await _db
+            .collection('cell_members')
+            .where('cellId', isEqualTo: cellId)
+            .get();
+        final allMembers = membersSnap.docs.map((d) => d.data()).toList();
+        final active = allMembers.where((m) => m['isActive'] != false).toList();
+        final visitors = active.where((m) => m['isVisitor'] == true).length;
+
+        final meetingsSnap = await _db
+            .collection('meetings')
+            .where('cellId', isEqualTo: cellId)
+            .get();
+
+        String lastMeeting = 'Nunca';
+        int lastMeetingDays = -1;
+        if (meetingsSnap.docs.isNotEmpty) {
+          DateTime latest = DateTime(2000);
+          for (final mDoc in meetingsSnap.docs) {
+            final date = (mDoc.data()['date'] as Timestamp).toDate();
+            if (date.isAfter(latest)) latest = date;
+          }
+          lastMeetingDays = DateTime.now().difference(latest).inDays;
+          lastMeeting = _formatDaysAgo(lastMeetingDays);
+        }
+
+        myCells.add({
+          'cellId': cellId,
+          'cellName': cellData['name'] ?? 'Célula',
+          'cellMeetingDay': cellData['meetingDay'],
+          'cellMeetingTime': cellData['meetingTime'],
+          'cellAddress': cellData['address'],
+          'cellMembers': active.length - visitors,
+          'cellVisitors': visitors,
+          'cellTotal': active.length,
+          'cellLastMeeting': lastMeeting,
+          'cellLastMeetingDays': lastMeetingDays,
+        });
+      }
+    }
+
+    stats['myCells'] = myCells;
 
     // ── Minha Supervisão (supervisor ou pastor com supervisionId) ──
     if (user.supervisionId != null &&
@@ -109,16 +180,37 @@ class _HomeTabState extends State<HomeTab> {
           .collection('cell_members')
           .where('supervisionId', isEqualTo: user.supervisionId)
           .get();
-      final activeSupMembers = membersSnap.docs
+      final activeDocs = membersSnap.docs
           .where((d) => (d.data())['isActive'] != false)
+          .toList();
+      final supVisitors = activeDocs
+          .where((d) => (d.data())['isVisitor'] == true)
           .length;
-      stats['supMembers'] = activeSupMembers;
+      stats['supMembers'] = activeDocs.length - supVisitors;
+      stats['supVisitors'] = supVisitors;
+
+      // Semáforo: quantas células reuniram esta semana
+      final now = DateTime.now();
+      final weekStart = now.subtract(Duration(days: now.weekday - 1));
+      final weekCutoff = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
       final meetingsSnap = await _db
           .collection('meetings')
           .where('supervisionId', isEqualTo: user.supervisionId)
           .get();
       stats['supWeeklyMeetings'] = _countRecentMeetings(meetingsSnap.docs);
+
+      // Contar células distintas que reuniram esta semana
+      final cellsMetThisWeek = <String>{};
+      for (final mDoc in meetingsSnap.docs) {
+        final data = mDoc.data() as Map<String, dynamic>;
+        final date = (data['date'] as Timestamp).toDate();
+        if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
+          final cellId = data['cellId'] as String? ?? '';
+          if (cellId.isNotEmpty) cellsMetThisWeek.add(cellId);
+        }
+      }
+      stats['supCellsMet'] = cellsMetThisWeek.length;
     }
 
     // ── Congregação (pastor) ──
@@ -182,12 +274,13 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  Future<void> _navigateToCellHub() async {
+  Future<void> _navigateToCellHub([String? cellId]) async {
     final user = context.read<AuthProvider>().appUser;
     final cellProvider = context.read<CellProvider>();
-    if (user == null || user.cellId == null) return;
+    final targetCellId = cellId ?? user?.cellId;
+    if (user == null || targetCellId == null) return;
 
-    final cellDoc = await _db.collection('cells').doc(user.cellId).get();
+    final cellDoc = await _db.collection('cells').doc(targetCellId).get();
     if (!mounted || !cellDoc.exists) return;
     final cell = CellGroup.fromFirestore(cellDoc);
     cellProvider.selectCell(cell);
@@ -195,12 +288,13 @@ class _HomeTabState extends State<HomeTab> {
     if (mounted) _loadStats();
   }
 
-  Future<void> _navigateToCreateMeeting() async {
+  Future<void> _navigateToCreateMeeting([String? cellId]) async {
     final user = context.read<AuthProvider>().appUser;
     final cellProvider = context.read<CellProvider>();
-    if (user == null || user.cellId == null) return;
+    final targetCellId = cellId ?? user?.cellId;
+    if (user == null || targetCellId == null) return;
 
-    final cellDoc = await _db.collection('cells').doc(user.cellId).get();
+    final cellDoc = await _db.collection('cells').doc(targetCellId).get();
     if (!mounted || !cellDoc.exists) return;
     final cell = CellGroup.fromFirestore(cellDoc);
     cellProvider.selectCell(cell);
@@ -315,15 +409,31 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   List<Widget> _buildMinhaCelulaSection() {
+    final myCells = (_stats['myCells'] as List<Map<String, dynamic>>?) ?? [];
+    if (myCells.isEmpty) return [];
+
+    final widgets = <Widget>[];
+    widgets.add(_sectionTitle(myCells.length == 1 ? 'Sua célula' : 'Suas células'));
+
+    for (int i = 0; i < myCells.length; i++) {
+      if (i > 0) widgets.add(const SizedBox(height: 8));
+      widgets.addAll(_buildSingleCellCard(myCells[i]));
+    }
+
+    return widgets;
+  }
+
+  List<Widget> _buildSingleCellCard(Map<String, dynamic> cellStats) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final cellName = _stats['cellName'] ?? 'Célula';
-    final meetingDay = _stats['cellMeetingDay'] as String?;
-    final meetingTime = _stats['cellMeetingTime'] as String?;
-    final members = _stats['cellMembers'] ?? 0;
-    final visitors = _stats['cellVisitors'] ?? 0;
-    final lastMeeting = _stats['cellLastMeeting'] ?? 'Nunca';
-    final lastMeetingDays = _stats['cellLastMeetingDays'] ?? -1;
+    final cellId = cellStats['cellId'] as String;
+    final cellName = cellStats['cellName'] ?? 'Célula';
+    final meetingDay = cellStats['cellMeetingDay'] as String?;
+    final meetingTime = cellStats['cellMeetingTime'] as String?;
+    final members = cellStats['cellMembers'] ?? 0;
+    final visitors = cellStats['cellVisitors'] ?? 0;
+    final lastMeeting = cellStats['cellLastMeeting'] ?? 'Nunca';
+    final lastMeetingDays = cellStats['cellLastMeetingDays'] ?? -1;
 
     Color meetingIconColor;
     if (lastMeetingDays < 0) {
@@ -342,122 +452,120 @@ class _HomeTabState extends State<HomeTab> {
     ].join(' · ');
 
     return [
-      _sectionTitle('Sua célula'),
       Card(
         clipBehavior: Clip.antiAlias,
         color: primaryColor.withValues(alpha: 0.04),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _navigateToCellHub(),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        child: Column(
+          children: [
+            InkWell(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              onTap: () => _navigateToCellHub(cellId),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.groups_rounded,
-                          color: primaryColor, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cellName,
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          if (schedule.isNotEmpty)
-                            Text(
-                              schedule,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[500]),
-                            ),
-                        ],
+                          child: Icon(Icons.groups_rounded,
+                              color: primaryColor, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cellName,
+                                style: theme.textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              if (schedule.isNotEmpty)
+                                Text(
+                                  schedule,
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[500]),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey[400]),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _StatChip(
+                          icon: Icons.people_rounded,
+                          label: '$members membros',
+                          color: Colors.grey[600]!,
+                        ),
+                        _StatChip(
+                          icon: Icons.person_add_rounded,
+                          label: '$visitors visitantes',
+                          color: Colors.grey[600]!,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _StatChip(
+                          icon: Icons.schedule_rounded,
+                          label: 'Última reunião: $lastMeeting',
+                          color: meetingIconColor,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Divider
+            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+            // Registrar Reunião button inside card
+            Material(
+              color: primaryColor,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+              child: InkWell(
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                onTap: () => _navigateToCreateMeeting(cellId),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_note_rounded,
+                          color: Colors.white, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Registrar Reunião',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _StatChip(
-                      icon: Icons.people_rounded,
-                      label: '$members membros',
-                      color: Colors.grey[600]!,
-                    ),
-                    _StatChip(
-                      icon: Icons.person_add_rounded,
-                      label: '$visitors visitantes',
-                      color: Colors.grey[600]!,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _StatChip(
-                      icon: Icons.schedule_rounded,
-                      label: 'Última reunião: $lastMeeting',
-                      color: meetingIconColor,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(height: 8),
-      Card(
-        color: primaryColor,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _navigateToCreateMeeting(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.edit_note_rounded,
-                      color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Registrar Reunião',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                      const Spacer(),
+                      Icon(Icons.chevron_right, color: Colors.white70, size: 20),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                Icon(Icons.chevron_right, color: Colors.white70),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     ];
@@ -469,7 +577,23 @@ class _HomeTabState extends State<HomeTab> {
     final supName = _stats['supName'] ?? 'Supervisão';
     final supCells = _stats['supCells'] ?? 0;
     final supMembers = _stats['supMembers'] ?? 0;
-    final supMeetings = _stats['supWeeklyMeetings'] ?? 0;
+    final supVisitors = _stats['supVisitors'] ?? 0;
+    final supCellsMet = _stats['supCellsMet'] ?? 0;
+
+    // Semáforo: cor baseada em % de células que reuniram
+    Color semaphoreColor;
+    if (supCells == 0) {
+      semaphoreColor = Colors.grey;
+    } else {
+      final pct = supCellsMet / supCells;
+      if (pct >= 0.75) {
+        semaphoreColor = Colors.green;
+      } else if (pct >= 0.50) {
+        semaphoreColor = Colors.orange;
+      } else {
+        semaphoreColor = Colors.red;
+      }
+    }
 
     return [
       _sectionTitle('Sua supervisão'),
@@ -525,26 +649,21 @@ class _HomeTabState extends State<HomeTab> {
                   children: [
                     _StatChip(
                       icon: Icons.people_rounded,
-                      label: '$supMembers participantes',
-                      color: primaryColor,
+                      label: '$supMembers membros',
+                      color: Colors.grey[600]!,
+                    ),
+                    _StatChip(
+                      icon: Icons.person_add_rounded,
+                      label: '$supVisitors visitantes',
+                      color: Colors.grey[600]!,
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.event_note_rounded,
-                        size: 15, color: Colors.grey[500]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Este mês: $supMeetings reuniões',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
+                _StatChip(
+                  icon: Icons.groups_rounded,
+                  label: '$supCellsMet/$supCells células reuniram esta semana',
+                  color: semaphoreColor,
                 ),
               ],
             ),
@@ -652,8 +771,9 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildQuickStats(BuildContext context, AppUser user) {
     final sections = <Widget>[];
 
-    // Minha Célula (qualquer role com cellId)
-    if (user.cellId != null) {
+    // Minha(s) Célula(s)
+    final myCells = (_stats['myCells'] as List<Map<String, dynamic>>?) ?? [];
+    if (myCells.isNotEmpty) {
       sections.addAll(_buildMinhaCelulaSection());
     }
 
@@ -703,8 +823,8 @@ class _HomeTabState extends State<HomeTab> {
       ]);
     }
 
-    // Líder sem célula = título "Minha Célula" apenas
-    if (user.role == UserRole.leader && user.cellId == null) {
+    // Líder sem célula
+    if (user.role == UserRole.leader && myCells.isEmpty) {
       sections.addAll([
         _sectionTitle('Sua célula'),
         _StatTile(

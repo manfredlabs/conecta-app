@@ -1,11 +1,12 @@
 import '../models/user_model.dart';
 import '../models/cell_model.dart';
+import '../models/cell_member_model.dart';
 import '../models/supervision_model.dart';
 
 class Permissions {
   // ── Cell ──
 
-  static bool canEditCell(AppUser user, CellGroup cell) {
+  static bool canEditCell(AppUser user, CellGroup cell, {List<CellMember>? cellMembers}) {
     if (user.role == UserRole.admin) {
       return true;
     }
@@ -20,6 +21,12 @@ class Permissions {
     if (user.role == UserRole.leader && user.cellId == cell.id) {
       return true;
     }
+    // Check if user is leader of this cell via cell_members (multi-cell leaders)
+    if (user.personId != null && cellMembers != null) {
+      final isLeaderHere = cellMembers.any((m) =>
+          m.personId == user.personId && m.isLeader && m.isActive);
+      if (isLeaderHere) return true;
+    }
     return false;
   }
 
@@ -33,11 +40,6 @@ class Permissions {
         user.congregationId == congregationId) {
       return true;
     }
-    if (user.role == UserRole.supervisor &&
-        user.supervisionId != null &&
-        user.supervisionId == supervisionId) {
-      return true;
-    }
     return false;
   }
 
@@ -49,8 +51,8 @@ class Permissions {
 
   // ── Members ──
 
-  static bool canManageMembers(AppUser user, CellGroup cell) {
-    return canEditCell(user, cell);
+  static bool canManageMembers(AppUser user, CellGroup cell, {List<CellMember>? cellMembers}) {
+    return canEditCell(user, cell, cellMembers: cellMembers);
   }
 
   static bool canPromoteToLeader(AppUser user, CellGroup cell) {
@@ -70,12 +72,12 @@ class Permissions {
 
   // ── Meetings ──
 
-  static bool canCreateMeeting(AppUser user, CellGroup cell) {
-    return canEditCell(user, cell);
+  static bool canCreateMeeting(AppUser user, CellGroup cell, {List<CellMember>? cellMembers}) {
+    return canEditCell(user, cell, cellMembers: cellMembers);
   }
 
-  static bool canEditMeeting(AppUser user, CellGroup cell) {
-    return canEditCell(user, cell);
+  static bool canEditMeeting(AppUser user, CellGroup cell, {List<CellMember>? cellMembers}) {
+    return canEditCell(user, cell, cellMembers: cellMembers);
   }
 
   // ── Supervision ──

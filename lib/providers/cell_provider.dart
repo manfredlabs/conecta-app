@@ -164,6 +164,25 @@ class CellProvider extends ChangeNotifier {
   Future<void> updateCellMember(String id, Map<String, dynamic> data) async {
     await _firestoreService.updateCellMember(id, data);
 
+    // Optimistic local update
+    final idx = _cellMembers.indexWhere((m) => m.id == id);
+    if (idx >= 0) {
+      final old = _cellMembers[idx];
+      _cellMembers[idx] = CellMember(
+        id: old.id,
+        personId: old.personId,
+        personName: data['personName'] as String? ?? old.personName,
+        cellId: old.cellId,
+        supervisionId: old.supervisionId,
+        congregationId: old.congregationId,
+        isLeader: data['isLeader'] as bool? ?? old.isLeader,
+        isHelper: data['isHelper'] as bool? ?? old.isHelper,
+        isVisitor: data['isVisitor'] as bool? ?? old.isVisitor,
+        isActive: data['isActive'] as bool? ?? old.isActive,
+      )..person = old.person;
+      notifyListeners();
+    }
+
     if (data.containsKey('personName') || data.containsKey('isLeader')) {
       final member = _cellMembers.where((m) => m.id == id).firstOrNull;
       if (member != null && member.isLeader && _selectedCell != null) {

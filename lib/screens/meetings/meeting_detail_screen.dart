@@ -134,7 +134,7 @@ class MeetingDetailScreen extends StatelessWidget {
     final allMembers = cellProvider.cellMembers;
     final theme = Theme.of(context);
     final canEdit =
-        user != null && cell != null && Permissions.canEditMeeting(user, cell);
+        user != null && cell != null && Permissions.canEditMeeting(user, cell, cellMembers: allMembers);
 
     final meeting = cellProvider.meetings
             .where((m) => m.id == argMeeting.id)

@@ -91,20 +91,31 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         .toSet();
 
     setState(() {
-      _filteredMembers = _allMembers
+      final matched = _allMembers
           .where((m) =>
               m.name.toLowerCase().contains(q) &&
               m.personId.isNotEmpty &&
               !currentCellPersonIds.contains(m.personId))
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
-      // Deduplicate by personId (same person in multiple cells)
+          .toList();
+      // Sort by role priority (leader > helper > member) so dedup keeps highest
+      int rolePriority(CellMember m) {
+        if (m.isLeader) return 0;
+        if (m.isHelper) return 1;
+        return 2;
+      }
+      matched.sort((a, b) {
+        final rp = rolePriority(a).compareTo(rolePriority(b));
+        if (rp != 0) return rp;
+        return a.name.compareTo(b.name);
+      });
+      // Deduplicate by personId (keeps highest role)
       final seen = <String>{};
-      _filteredMembers = _filteredMembers.where((m) {
+      _filteredMembers = matched.where((m) {
         if (seen.contains(m.personId)) return false;
         seen.add(m.personId);
         return true;
-      }).toList();
+      }).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
     });
   }
 

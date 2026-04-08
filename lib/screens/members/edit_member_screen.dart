@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/approval_request_model.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/cell_model.dart';
@@ -1009,28 +1010,78 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   Future<void> _selectNewLeader({required bool inactivate}) async {
     final cell = context.read<CellProvider>().selectedCell;
     final user = context.read<AuthProvider>().appUser;
-    if (cell == null) return;
+    if (cell == null || user == null) return;
+
+    // Show loading modal immediately
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
 
     final service = FirestoreService();
     final allMembers = await service.getCellMembersByCongregation(cell.congregationId);
-    final allCells = await service.getCellListByCongregation(cell.congregationId);
 
-    final cellNameMap = {for (var c in allCells) c.id: c.name};
+    // Load supplementary data (cell names + user roles)
+    final cellIds = allMembers.map((m) => m.cellId).toSet();
+    final results = await Future.wait([
+      service.getCellNames(cellIds),
+      service.getUserRolesByName(),
+    ]);
+    final cellNameMap = results[0] as Map<String, String>;
+    final nameRoles = results[1] as Map<String, String>;
 
+    // Build personCells map (personId → list of cell names)
+    final personCells = <String, List<String>>{};
+    for (final m in allMembers) {
+      if (m.personId.isEmpty) continue;
+      final cellName = cellNameMap[m.cellId] ?? '';
+      personCells.putIfAbsent(m.personId, () => []);
+      if (cellName.isNotEmpty) personCells[m.personId]!.add(cellName);
+    }
+
+    // Filter: exclude the leader being demoted
     final candidates = allMembers
-        .where((m) => m.id != _member.id && !m.isVisitor && m.isActive)
-        .toList()
+        .where((m) => m.id != _member.id && m.personId != _member.personId)
+        .toList();
+
+    // Sort by role priority (leader > helper > member) then name
+    int rolePriority(CellMember m) {
+      if (m.isLeader) return 0;
+      if (m.isHelper) return 1;
+      return 2;
+    }
+    candidates.sort((a, b) {
+      final rp = rolePriority(a).compareTo(rolePriority(b));
+      if (rp != 0) return rp;
+      return a.name.compareTo(b.name);
+    });
+
+    // Dedup by personId (keeps highest role)
+    final seen = <String>{};
+    final deduped = candidates.where((m) {
+      if (m.personId.isEmpty) return true;
+      if (seen.contains(m.personId)) return false;
+      seen.add(m.personId);
+      return true;
+    }).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
 
-    final sameCellMembers = candidates.where((m) => m.cellId == cell.id).toList();
-    final otherCellMembers = candidates.where((m) => m.cellId != cell.id).toList();
+    final sameCellMembers = deduped.where((m) => m.cellId == cell.id).toList();
+    final otherCellMembers = deduped.where((m) => m.cellId != cell.id).toList();
 
-    // Check if logged-in user is already in the list
-    final userInList = user != null &&
-        candidates.any((m) =>
-            m.name.toLowerCase() == user.name.toLowerCase());
+    // Find user's cell_member record (if any) to reuse in demotion
+    final userCellMember = deduped.where((m) =>
+        m.name.toLowerCase() == user.name.toLowerCase()).firstOrNull;
+
+    // Remove user from regular lists (they'll appear as "Eu mesmo" instead)
+    if (userCellMember != null) {
+      sameCellMembers.removeWhere((m) => m.id == userCellMember.id);
+      otherCellMembers.removeWhere((m) => m.id == userCellMember.id);
+    }
 
     if (!mounted) return;
+    Navigator.pop(context); // dismiss loading spinner
 
     showModalBottomSheet(
       context: context,
@@ -1042,19 +1093,24 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         sameCellMembers: sameCellMembers,
         otherCellMembers: otherCellMembers,
         cellNameMap: cellNameMap,
+        nameRoles: nameRoles,
+        personCells: personCells,
         currentCell: cell,
-        showSelfOption: !userInList && user != null,
-        selfName: user?.name ?? '',
+        showSelfOption: true,
+        selfName: user.name,
+        selfRole: user.roleDisplayName,
         onSelected: (newLeader) {
           Navigator.pop(ctx);
           _executeDemotion(newLeader: newLeader, inactivate: inactivate);
         },
-        onSelfSelected: !userInList && user != null
-            ? () {
-                Navigator.pop(ctx);
-                _executeDemotionWithSelf(inactivate: inactivate);
-              }
-            : null,
+        onSelfSelected: () {
+          Navigator.pop(ctx);
+          if (userCellMember != null) {
+            _executeDemotion(newLeader: userCellMember, inactivate: inactivate);
+          } else {
+            _executeDemotionWithSelf(inactivate: inactivate);
+          }
+        },
       ),
     );
   }
@@ -1198,10 +1254,34 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         );
       }
 
-      // 2. Create cell_member doc for self as leader
+      // 2. Resolve personId (create person record if needed)
+      var personId = user.personId ?? '';
+      if (personId.isEmpty) {
+        final db = FirebaseFirestore.instance;
+        // Try to find existing person by userId
+        final existingPerson = await db
+            .collection('people')
+            .where('userId', isEqualTo: user.id)
+            .limit(1)
+            .get();
+        if (existingPerson.docs.isNotEmpty) {
+          personId = existingPerson.docs.first.id;
+        } else {
+          // Create a person record for this user
+          final newPersonRef = await db.collection('people').add({
+            'name': user.name,
+            'userId': user.id,
+            'congregationId': cell.congregationId,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          personId = newPersonRef.id;
+        }
+      }
+
+      // 3. Create cell_member doc for self as leader
       await cellProvider.addNewCellMember(CellMember(
         id: '',
-        personId: '',
+        personId: personId,
         personName: user.name,
         cellId: cell.id,
         supervisionId: cell.supervisionId,
@@ -1701,52 +1781,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ),
                   ],
 
-                  // ── Remover como Líder ──
-                  if (_member.isLeader && _canDemoteLeader) ...[
-                    const SizedBox(height: 16),
-                    Card(
-                      color: Colors.red.withValues(alpha: 0.05),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _confirmDemoteLeader,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.person_remove_rounded,
-                                  color: Colors.red[400],
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  'Remover como Líder',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.red[400],
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: Colors.red[400],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-
                   // ── Inativar/Reativar ──
                   if (!_member.isLeader && !_hasPendingRequest) ...[
                     const SizedBox(height: 12),
@@ -1902,21 +1936,27 @@ class _NewLeaderSelector extends StatefulWidget {
   final List<CellMember> sameCellMembers;
   final List<CellMember> otherCellMembers;
   final Map<String, String> cellNameMap;
+  final Map<String, String> nameRoles;
+  final Map<String, List<String>> personCells;
   final CellGroup currentCell;
   final bool showSelfOption;
   final String selfName;
+  final String selfRole;
   final void Function(CellMember) onSelected;
-  final VoidCallback? onSelfSelected;
+  final VoidCallback onSelfSelected;
 
   const _NewLeaderSelector({
     required this.sameCellMembers,
     required this.otherCellMembers,
     required this.cellNameMap,
+    required this.nameRoles,
+    required this.personCells,
     required this.currentCell,
     required this.showSelfOption,
     required this.selfName,
+    required this.selfRole,
     required this.onSelected,
-    this.onSelfSelected,
+    required this.onSelfSelected,
   });
 
   @override
@@ -1933,8 +1973,19 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
     super.dispose();
   }
 
+  String? _getRoleBadge(CellMember member) {
+    final role = widget.nameRoles[member.name.toLowerCase()];
+    if (role == 'pastor') return 'Pastor';
+    if (role == 'supervisor') return 'Supervisor';
+    if (member.isLeader) return 'Líder';
+    if (member.isHelper) return 'Auxiliar';
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     final sameFiltered = widget.sameCellMembers
         .where((m) => m.name.toLowerCase().contains(_searchQuery))
         .toList();
@@ -1966,27 +2017,29 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(Icons.star_rounded,
+                        color: primaryColor, size: 28),
+                  ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(Icons.star_rounded, color: Colors.amber[700], size: 24),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Selecionar novo líder',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Selecionar novo líder',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Quem será o novo líder desta célula?',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-                    ),
+                  Text(
+                    'Quem será o novo líder desta célula?',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 16),
                   // Search
@@ -2020,40 +2073,40 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                   // Self option
                   if (showSelf) ...[
                     _sectionHeader('Eu mesmo'),
-                    _memberTile(
+                    _candidateTile(
                       name: widget.selfName,
-                      subtitle: 'Você',
-                      icon: Icons.person_rounded,
-                      iconColor: Colors.blue,
-                      onTap: widget.onSelfSelected!,
+                      subtitle: '',
+                      roleBadge: widget.selfRole,
+                      primaryColor: primaryColor,
+                      onTap: widget.onSelfSelected,
                     ),
                   ],
                   // Same cell
                   if (sameFiltered.isNotEmpty) ...[
                     _sectionHeader('Membros desta célula'),
-                    ...sameFiltered.map((m) => _memberTile(
-                          name: m.name,
-                          subtitle: m.isHelper ? 'Auxiliar' : 'Membro',
-                          icon: m.isHelper
-                              ? Icons.volunteer_activism
-                              : Icons.person_outline,
-                          iconColor: m.isHelper
-                              ? RoleColors.helper
-                              : Theme.of(context).colorScheme.primary,
-                          onTap: () => widget.onSelected(m),
-                        )),
+                    ...sameFiltered.map((m) {
+                      final cells = widget.personCells[m.personId] ?? [];
+                      final subtitle = cells.join(' · ');
+                      return _candidateTile(
+                        name: m.name,
+                        subtitle: subtitle,
+                        roleBadge: _getRoleBadge(m),
+                        primaryColor: primaryColor,
+                        onTap: () => widget.onSelected(m),
+                      );
+                    }),
                   ],
                   // Other cells
                   if (otherFiltered.isNotEmpty) ...[
                     _sectionHeader('Outros membros'),
                     ...otherFiltered.map((m) {
-                      final cellName =
-                          widget.cellNameMap[m.cellId] ?? 'Célula desconhecida';
-                      return _memberTile(
+                      final cells = widget.personCells[m.personId] ?? [];
+                      final subtitle = cells.join(' · ');
+                      return _candidateTile(
                         name: m.name,
-                        subtitle: cellName,
-                        icon: Icons.person_outline,
-                        iconColor: Colors.grey[600]!,
+                        subtitle: subtitle,
+                        roleBadge: _getRoleBadge(m),
+                        primaryColor: primaryColor,
                         onTap: () => widget.onSelected(m),
                       );
                     }),
@@ -2102,36 +2155,81 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
     );
   }
 
-  Widget _memberTile({
+  Widget _candidateTile({
     required String name,
     required String subtitle,
-    required IconData icon,
-    required Color iconColor,
+    required String? roleBadge,
+    required Color primaryColor,
     required VoidCallback onTap,
   }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 2),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: iconColor.withValues(alpha: 0.1),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 14,
-          color: Colors.grey[400],
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  child: Text(
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty)
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (roleBadge != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      roleBadge,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );

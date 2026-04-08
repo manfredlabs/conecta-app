@@ -27,7 +27,30 @@ class AuthService {
   Future<AppUser?> getAppUser(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
-      return AppUser.fromFirestore(doc);
+      final appUser = AppUser.fromFirestore(doc);
+      // Resolve personId from people collection
+      if (appUser.personId == null) {
+        final personSnap = await _firestore
+            .collection('people')
+            .where('userId', isEqualTo: uid)
+            .limit(1)
+            .get();
+        if (personSnap.docs.isNotEmpty) {
+          return AppUser(
+            id: appUser.id,
+            name: appUser.name,
+            email: appUser.email,
+            role: appUser.role,
+            congregationId: appUser.congregationId,
+            supervisionId: appUser.supervisionId,
+            cellId: appUser.cellId,
+            personId: personSnap.docs.first.id,
+            gender: appUser.gender,
+            birthDate: appUser.birthDate,
+          );
+        }
+      }
+      return appUser;
     }
     return null;
   }

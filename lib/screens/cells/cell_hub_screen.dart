@@ -29,8 +29,7 @@ class CellHubScreen extends StatelessWidget {
         final memberCount = activeCount - visitorCount;
 
         final user = context.read<AuthProvider>().appUser;
-        final canEdit = user != null && Permissions.canEditCell(user, cell);
-        final isOwnCell = user?.id == cell.leaderId;
+        final canEdit = user != null && Permissions.canEditCell(user, cell, cellMembers: members);
 
         // Calcular dias desde última reunião
         int? lastMeetingDays;
@@ -101,7 +100,7 @@ class CellHubScreen extends StatelessWidget {
                                     label: scheduleText,
                                     color: primaryColor,
                                   ),
-                                if (cell.leaderName != null && !isOwnCell)
+                                if (cell.leaderName != null)
                                   _HeaderChip(
                                     icon: Icons.person_rounded,
                                     label: cell.leaderName!,
