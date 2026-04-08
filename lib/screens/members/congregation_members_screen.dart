@@ -236,9 +236,10 @@ class _CongregationMembersScreenState
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(20),
                           itemCount: _filteredMembers.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             final member = _filteredMembers[index];
                             final cellName =
@@ -311,7 +312,8 @@ class _MemberCard extends StatelessWidget {
     final color = _roleColor(theme);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

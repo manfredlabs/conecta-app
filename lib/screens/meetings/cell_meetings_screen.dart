@@ -58,7 +58,7 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
         }
 
         final user = context.read<AuthProvider>().appUser;
-        final canEdit = user != null && Permissions.canEditCell(user, cell);
+        final canEdit = user != null && Permissions.canEditCell(user, cell, cellMembers: cellProvider.cellMembers);
         final theme = Theme.of(context);
         final primaryColor = theme.colorScheme.primary;
 
@@ -124,15 +124,16 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
                           ],
                         ),
                       )
-                    : ListView.builder(
+                    : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                         itemCount: meetings.length + (canEdit ? 1 : 0),
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           // Registrar Reunião card at top
                           if (canEdit && index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Card(
+                            return Card(
+                                margin: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 color: primaryColor.withValues(alpha: 0.08),
                                 elevation: 0,
                                 child: InkWell(
@@ -175,7 +176,6 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
                                     ),
                                   ),
                                 ),
-                              ),
                             );
                           }
 
@@ -239,7 +239,8 @@ class _MeetingCard extends StatelessWidget {
     }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.pushNamed(

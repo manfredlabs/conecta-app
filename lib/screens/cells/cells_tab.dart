@@ -104,9 +104,10 @@ class _CellsTabState extends State<CellsTab> {
         if (congregations.isEmpty) {
           return _emptyState(Icons.account_balance_outlined, 'Nenhuma congregação encontrada');
         }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
           itemCount: congregations.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final c = congregations[index];
             return _HierarchyCard(
@@ -141,9 +142,10 @@ class _CellsTabState extends State<CellsTab> {
             return a.name.compareTo(b.name);
           });
         }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        return ListView.separated(
+          padding: const EdgeInsets.all(20),
           itemCount: cells.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final cell = cells[index];
             final isMyCell = user?.cellId != null && cell.id == user!.cellId;
@@ -205,13 +207,13 @@ class _HierarchyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
       shape: highlighted
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(color: iconColor.withValues(alpha: 0.4), width: 1.5),
             )
-          : null,
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: highlighted ? iconColor.withValues(alpha: 0.03) : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),

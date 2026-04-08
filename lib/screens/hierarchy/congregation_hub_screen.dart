@@ -67,7 +67,8 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
             // Card Editar Congregação
             if (canEdit)
             Card(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () =>
@@ -119,9 +120,12 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
               ),
             ),
 
+            if (canEdit) const SizedBox(height: 8),
+
             // Card Supervisões
             Card(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () =>
@@ -178,9 +182,12 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
               ),
             ),
 
+            const SizedBox(height: 8),
+
             // Card Células
             Card(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () =>
@@ -235,8 +242,12 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
               ),
             ),
 
+            const SizedBox(height: 8),
+
             // Card Reuniões
             Card(
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () =>

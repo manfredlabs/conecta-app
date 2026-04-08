@@ -95,8 +95,9 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
       ..sort((a, b) =>
           (_supervisionNames[a] ?? '').compareTo(_supervisionNames[b] ?? ''));
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemCount: sortedSupIds.length,
       itemBuilder: (context, index) {
         final supId = sortedSupIds[index];
@@ -106,7 +107,6 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (index > 0) const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.only(bottom: 8, left: 4),
               child: Text(
@@ -117,13 +117,16 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
                     ),
               ),
             ),
-            ...cells.map((cell) => _CellCard(
-                  cell: cell,
-                  onTap: () {
-                    context.read<CellProvider>().selectCell(cell);
-                    Navigator.pushNamed(context, '/cell-hub');
-                  },
-                )),
+            ...cells.asMap().entries.expand((entry) => [
+              if (entry.key > 0) const SizedBox(height: 8),
+              _CellCard(
+                cell: entry.value,
+                onTap: () {
+                  context.read<CellProvider>().selectCell(entry.value);
+                  Navigator.pushNamed(context, '/cell-hub');
+                },
+              ),
+            ]),
           ],
         );
       },
@@ -140,7 +143,8 @@ class _CellCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

@@ -153,6 +153,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                   children: [
                     // ── Data da Reunião ──
                     Card(
+                      margin: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -208,6 +210,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     AnimatedCrossFade(
                       firstChild: const SizedBox.shrink(),
                       secondChild: Card(
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: CalendarDatePicker(
                           initialDate: _selectedDate,
                           firstDate: DateTime(2020),
@@ -270,6 +274,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
                     if (members.isEmpty)
                       Card(
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Column(
@@ -289,9 +295,12 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     else ...[
                       // Select all
                       _buildSelectAllRow(members),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       // Member list
-                      ...members.map((m) => _buildMemberTile(m)),
+                      ...members.asMap().entries.expand((entry) => [
+                        if (entry.key > 0) const SizedBox(height: 8),
+                        _buildMemberTile(entry.value),
+                      ]),
                     ],
 
                     const SizedBox(height: 20),
@@ -306,6 +315,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     ),
                     const SizedBox(height: 8),
                     Card(
+                      margin: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: TextFormField(
@@ -447,7 +458,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                 : 'Membro';
 
     return Card(
-      margin: const EdgeInsets.only(top: 6),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -469,7 +481,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                 decoration: BoxDecoration(
                   color: (isPresent ? roleColor : Colors.grey)
                       .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(

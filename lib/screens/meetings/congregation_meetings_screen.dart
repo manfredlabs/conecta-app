@@ -207,9 +207,10 @@ class _CongregationMeetingsScreenState
                           ],
                         ),
                       )
-                    : ListView.builder(
+                    : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                         itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final meeting = filtered[index];
                           final cellName =
@@ -267,7 +268,8 @@ class _MeetingCard extends StatelessWidget {
     final weekday = weekdays[meeting.date.weekday - 1];
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

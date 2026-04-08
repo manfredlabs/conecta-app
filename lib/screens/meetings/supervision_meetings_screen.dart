@@ -29,6 +29,7 @@ class SupervisionMeetingsScreen extends StatefulWidget {
 class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
   static _MeetingFilter _savedFilter = _MeetingFilter.threeMonths;
   _MeetingFilter _filter = _savedFilter;
+  String _cellFilter = 'Todas';
 
   List<Meeting> _meetings = [];
   StreamSubscription? _meetingsSub;
@@ -106,16 +107,30 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
     final cellMap = {for (final c in cells) c.id: c};
 
     final cutoff = _filterDate();
-    final filtered = _meetings
+    var filtered = _meetings
         .where(
             (m) => m.date.isAfter(cutoff) || m.date.isAtSameMomentAs(cutoff))
         .toList();
+
+    // Apply cell filter
+    if (_cellFilter != 'Todas') {
+      final cellId = cellMap.entries
+          .where((e) => e.value.name == _cellFilter)
+          .map((e) => e.key)
+          .firstOrNull;
+      if (cellId != null) {
+        filtered = filtered.where((m) => m.cellId == cellId).toList();
+      }
+    }
+
+    // Build sorted cell names for filter
+    final cellNames = cells.map((c) => c.name).toList()..sort();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reuniões')),
       body: Column(
         children: [
-          // Filter chips
+          // Period filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
@@ -158,6 +173,49 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
             ),
           ),
 
+          // Cell filter chips
+          if (cellNames.length > 1)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: Row(
+                children: ['Todas', ...cellNames].map((name) {
+                  final selected = name == _cellFilter;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(name),
+                      selected: selected,
+                      onSelected: (_) => setState(() {
+                        _cellFilter = name;
+                      }),
+                      selectedColor: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withValues(alpha: 0.1),
+                      checkmarkColor: Theme.of(context).colorScheme.tertiary,
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w400,
+                        color: selected
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Colors.grey[600],
+                      ),
+                      side: BorderSide(
+                        color: selected
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Colors.grey[300]!,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
           // List
           Expanded(
             child: _loading
@@ -178,9 +236,10 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
                           ],
                         ),
                       )
-                    : ListView.builder(
+                    : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                         itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final meeting = filtered[index];
                           final cell = cellMap[meeting.cellId];
@@ -230,7 +289,8 @@ class _MeetingCard extends StatelessWidget {
     final weekday = weekdays[meeting.date.weekday - 1];
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,

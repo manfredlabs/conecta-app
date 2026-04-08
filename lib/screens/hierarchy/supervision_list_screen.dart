@@ -38,13 +38,15 @@ class SupervisionListScreen extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
       itemCount: supervisions.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final supervision = supervisions[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
