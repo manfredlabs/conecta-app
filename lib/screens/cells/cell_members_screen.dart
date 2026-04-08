@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/permissions.dart';
+import '../../utils/role_colors.dart';
 import '../../models/cell_member_model.dart';
 
 class CellMembersScreen extends StatelessWidget {
@@ -175,10 +176,12 @@ class _MemberCard extends StatelessWidget {
   }
 
   Color _roleColor(ThemeData theme) {
-    if (member.isLeader) return theme.colorScheme.primary;
-    if (member.isHelper) return Colors.teal;
-    if (member.isVisitor) return Colors.orange;
-    return Colors.blue;
+    return RoleColors.forMember(
+      theme: theme,
+      isLeader: member.isLeader,
+      isHelper: member.isHelper,
+      isVisitor: member.isVisitor,
+    );
   }
 
   @override

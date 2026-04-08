@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/cell_member_model.dart';
@@ -26,6 +27,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   List<CellMember> _allMembers = [];
   Map<String, String> _cellNames = {};
   Map<String, String> _nameRoles = {};
+  Map<String, List<String>> _personCells = {}; // personId → cell names
   List<CellMember> _filteredMembers = [];
   CellMember? _selectedMember;
   bool _loadingMembers = false;
@@ -40,7 +42,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   Future<void> _loadAllMembers() async {
     setState(() => _loadingMembers = true);
     final firestoreService = FirestoreService();
-    final members = await firestoreService.searchAllActiveCellMembers();
+    final members = await firestoreService.searchAllNonVisitorCellMembers();
     final cellIds = members.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
@@ -48,10 +50,21 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     ]);
 
     if (mounted) {
+      // Build personId → list of cell names map
+      final personCells = <String, List<String>>{};
+      for (final m in members) {
+        if (m.personId.isEmpty) continue;
+        final cellName = (results[0] as Map<String, String>)[m.cellId] ?? '';
+        final label = m.isActive ? cellName : '$cellName (Inativo)';
+        personCells.putIfAbsent(m.personId, () => []);
+        if (label.isNotEmpty) personCells[m.personId]!.add(label);
+      }
+
       setState(() {
         _allMembers = members;
         _cellNames = results[0];
         _nameRoles = results[1];
+        _personCells = personCells;
         _loadingMembers = false;
       });
       // Re-filter with current search text
@@ -69,19 +82,27 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final q = query.trim().toLowerCase();
     final cell = context.read<CellProvider>().selectedCell!;
 
+    // Collect personIds already in the current cell
+    final currentCellPersonIds = context
+        .read<CellProvider>()
+        .cellMembers
+        .map((m) => m.personId)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
     setState(() {
       _filteredMembers = _allMembers
           .where((m) =>
               m.name.toLowerCase().contains(q) &&
-              m.cellId != cell.id)
+              m.personId.isNotEmpty &&
+              !currentCellPersonIds.contains(m.personId))
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
-      // Deduplicate by name (same person in multiple cells)
+      // Deduplicate by personId (same person in multiple cells)
       final seen = <String>{};
       _filteredMembers = _filteredMembers.where((m) {
-        final key = m.name.toLowerCase();
-        if (seen.contains(key)) return false;
-        seen.add(key);
+        if (seen.contains(m.personId)) return false;
+        seen.add(m.personId);
         return true;
       }).toList();
     });
@@ -135,6 +156,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
     final cellProvider = context.read<CellProvider>();
     final cell = cellProvider.selectedCell!;
+    final userId = context.read<AuthProvider>().appUser?.id ?? '';
 
     if (_isVisitor) {
       final person = Person(
@@ -151,10 +173,26 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
         isVisitor: true,
+        changedBy: userId,
       );
     } else {
-      // Add existing person to this cell
+      // Add existing person to this cell — check for duplicates first
       final src = _selectedMember!;
+      final currentCellPersonIds = cellProvider.cellMembers
+          .map((m) => m.personId)
+          .where((id) => id.isNotEmpty)
+          .toSet();
+      if (currentCellPersonIds.contains(src.personId)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Esse membro já está nesta célula.'),
+            ),
+          );
+          setState(() => _saving = false);
+        }
+        return;
+      }
       final firestoreService = FirestoreService();
       await firestoreService.addPersonToCell(
         personId: src.personId,
@@ -162,6 +200,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
+        changedBy: userId,
       );
     }
 
@@ -470,9 +509,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      _cellNames[_selectedMember!.cellId] !=
-                                              null
-                                          ? '${_cellNames[_selectedMember!.cellId]}'
+                                      (_personCells[_selectedMember!.personId] ?? []).isNotEmpty
+                                          ? (_personCells[_selectedMember!.personId]!).join(' · ')
                                           : 'Sem célula',
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
@@ -599,8 +637,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       ] else ...[
                         const SizedBox(height: 12),
                         ..._filteredMembers.take(20).map((member) {
-                          final cellName =
-                              _cellNames[member.cellId] ?? '';
+                          final cells = _personCells[member.personId] ?? [];
+                          final subtitle = cells.join(' · ');
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Card(
@@ -641,9 +679,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                                 fontSize: 14,
                                               ),
                                             ),
-                                            if (cellName.isNotEmpty)
+                                            if (subtitle.isNotEmpty)
                                               Text(
-                                                cellName,
+                                                subtitle,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.grey[500],

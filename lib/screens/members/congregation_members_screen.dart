@@ -5,6 +5,7 @@ import '../../providers/hierarchy_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/cell_model.dart';
+import '../../utils/role_colors.dart';
 
 class CongregationMembersScreen extends StatefulWidget {
   const CongregationMembersScreen({super.key});
@@ -296,10 +297,12 @@ class _MemberCard extends StatelessWidget {
   }
 
   Color _roleColor(ThemeData theme) {
-    if (member.isLeader) return theme.colorScheme.primary;
-    if (member.isHelper) return Colors.teal;
-    if (member.isVisitor) return Colors.orange;
-    return Colors.blue;
+    return RoleColors.forMember(
+      theme: theme,
+      isLeader: member.isLeader,
+      isHelper: member.isHelper,
+      isVisitor: member.isVisitor,
+    );
   }
 
   @override

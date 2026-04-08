@@ -258,10 +258,9 @@ class FirestoreService {
     return snap.docs.map((d) => CellMember.fromFirestore(d)).toList();
   }
 
-  Future<List<CellMember>> searchAllActiveCellMembers() async {
+  Future<List<CellMember>> searchAllNonVisitorCellMembers() async {
     final snap = await _db
         .collection('cell_members')
-        .where('isActive', isEqualTo: true)
         .where('isVisitor', isEqualTo: false)
         .get();
     return snap.docs.map((d) => CellMember.fromFirestore(d)).toList();
@@ -279,6 +278,30 @@ class FirestoreService {
     return _db.collection('cell_members').doc(id).delete();
   }
 
+  // ─── Member History ───
+
+  Future<void> addMemberHistory({
+    required String cellMemberId,
+    required String action,
+    String? from,
+    String? to,
+    required String changedBy,
+    String cellId = '',
+  }) {
+    return _db
+        .collection('cell_members')
+        .doc(cellMemberId)
+        .collection('history')
+        .add({
+      'action': action,
+      if (from != null) 'from': from,
+      if (to != null) 'to': to,
+      'changedBy': changedBy,
+      if (cellId.isNotEmpty) 'cellId': cellId,
+      'date': FieldValue.serverTimestamp(),
+    });
+  }
+
   /// Add a person + cell_member in one operation (for new visitors/members)
   Future<String> addPersonAndCellMember({
     required Person person,
@@ -288,6 +311,7 @@ class FirestoreService {
     bool isVisitor = false,
     bool isLeader = false,
     bool isHelper = false,
+    String changedBy = '',
   }) async {
     final personRef = await addPerson(person);
     final cellMember = CellMember(
@@ -302,6 +326,14 @@ class FirestoreService {
       isHelper: isHelper,
     );
     final cmRef = await addCellMember(cellMember);
+    if (changedBy.isNotEmpty) {
+      await addMemberHistory(
+        cellMemberId: cmRef.id,
+        action: 'joined',
+        changedBy: changedBy,
+        cellId: cellId,
+      );
+    }
     return cmRef.id;
   }
 
@@ -313,6 +345,7 @@ class FirestoreService {
     required String supervisionId,
     required String congregationId,
     bool isVisitor = false,
+    String changedBy = '',
   }) async {
     final cellMember = CellMember(
       id: '',
@@ -324,6 +357,14 @@ class FirestoreService {
       isVisitor: isVisitor,
     );
     final ref = await addCellMember(cellMember);
+    if (changedBy.isNotEmpty) {
+      await addMemberHistory(
+        cellMemberId: ref.id,
+        action: 'joined',
+        changedBy: changedBy,
+        cellId: cellId,
+      );
+    }
     return ref.id;
   }
 
@@ -486,7 +527,7 @@ class FirestoreService {
     await _db.collection('approval_requests').add(request.toMap());
   }
 
-  Future<void> approveRequest(String requestId) async {
+  Future<void> approveRequest(String requestId, {required String changedBy}) async {
     final doc = await _db.collection('approval_requests').doc(requestId).get();
     if (!doc.exists) return;
 
@@ -508,27 +549,67 @@ class FirestoreService {
       'status': 'approved',
       'resolvedAt': FieldValue.serverTimestamp(),
     });
+
+    // Track history
+    await addMemberHistory(
+      cellMemberId: request.cellMemberId,
+      action: 'approval_approved',
+      changedBy: changedBy,
+      cellId: request.cellId,
+    );
+    await addMemberHistory(
+      cellMemberId: request.cellMemberId,
+      action: 'role_change',
+      from: 'visitor',
+      to: 'member',
+      changedBy: changedBy,
+      cellId: request.cellId,
+    );
   }
 
-  Future<void> rejectRequest(String requestId) async {
+  Future<void> rejectRequest(String requestId, {required String changedBy}) async {
+    final doc = await _db.collection('approval_requests').doc(requestId).get();
+    if (!doc.exists) return;
+
+    final request = ApprovalRequest.fromFirestore(doc);
+
     await _db.collection('approval_requests').doc(requestId).update({
       'status': 'rejected',
       'resolvedAt': FieldValue.serverTimestamp(),
     });
+
+    await addMemberHistory(
+      cellMemberId: request.cellMemberId,
+      action: 'approval_rejected',
+      changedBy: changedBy,
+      cellId: request.cellId,
+    );
   }
 
   /// Cancel all pending requests for a cell member (e.g. when inactivated/deleted)
-  Future<void> cancelPendingRequests(String cellMemberId) async {
+  Future<void> cancelPendingRequests(String cellMemberId, {String changedBy = ''}) async {
     final snap = await _db
         .collection('approval_requests')
         .where('cellMemberId', isEqualTo: cellMemberId)
         .where('status', isEqualTo: 'pending')
         .get();
+    String cellId = '';
     for (final doc in snap.docs) {
       await doc.reference.update({
         'status': 'cancelled',
         'resolvedAt': FieldValue.serverTimestamp(),
       });
+      if (cellId.isEmpty) {
+        cellId = (doc.data()['cellId'] as String?) ?? '';
+      }
+    }
+    if (snap.docs.isNotEmpty && changedBy.isNotEmpty) {
+      await addMemberHistory(
+        cellMemberId: cellMemberId,
+        action: 'approval_cancelled',
+        changedBy: changedBy,
+        cellId: cellId,
+      );
     }
   }
 }

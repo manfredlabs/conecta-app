@@ -108,10 +108,20 @@ class MeetingDetailScreen extends StatelessWidget {
     return 'Membro';
   }
 
+  String _snapshotRoleLabel(String role) {
+    switch (role) {
+      case 'leader':
+        return 'Líder';
+      case 'helper':
+        return 'Auxiliar';
+      case 'visitor':
+        return 'Visitante';
+      default:
+        return 'Membro';
+    }
+  }
+
   Color _roleColor(CellMember m, ThemeData theme) {
-    if (m.isLeader) return theme.colorScheme.primary;
-    if (m.isHelper) return Colors.teal;
-    if (m.isVisitor) return Colors.orange;
     return Colors.grey[600]!;
   }
 
@@ -123,7 +133,6 @@ class MeetingDetailScreen extends StatelessWidget {
     final cell = cellProvider.selectedCell;
     final allMembers = cellProvider.cellMembers;
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
     final canEdit =
         user != null && cell != null && Permissions.canEditMeeting(user, cell);
 
@@ -147,122 +156,86 @@ class MeetingDetailScreen extends StatelessWidget {
 
     final activeMembers = allMembers.where((m) => m.isActive).toList();
     int sortByRole(CellMember a, CellMember b) {
-      int priority(CellMember m) =>
+      int priority(String role) {
+        switch (role) {
+          case 'leader': return 0;
+          case 'helper': return 1;
+          case 'visitor': return 3;
+          default: return 2;
+        }
+      }
+      int currentPriority(CellMember m) =>
           m.isLeader ? 0 : m.isHelper ? 1 : m.isVisitor ? 3 : 2;
-      final p = priority(a).compareTo(priority(b));
+
+      final pa = meeting.memberRoles.containsKey(a.id)
+          ? priority(meeting.memberRoles[a.id]!)
+          : currentPriority(a);
+      final pb = meeting.memberRoles.containsKey(b.id)
+          ? priority(meeting.memberRoles[b.id]!)
+          : currentPriority(b);
+      final p = pa.compareTo(pb);
       if (p != 0) return p;
       return a.name.compareTo(b.name);
     }
 
-    final presentMembers = activeMembers
+    final presentMembers = allMembers
         .where((m) => meeting.presentMemberIds.contains(m.id))
         .toList()
       ..sort(sortByRole);
-    final absentMembers = activeMembers
-        .where(
-            (m) => !meeting.presentMemberIds.contains(m.id) && !m.isVisitor)
-        .toList()
-      ..sort(sortByRole);
-    final totalActive =
-        activeMembers.where((m) => !m.isVisitor).length;
-    final percentage = totalActive > 0
-        ? ((presentMembers.where((m) => !m.isVisitor).length / totalActive) *
-                100)
-            .round()
-        : 0;
+
+    // Absent = non-visitor members from snapshot who weren't present
+    final List<CellMember> absentMembers;
+    if (meeting.memberRoles.isNotEmpty) {
+      final nonVisitorIds = meeting.memberRoles.entries
+          .where((e) => e.value != 'visitor')
+          .map((e) => e.key)
+          .toSet();
+      absentMembers = allMembers
+          .where((m) =>
+              nonVisitorIds.contains(m.id) &&
+              !meeting.presentMemberIds.contains(m.id))
+          .toList()
+        ..sort(sortByRole);
+    } else {
+      absentMembers = activeMembers
+          .where(
+              (m) => !meeting.presentMemberIds.contains(m.id) && !m.isVisitor)
+          .toList()
+        ..sort(sortByRole);
+    }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes da Reunião')),
+      appBar: AppBar(title: Text('$weekday, $dateStr')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ── Header card ──
-          Card(
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(Icons.groups_outlined,
-                        color: primaryColor, size: 28),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    weekday,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    dateStr,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Stats row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatItem(
-                          icon: Icons.check_circle_rounded,
-                          iconColor: Colors.green[600]!,
-                          value: '${presentMembers.length}',
-                          label: 'Presentes',
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.grey[200],
-                      ),
-                      Expanded(
-                        child: _StatItem(
-                          icon: Icons.cancel_rounded,
-                          iconColor: Colors.red[400]!,
-                          value: '${absentMembers.length}',
-                          label: 'Ausentes',
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.grey[200],
-                      ),
-                      Expanded(
-                        child: _StatItem(
-                          icon: Icons.pie_chart_rounded,
-                          iconColor: primaryColor,
-                          value: '$percentage%',
-                          label: 'Frequência',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          // Summary badges
+          Row(
+            children: [
+              _Badge(
+                  label: '${presentMembers.length} presentes',
+                  color: Colors.green[600]!),
+              const SizedBox(width: 8),
+              _Badge(
+                  label: '${absentMembers.length} ausentes',
+                  color: Colors.red[400]!),
+            ],
           ),
 
           const SizedBox(height: 20),
 
           // ── Presentes ──
           if (presentMembers.isNotEmpty) ...[
-            _SectionHeader(
-              title: 'Presentes',
-              count: presentMembers.length,
-              countColor: Colors.green[600]!,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Presentes',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
             Card(
               margin: EdgeInsets.zero,
               child: Column(
@@ -270,7 +243,9 @@ class MeetingDetailScreen extends StatelessWidget {
                   for (int i = 0; i < presentMembers.length; i++) ...[
                     _MemberRow(
                       name: presentMembers[i].name,
-                      role: _roleLabel(presentMembers[i]),
+                      role: meeting.memberRoles.containsKey(presentMembers[i].id)
+                          ? _snapshotRoleLabel(meeting.memberRoles[presentMembers[i].id]!)
+                          : _roleLabel(presentMembers[i]),
                       roleColor: _roleColor(presentMembers[i], theme),
                       isPresent: true,
                     ),
@@ -290,12 +265,16 @@ class MeetingDetailScreen extends StatelessWidget {
 
           // ── Ausentes ──
           if (absentMembers.isNotEmpty) ...[
-            _SectionHeader(
-              title: 'Ausentes',
-              count: absentMembers.length,
-              countColor: Colors.red[400]!,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Ausentes',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
             Card(
               margin: EdgeInsets.zero,
               child: Column(
@@ -303,7 +282,9 @@ class MeetingDetailScreen extends StatelessWidget {
                   for (int i = 0; i < absentMembers.length; i++) ...[
                     _MemberRow(
                       name: absentMembers[i].name,
-                      role: _roleLabel(absentMembers[i]),
+                      role: meeting.memberRoles.containsKey(absentMembers[i].id)
+                          ? _snapshotRoleLabel(meeting.memberRoles[absentMembers[i].id]!)
+                          : _roleLabel(absentMembers[i]),
                       roleColor: _roleColor(absentMembers[i], theme),
                       isPresent: false,
                     ),
@@ -322,46 +303,37 @@ class MeetingDetailScreen extends StatelessWidget {
           if (meeting.observations != null &&
               meeting.observations!.isNotEmpty) ...[
             const SizedBox(height: 20),
-            _SectionHeader(
-              icon: Icons.notes_rounded,
-              iconColor: Colors.grey[600]!,
-              title: 'Observações',
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Observações',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
             Card(
               margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.format_quote_rounded,
-                        size: 20, color: Colors.grey[300]),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        meeting.observations!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  meeting.observations!,
+                  style: theme.textTheme.bodyMedium,
                 ),
               ),
             ),
           ],
 
+          const SizedBox(height: 24),
+
           // ── Ações ──
-          if (canEdit) ...[
-            const SizedBox(height: 24),
+          if (canEdit)
             Row(
               children: [
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.only(right: 4),
-                    color: primaryColor.withValues(alpha: 0.06),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () => Navigator.pushNamed(
@@ -370,18 +342,18 @@ class MeetingDetailScreen extends StatelessWidget {
                         arguments: meeting,
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.edit_outlined,
-                                size: 18, color: primaryColor),
-                            const SizedBox(width: 8),
+                                size: 18, color: Colors.grey[600]),
+                            const SizedBox(width: 6),
                             Text(
                               'Editar',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: primaryColor,
+                                color: Colors.grey[600],
                               ),
                             ),
                           ],
@@ -393,18 +365,17 @@ class MeetingDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.only(left: 4),
-                    color: Colors.red.withValues(alpha: 0.06),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () => _confirmDelete(context, meeting),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.delete_outline_rounded,
                                 size: 18, color: Colors.red[400]),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 6),
                             Text(
                               'Excluir',
                               style: TextStyle(
@@ -420,104 +391,36 @@ class MeetingDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String value;
+class _Badge extends StatelessWidget {
   final String label;
+  final Color color;
 
-  const _StatItem({
-    required this.icon,
-    required this.iconColor,
-    required this.value,
-    required this.label,
-  });
+  const _Badge({required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 20, color: iconColor),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[500],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final IconData? icon;
-  final Color? iconColor;
-  final Color? countColor;
-  final String title;
-  final int? count;
-
-  const _SectionHeader({
-    this.icon,
-    this.iconColor,
-    this.countColor,
-    required this.title,
-    this.count,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final badgeColor = countColor ?? iconColor ?? Colors.grey[600]!;
-    return Row(
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: 18, color: iconColor),
-          const SizedBox(width: 8),
-        ],
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-        ),
-        if (count != null) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: badgeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: badgeColor,
-              ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -562,34 +465,27 @@ class _MemberRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: isPresent ? null : Colors.grey[400],
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    role,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isPresent ? roleColor : Colors.grey[400],
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              name,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: isPresent ? null : Colors.grey[400],
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              role,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isPresent ? roleColor : Colors.grey[400],
+              ),
             ),
           ),
         ],

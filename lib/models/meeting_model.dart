@@ -46,6 +46,7 @@ class Meeting {
   final String congregationId;
   final DateTime date;
   final List<String> presentMemberIds;
+  final Map<String, String> memberRoles;
   final List<Visitor> visitors;
   final String? observations;
   final String createdBy;
@@ -57,6 +58,7 @@ class Meeting {
     required this.congregationId,
     required this.date,
     required this.presentMemberIds,
+    this.memberRoles = const {},
     this.visitors = const [],
     this.observations,
     required this.createdBy,
@@ -71,6 +73,7 @@ class Meeting {
       congregationId: data['congregationId'] ?? '',
       date: (data['date'] as Timestamp).toDate(),
       presentMemberIds: List<String>.from(data['presentMemberIds'] ?? []),
+      memberRoles: Map<String, String>.from(data['memberRoles'] ?? {}),
       visitors: (data['visitors'] as List<dynamic>?)
               ?.map((v) => Visitor.fromMap(v as Map<String, dynamic>))
               .toList() ??
@@ -87,6 +90,7 @@ class Meeting {
       'congregationId': congregationId,
       'date': Timestamp.fromDate(date),
       'presentMemberIds': presentMemberIds,
+      'memberRoles': memberRoles,
       'visitors': visitors.map((v) => v.toMap()).toList(),
       'observations': observations,
       'createdBy': createdBy,

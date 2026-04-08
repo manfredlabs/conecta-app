@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/permissions.dart';
+import '../../utils/role_colors.dart';
 
 class EditMemberScreen extends StatefulWidget {
   const EditMemberScreen({super.key});
@@ -113,11 +114,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
 
   void _confirmPromoteToMember() async {
     final firstName = _nameController.text.trim().split(' ').first;
-    final primaryColor = Theme.of(context).colorScheme.primary;
 
     // Admin promotes directly
     if (_isAdmin) {
-      _showPromoteModal(firstName, primaryColor);
+      _showPromoteModal(firstName);
       return;
     }
 
@@ -135,10 +135,11 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     }
 
     if (!mounted) return;
-    _showRequestApprovalModal(firstName, primaryColor);
+    _showRequestApprovalModal(firstName);
   }
 
-  void _showPromoteModal(String firstName, Color primaryColor) {
+  void _showPromoteModal(String firstName) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -209,9 +210,18 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
                       await cellProvider.updateCellMember(_member.id, {
                         'isVisitor': false,
                       });
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'role_change',
+                        from: 'visitor',
+                        to: 'member',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
                       if (_member.personId.isNotEmpty) {
                         await cellProvider.updatePersonAndSync(
                             _member.personId, {'baptized': true});
@@ -226,6 +236,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       }
                     },
                     style: FilledButton.styleFrom(
+                      backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -243,7 +254,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     );
   }
 
-  void _showRequestApprovalModal(String firstName, Color primaryColor) {
+  void _showRequestApprovalModal(String firstName) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -267,13 +279,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 Icons.send_rounded,
                 size: 28,
-                color: Colors.orange[700],
+                color: primaryColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -332,6 +344,12 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       );
 
                       await FirestoreService().createApprovalRequest(request);
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'approval_created',
+                        changedBy: user.id,
+                        cellId: _member.cellId,
+                      );
 
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -344,7 +362,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange[700],
+                      backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -365,9 +383,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   void _confirmToggleActive() {
     final isActive = _member.isActive;
     final firstName = _nameController.text.trim().split(' ').first;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final message = isActive
-        ? 'Tem certeza que deseja tornar $firstName inativo(a)?'
-        : 'Tem certeza que deseja reativar $firstName?';
+        ? 'Tornar $firstName inativo(a)?'
+        : 'Reativar $firstName?';
 
     showModalBottomSheet(
       context: context,
@@ -392,14 +411,14 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: (isActive ? Colors.red : Colors.green)
+                color: (isActive ? RoleColors.inactive : Colors.green)
                     .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 isActive ? Icons.person_off_outlined : Icons.person_add_alt_1,
                 size: 28,
-                color: isActive ? Colors.red[400] : Colors.green[600],
+                color: isActive ? RoleColors.inactive : Colors.green[600],
               ),
             ),
             const SizedBox(height: 16),
@@ -442,13 +461,38 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
                       // Cancel pending approval requests when inactivating a visitor
                       if (isActive && _member.isVisitor) {
-                        await FirestoreService().cancelPendingRequests(_member.id);
+                        await FirestoreService().cancelPendingRequests(_member.id, changedBy: userId);
                       }
-                      await cellProvider.updateCellMember(_member.id, {
+                      final updates = <String, dynamic>{
                         'isActive': !isActive,
-                      });
+                      };
+                      // Remove helper role on inactivation
+                      if (isActive && _member.isHelper) {
+                        updates['isHelper'] = false;
+                      }
+                      await cellProvider.updateCellMember(_member.id, updates);
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'status_change',
+                        from: isActive ? 'active' : 'inactive',
+                        to: isActive ? 'inactive' : 'active',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
+                      // Track helper demotion if inactivating a helper
+                      if (isActive && _member.isHelper) {
+                        await FirestoreService().addMemberHistory(
+                          cellMemberId: _member.id,
+                          action: 'role_change',
+                          from: 'helper',
+                          to: 'member',
+                          changedBy: userId,
+                          cellId: _member.cellId,
+                        );
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -462,7 +506,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor:
-                          isActive ? Colors.red[400] : Colors.green[600],
+                          isActive ? RoleColors.inactive : Colors.green[600],
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -501,13 +545,28 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
-            Icon(Icons.delete_outline, size: 40, color: Colors.red[700]),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.delete_outline,
+                size: 28,
+                color: Colors.red[700],
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
-              'Tem certeza que deseja excluir $firstName permanentemente?',
+              'Excluir $firstName permanentemente?',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -522,6 +581,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -532,14 +593,21 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
                       // Cancel pending approval requests when deleting a visitor
                       if (_member.isVisitor) {
-                        await FirestoreService().cancelPendingRequests(_member.id);
+                        await FirestoreService().cancelPendingRequests(_member.id, changedBy: userId);
                       }
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'removed',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
                       await cellProvider.deleteCellMember(_member.id);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -550,7 +618,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         Navigator.pop(context);
                       }
                     },
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       backgroundColor: Colors.red[700],
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -572,6 +640,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   void _confirmToggleHelper() {
     final firstName = _nameController.text.trim().split(' ').first;
     final willBeHelper = !_member.isHelper;
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final message = willBeHelper
         ? 'Tornar $firstName auxiliar da célula?'
         : 'Remover $firstName como auxiliar?';
@@ -599,14 +668,14 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: (willBeHelper ? Colors.teal : Colors.grey)
+                color: primaryColor
                     .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 willBeHelper ? Icons.volunteer_activism : Icons.person_rounded,
                 size: 28,
-                color: willBeHelper ? Colors.teal : Colors.grey[400],
+                color: primaryColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -649,9 +718,18 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
                       await cellProvider.updateCellMember(_member.id, {
                         'isHelper': willBeHelper,
                       });
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'role_change',
+                        from: willBeHelper ? 'member' : 'helper',
+                        to: willBeHelper ? 'helper' : 'member',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
                       if (willBeHelper && _member.personId.isNotEmpty) {
                         await cellProvider.updatePersonAndSync(
                             _member.personId, {'baptized': true});
@@ -669,7 +747,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor:
-                          willBeHelper ? Colors.teal : Colors.grey[600],
+                          primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -701,6 +779,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     }
 
     final firstName = _nameController.text.trim().split(' ').first;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     showModalBottomSheet(
       context: context,
@@ -720,17 +799,28 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
-            Icon(
-              Icons.star_rounded,
-              size: 40,
-              color: Theme.of(context).colorScheme.primary,
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.star_rounded,
+                size: 28,
+                color: primaryColor,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'Promover $firstName a líder?',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -745,6 +835,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -755,14 +847,24 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: FilledButton(
                     onPressed: () async {
                       Navigator.pop(ctx);
                       final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
+                      final fromRole = _member.isHelper ? 'helper' : 'member';
                       await cellProvider.updateCellMember(_member.id, {
                         'isLeader': true,
                         'isHelper': false,
                       });
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'role_change',
+                        from: fromRole,
+                        to: 'leader',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
                       if (_member.personId.isNotEmpty) {
                         await cellProvider.updatePersonAndSync(
                             _member.personId, {'baptized': true});
@@ -776,7 +878,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         Navigator.pop(context);
                       }
                     },
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -815,70 +917,84 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
-            Icon(
-              Icons.person_remove_rounded,
-              size: 40,
-              color: Colors.orange[700],
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.person_remove_rounded,
+                size: 28,
+                color: Colors.red[400],
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'Remover $firstName como líder?',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Primeiro, escolha o que fazer com $firstName.\nDepois, selecione o novo líder.',
+              'Escolha o que fazer com $firstName.\nDepois, selecione o novo líder.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _selectNewLeader(inactivate: false);
-                },
-                icon: const Icon(Icons.arrow_downward_rounded),
-                label: const Text('Rebaixar a Membro'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _selectNewLeader(inactivate: false);
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Rebaixar'),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _selectNewLeader(inactivate: true);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.red[400],
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Inativar'),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _selectNewLeader(inactivate: true);
-                },
-                icon: const Icon(Icons.person_off_outlined),
-                label: const Text('Inativar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[50],
-                  foregroundColor: Colors.red[700],
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
+              child: OutlinedButton(
                 onPressed: () => Navigator.pop(ctx),
-                style: TextButton.styleFrom(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                  side: BorderSide(color: Colors.grey[300]!),
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('Cancelar'),
               ),
@@ -954,20 +1070,48 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     setState(() => _saving = true);
 
     try {
+      final userId = context.read<AuthProvider>().appUser?.id ?? '';
       // 1. Demote current leader
       await cellProvider.updateCellMember(_member.id, {
         'isLeader': false,
         if (inactivate) 'isActive': false,
       });
+      await FirestoreService().addMemberHistory(
+        cellMemberId: _member.id,
+        action: 'role_change',
+        from: 'leader',
+        to: 'member',
+        changedBy: userId,
+        cellId: _member.cellId,
+      );
+      if (inactivate) {
+        await FirestoreService().addMemberHistory(
+          cellMemberId: _member.id,
+          action: 'status_change',
+          from: 'active',
+          to: 'inactive',
+          changedBy: userId,
+          cellId: _member.cellId,
+        );
+      }
 
       // 2. Promote new leader
       if (newLeader.cellId == cell.id) {
+        final fromRole = newLeader.isHelper ? 'helper' : 'member';
         await cellProvider.updateCellMember(newLeader.id, {
           'isLeader': true,
           'isHelper': false,
         });
+        await FirestoreService().addMemberHistory(
+          cellMemberId: newLeader.id,
+          action: 'role_change',
+          from: fromRole,
+          to: 'leader',
+          changedBy: userId,
+          cellId: cell.id,
+        );
       } else {
-        await cellProvider.addNewCellMember(CellMember(
+        final newCmId = await cellProvider.addNewCellMember(CellMember(
           id: '',
           personId: newLeader.personId,
           personName: newLeader.name,
@@ -976,6 +1120,22 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
           congregationId: cell.congregationId,
           isLeader: true,
         ));
+        if (newCmId != null) {
+          await FirestoreService().addMemberHistory(
+            cellMemberId: newCmId,
+            action: 'joined',
+            changedBy: userId,
+            cellId: cell.id,
+          );
+          await FirestoreService().addMemberHistory(
+            cellMemberId: newCmId,
+            action: 'role_change',
+            from: 'member',
+            to: 'leader',
+            changedBy: userId,
+            cellId: cell.id,
+          );
+        }
       }
 
       // 3. Update cell doc
@@ -1019,6 +1179,24 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         'isLeader': false,
         if (inactivate) 'isActive': false,
       });
+      await FirestoreService().addMemberHistory(
+        cellMemberId: _member.id,
+        action: 'role_change',
+        from: 'leader',
+        to: 'member',
+        changedBy: user.id,
+        cellId: _member.cellId,
+      );
+      if (inactivate) {
+        await FirestoreService().addMemberHistory(
+          cellMemberId: _member.id,
+          action: 'status_change',
+          from: 'active',
+          to: 'inactive',
+          changedBy: user.id,
+          cellId: _member.cellId,
+        );
+      }
 
       // 2. Create cell_member doc for self as leader
       await cellProvider.addNewCellMember(CellMember(
@@ -1316,11 +1494,22 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   ),
 
                   // ── Promover visitante a membro ──
-                  if (_member.isVisitor && _pendingCheckDone) ...[
+                  if (_member.isVisitor) ...[
                     const SizedBox(height: 20),
-                    if (_hasPendingRequest && !_isAdmin) ...[
+                    if (!_pendingCheckDone) ...[
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ] else if (_hasPendingRequest && !_isAdmin) ...[
                       Card(
-                        color: Colors.orange.withValues(alpha: 0.08),
+                        color: primaryColor.withValues(alpha: 0.08),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Row(
@@ -1329,12 +1518,12 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.1),
+                                  color: primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   Icons.hourglass_top_rounded,
-                                  color: Colors.orange[700],
+                                  color: primaryColor,
                                   size: 22,
                                 ),
                               ),
@@ -1347,7 +1536,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                       'Aguardando Aprovação',
                                       style: theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.orange[700],
+                                        color: primaryColor,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -1417,9 +1606,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       _member.isActive) ...[
                     const SizedBox(height: 16),
                     Card(
-                      color: _member.isHelper
-                          ? null
-                          : Colors.teal.withValues(alpha: 0.08),
+                      color: primaryColor.withValues(alpha: 0.08),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: _confirmToggleHelper,
@@ -1431,19 +1618,14 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: (_member.isHelper
-                                          ? Colors.grey
-                                          : Colors.teal)
-                                      .withValues(alpha: 0.1),
+                                  color: primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   _member.isHelper
                                       ? Icons.person_rounded
                                       : Icons.volunteer_activism,
-                                  color: _member.isHelper
-                                      ? Colors.grey[600]
-                                      : Colors.teal,
+                                  color: primaryColor,
                                   size: 22,
                                 ),
                               ),
@@ -1455,17 +1637,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                       : 'Tornar Auxiliar',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: _member.isHelper
-                                        ? Colors.grey[700]
-                                        : Colors.teal,
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                color: _member.isHelper
-                                    ? Colors.grey[400]
-                                    : Colors.teal,
+                                color: primaryColor,
                               ),
                             ],
                           ),
@@ -1481,7 +1659,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       _canPromoteToLeader) ...[
                     const SizedBox(height: 8),
                     Card(
-                      color: Colors.amber[50],
+                      color: primaryColor.withValues(alpha: 0.04),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: _confirmPromoteToLeader,
@@ -1493,12 +1671,12 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.1),
+                                  color: primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   Icons.star_rounded,
-                                  color: Colors.amber[800],
+                                  color: primaryColor,
                                   size: 22,
                                 ),
                               ),
@@ -1508,13 +1686,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   'Promover a Líder',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.amber[800],
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                color: Colors.amber[800],
+                                color: primaryColor,
                               ),
                             ],
                           ),
@@ -1527,7 +1705,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   if (_member.isLeader && _canDemoteLeader) ...[
                     const SizedBox(height: 16),
                     Card(
-                      color: Colors.orange[50],
+                      color: Colors.red.withValues(alpha: 0.05),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: _confirmDemoteLeader,
@@ -1539,12 +1717,12 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.1),
+                                  color: Colors.red.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   Icons.person_remove_rounded,
-                                  color: Colors.orange[800],
+                                  color: Colors.red[400],
                                   size: 22,
                                 ),
                               ),
@@ -1554,13 +1732,13 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   'Remover como Líder',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.orange[800],
+                                    color: Colors.red[400],
                                   ),
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                color: Colors.orange[800],
+                                color: Colors.red[400],
                               ),
                             ],
                           ),
@@ -1589,7 +1767,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         ),
                         style: TextButton.styleFrom(
                           foregroundColor: _member.isActive
-                              ? Colors.red[400]
+                              ? RoleColors.inactive
                               : Colors.green[600],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1860,7 +2038,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                               ? Icons.volunteer_activism
                               : Icons.person_outline,
                           iconColor: m.isHelper
-                              ? Colors.teal
+                              ? RoleColors.helper
                               : Theme.of(context).colorScheme.primary,
                           onTap: () => widget.onSelected(m),
                         )),

@@ -136,14 +136,10 @@ class CellHubScreen extends StatelessWidget {
               // ── Card Reuniões ──
               _HubTile(
                 icon: Icons.event_note_rounded,
-                iconColor: theme.colorScheme.tertiary,
-                iconBgColor:
-                    theme.colorScheme.tertiary.withValues(alpha: 0.1),
+                iconColor: primaryColor,
+                iconBgColor: primaryColor.withValues(alpha: 0.1),
                 title: 'Reuniões',
                 subtitle: _buildMeetingSubtitle(meetings.length, lastMeetingDays),
-                trailing: lastMeetingDays != null
-                    ? _LastMeetingBadge(days: lastMeetingDays)
-                    : null,
                 onTap: () => Navigator.pushNamed(context, '/cell-meetings'),
               ),
 
@@ -203,39 +199,7 @@ class CellHubScreen extends StatelessWidget {
         : '';
     return lastText;
   }
-}
 
-class _LastMeetingBadge extends StatelessWidget {
-  final int days;
-  const _LastMeetingBadge({required this.days});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color color;
-    if (days <= 7) {
-      color = Colors.green;
-    } else if (days <= 14) {
-      color = Colors.orange;
-    } else {
-      color = Colors.red;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '${days}d',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
-  }
 }
 
 class _HubTile extends StatelessWidget {

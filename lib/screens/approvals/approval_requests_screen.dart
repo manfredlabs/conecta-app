@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/approval_request_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../utils/role_colors.dart';
 
 class ApprovalRequestsScreen extends StatelessWidget {
   const ApprovalRequestsScreen({super.key});
@@ -87,7 +90,8 @@ class _RequestCardState extends State<_RequestCard> {
     if (confirmed != true) return;
 
     setState(() => _loading = true);
-    await FirestoreService().approveRequest(widget.request.id);
+    final userId = context.read<AuthProvider>().appUser?.id ?? '';
+    await FirestoreService().approveRequest(widget.request.id, changedBy: userId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,7 +114,8 @@ class _RequestCardState extends State<_RequestCard> {
     if (confirmed != true) return;
 
     setState(() => _loading = true);
-    await FirestoreService().rejectRequest(widget.request.id);
+    final userId = context.read<AuthProvider>().appUser?.id ?? '';
+    await FirestoreService().rejectRequest(widget.request.id, changedBy: userId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Solicitação rejeitada')),
@@ -232,12 +237,12 @@ class _RequestCardState extends State<_RequestCard> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: RoleColors.visitor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.arrow_upward_rounded,
-                    color: Colors.orange[700],
+                    color: RoleColors.visitor,
                     size: 22,
                   ),
                 ),
@@ -256,7 +261,7 @@ class _RequestCardState extends State<_RequestCard> {
                       Text(
                         'Visitante → Membro',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.orange[700],
+                          color: RoleColors.visitor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

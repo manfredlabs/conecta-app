@@ -139,6 +139,7 @@ class CellProvider extends ChangeNotifier {
     bool isVisitor = false,
     bool isLeader = false,
     bool isHelper = false,
+    String changedBy = '',
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -151,6 +152,7 @@ class CellProvider extends ChangeNotifier {
         isVisitor: isVisitor,
         isLeader: isLeader,
         isHelper: isHelper,
+        changedBy: changedBy,
       );
       return cmId;
     } finally {

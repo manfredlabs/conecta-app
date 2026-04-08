@@ -5,6 +5,7 @@ import '../../providers/cell_provider.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/person_model.dart';
 import '../../models/meeting_model.dart';
+import '../../utils/role_colors.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
   const CreateMeetingScreen({super.key});
@@ -41,12 +42,14 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
         birthDate: visitor.birthDate,
       );
 
+      final userId = context.read<AuthProvider>().appUser?.id ?? '';
       final cmId = await cellProvider.addPersonAndCellMember(
         person: person,
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
         isVisitor: true,
+        changedBy: userId,
       );
       if (cmId != null && mounted) {
         setState(() {
@@ -87,6 +90,17 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       return;
     }
 
+    final memberRoles = {
+      for (final m in cellProvider.cellMembers.where((m) => m.isActive))
+        m.id: m.isLeader
+            ? 'leader'
+            : m.isHelper
+                ? 'helper'
+                : m.isVisitor
+                    ? 'visitor'
+                    : 'member',
+    };
+
     final meeting = Meeting(
       id: '',
       cellId: cell.id,
@@ -94,6 +108,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       congregationId: cell.congregationId,
       date: _selectedDate,
       presentMemberIds: _presentMemberIds.toList(),
+      memberRoles: memberRoles,
       visitors: const [],
       observations: _observationsController.text.trim().isEmpty
           ? null
@@ -417,13 +432,12 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
 
   Widget _buildMemberTile(CellMember member) {
     final isPresent = _presentMemberIds.contains(member.id);
-    final roleColor = member.isLeader
-        ? Theme.of(context).colorScheme.primary
-        : member.isHelper
-            ? Colors.teal
-            : member.isVisitor
-                ? Colors.orange
-                : Colors.blue;
+    final roleColor = RoleColors.forMember(
+      theme: Theme.of(context),
+      isLeader: member.isLeader,
+      isHelper: member.isHelper,
+      isVisitor: member.isVisitor,
+    );
     final roleLabel = member.isLeader
         ? 'Líder'
         : member.isHelper

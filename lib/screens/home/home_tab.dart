@@ -8,6 +8,7 @@ import '../../models/user_model.dart';
 import '../../models/cell_model.dart';
 import '../../models/supervision_model.dart';
 import '../../models/congregation_model.dart';
+import '../../utils/role_colors.dart';
 
 class HomeTab extends StatefulWidget {
   final void Function(int)? onSwitchTab;
@@ -398,12 +399,12 @@ class _HomeTabState extends State<HomeTab> {
                     _StatChip(
                       icon: Icons.people_rounded,
                       label: '$members membros',
-                      color: primaryColor,
+                      color: Colors.grey[600]!,
                     ),
                     _StatChip(
                       icon: Icons.person_add_rounded,
                       label: '$visitors visitantes',
-                      color: primaryColor.withValues(alpha: 0.6),
+                      color: Colors.grey[600]!,
                     ),
                   ],
                 ),

@@ -182,16 +182,10 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
                           final meetingIndex =
                               canEdit ? index - 1 : index;
                           final meeting = meetings[meetingIndex];
-                          final activeIds = cellProvider.cellMembers
-                              .where((m) => m.isActive)
-                              .map((m) => m.id)
-                              .toSet();
-                          final presentCount = meeting.presentMemberIds
-                              .where((id) => activeIds.contains(id))
-                              .length;
                           return _MeetingCard(
                             meeting: meeting,
-                            presentCount: presentCount,
+                            presentCount: meeting.presentMemberIds.length,
+                            isFirst: meetingIndex == 0,
                           );
                         },
                       ),
@@ -208,7 +202,8 @@ class _CellMeetingsScreenState extends State<CellMeetingsScreen> {
 class _MeetingCard extends StatelessWidget {
   final Meeting meeting;
   final int presentCount;
-  const _MeetingCard({required this.meeting, required this.presentCount});
+  final bool isFirst;
+  const _MeetingCard({required this.meeting, required this.presentCount, this.isFirst = false});
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +221,22 @@ class _MeetingCard extends StatelessWidget {
       'Domingo',
     ];
     final weekday = weekdays[meeting.date.weekday - 1];
+
+    // First card: show relative date if ≤14 days ago
+    String title = '$weekday, $dateStr';
+    if (isFirst) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final meetingDay = DateTime(meeting.date.year, meeting.date.month, meeting.date.day);
+      final days = today.difference(meetingDay).inDays;
+      if (days == 0) {
+        title = 'Hoje';
+      } else if (days == 1) {
+        title = 'Ontem';
+      } else if (days <= 14) {
+        title = 'Há $days dias';
+      }
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -259,7 +270,7 @@ class _MeetingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$weekday, $dateStr',
+                      title,
                       style: theme.textTheme.titleSmall
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
