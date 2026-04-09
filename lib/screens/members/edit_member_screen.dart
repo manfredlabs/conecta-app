@@ -53,9 +53,14 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     if (!_member.isLeader) return false;
     final cell = context.read<CellProvider>().selectedCell;
     if (cell == null || cell.leaderId == null) return false;
+    // If member has a userId, check if it differs from cell's main leader
     final memberUserId = _member.person?.userId;
-    if (memberUserId == null || memberUserId.isEmpty) return false;
-    return memberUserId != cell.leaderId;
+    if (memberUserId != null && memberUserId.isNotEmpty) {
+      return memberUserId != cell.leaderId;
+    }
+    // Member has no userId (no login) — they're a co-leader if isLeader is true
+    // since they can't be the main leader (main leader always has userId == cell.leaderId)
+    return true;
   }
 
   @override
