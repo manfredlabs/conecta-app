@@ -48,23 +48,50 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
       firestoreService.getUserRolesByName(churchId: churchId),
+      firestoreService.searchAllPeople(churchId: churchId),
     ]);
+
+    final cellNames = results[0] as Map<String, String>;
+    final nameRoles = results[1] as Map<String, String>;
+    final allPeople = results[2] as List<Person>;
 
     if (mounted) {
       // Build personId → list of cell names map
       final personCells = <String, List<String>>{};
+      final personIdsWithCm = <String>{};
       for (final m in members) {
         if (m.personId.isEmpty) continue;
-        final cellName = (results[0] as Map<String, String>)[m.cellId] ?? '';
+        personIdsWithCm.add(m.personId);
+        final cellName = cellNames[m.cellId] ?? '';
         final label = m.isActive ? cellName : '$cellName (Inativo)';
         personCells.putIfAbsent(m.personId, () => []);
         if (label.isNotEmpty) personCells[m.personId]!.add(label);
       }
 
+      // Find orphan people (have no cell_member at all) and create virtual CellMember entries
+      final orphanMembers = <CellMember>[];
+      for (final person in allPeople) {
+        if (person.id.isEmpty || personIdsWithCm.contains(person.id)) continue;
+        orphanMembers.add(CellMember(
+          id: '',
+          personId: person.id,
+          personName: person.name,
+          cellId: '',
+          supervisionId: '',
+          congregationId: person.congregationId ?? '',
+          churchId: person.churchId,
+          isLeader: false,
+          isHelper: false,
+          isVisitor: false,
+          isActive: false,
+        ));
+        personCells[person.id] = ['Sem célula'];
+      }
+
       setState(() {
-        _allMembers = members;
-        _cellNames = results[0];
-        _nameRoles = results[1];
+        _allMembers = [...members, ...orphanMembers];
+        _cellNames = cellNames;
+        _nameRoles = nameRoles;
         _personCells = personCells;
         _loadingMembers = false;
       });
