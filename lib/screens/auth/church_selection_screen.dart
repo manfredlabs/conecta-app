@@ -41,8 +41,10 @@ class _ChurchSelectionScreenState extends State<ChurchSelectionScreen> {
       }
 
       if (mounted) {
-        context.read<AuthProvider>().setChurchId(church.id);
-        Navigator.pushReplacementNamed(context, '/login');
+        await context.read<AuthProvider>().setChurchId(church.id);
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       }
     } catch (e) {
       setState(() => _error = 'Erro ao buscar igreja. Tente novamente.');

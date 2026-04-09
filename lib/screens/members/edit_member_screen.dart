@@ -1002,18 +1002,25 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                       if (_member.person?.userId != null && _member.person!.userId!.isNotEmpty) {
                         final memberUid = _member.person!.userId!;
                         final db = FirebaseFirestore.instance;
+                        final churchId = context.read<AuthProvider>().churchId;
                         // Check if this person is a supervisor
-                        final supSnap = await db
+                        Query<Map<String, dynamic>> supQuery = db
                             .collection('supervisions')
                             .where('supervisorId', isEqualTo: memberUid)
-                            .limit(1)
-                            .get();
+                            .limit(1);
+                        if (churchId != null) {
+                          supQuery = supQuery.where('churchId', isEqualTo: churchId);
+                        }
+                        final supSnap = await supQuery.get();
                         // Check if leader of other cells
-                        final otherCellsSnap = await db
+                        Query<Map<String, dynamic>> otherCellsQuery = db
                             .collection('cells')
                             .where('leaderId', isEqualTo: memberUid)
-                            .limit(1)
-                            .get();
+                            .limit(1);
+                        if (churchId != null) {
+                          otherCellsQuery = otherCellsQuery.where('churchId', isEqualTo: churchId);
+                        }
+                        final otherCellsSnap = await otherCellsQuery.get();
                         if (supSnap.docs.isNotEmpty) {
                           // Keep as supervisor
                         } else if (otherCellsSnap.docs.isNotEmpty) {

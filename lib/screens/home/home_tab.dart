@@ -47,20 +47,25 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _loadStats() async {
-    final user = context.read<AuthProvider>().appUser;
+    final auth = context.read<AuthProvider>();
+    final user = auth.appUser;
     if (user == null) return;
+    final churchId = auth.churchId;
 
     final stats = <String, dynamic>{};
 
     // ── Minhas Células (busca por personId onde é líder) ──
     final myCells = <Map<String, dynamic>>[];
     if (user.personId != null) {
-      final leaderSnap = await _db
+      Query<Map<String, dynamic>> leaderQuery = _db
           .collection('cell_members')
           .where('personId', isEqualTo: user.personId)
           .where('isLeader', isEqualTo: true)
-          .where('isActive', isEqualTo: true)
-          .get();
+          .where('isActive', isEqualTo: true);
+      if (churchId != null) {
+        leaderQuery = leaderQuery.where('churchId', isEqualTo: churchId);
+      }
+      final leaderSnap = await leaderQuery.get();
 
       for (final doc in leaderSnap.docs) {
         final cmData = doc.data();
@@ -115,10 +120,13 @@ class _HomeTabState extends State<HomeTab> {
 
     // Fallback: se não achou por personId, busca cells onde leaderId == user.id
     if (myCells.isEmpty) {
-      final leaderCellsSnap = await _db
+      Query<Map<String, dynamic>> leaderCellsQuery = _db
           .collection('cells')
-          .where('leaderId', isEqualTo: user.id)
-          .get();
+          .where('leaderId', isEqualTo: user.id);
+      if (churchId != null) {
+        leaderCellsQuery = leaderCellsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final leaderCellsSnap = await leaderCellsQuery.get();
 
       for (final cellDoc in leaderCellsSnap.docs) {
         final cellData = cellDoc.data();
@@ -176,16 +184,22 @@ class _HomeTabState extends State<HomeTab> {
         stats['supName'] = (supDoc.data() as Map<String, dynamic>)['name'] ?? 'Supervisão';
       }
 
-      final cellsSnap = await _db
+      Query<Map<String, dynamic>> supCellsQuery = _db
           .collection('cells')
-          .where('supervisionId', isEqualTo: user.supervisionId)
-          .get();
+          .where('supervisionId', isEqualTo: user.supervisionId);
+      if (churchId != null) {
+        supCellsQuery = supCellsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final cellsSnap = await supCellsQuery.get();
       stats['supCells'] = cellsSnap.size;
 
-      final membersSnap = await _db
+      Query<Map<String, dynamic>> supMembersQuery = _db
           .collection('cell_members')
-          .where('supervisionId', isEqualTo: user.supervisionId)
-          .get();
+          .where('supervisionId', isEqualTo: user.supervisionId);
+      if (churchId != null) {
+        supMembersQuery = supMembersQuery.where('churchId', isEqualTo: churchId);
+      }
+      final membersSnap = await supMembersQuery.get();
       final activeDocs = membersSnap.docs
           .where((d) => (d.data())['isActive'] != false)
           .toList();
@@ -200,10 +214,13 @@ class _HomeTabState extends State<HomeTab> {
       final weekStart = now.subtract(Duration(days: now.weekday - 1));
       final weekCutoff = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
-      final meetingsSnap = await _db
+      Query<Map<String, dynamic>> supMeetingsQuery = _db
           .collection('meetings')
-          .where('supervisionId', isEqualTo: user.supervisionId)
-          .get();
+          .where('supervisionId', isEqualTo: user.supervisionId);
+      if (churchId != null) {
+        supMeetingsQuery = supMeetingsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final meetingsSnap = await supMeetingsQuery.get();
       stats['supWeeklyMeetings'] = _countRecentMeetings(meetingsSnap.docs);
 
       // Contar células distintas que reuniram esta semana
@@ -228,38 +245,48 @@ class _HomeTabState extends State<HomeTab> {
         stats['congName'] = (congDoc.data() as Map<String, dynamic>)['name'] ?? 'Congregação';
       }
 
-      final supervisionsSnap = await _db
+      Query<Map<String, dynamic>> congSupsQuery = _db
           .collection('supervisions')
-          .where('congregationId', isEqualTo: user.congregationId)
-          .get();
+          .where('congregationId', isEqualTo: user.congregationId);
+      if (churchId != null) {
+        congSupsQuery = congSupsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final supervisionsSnap = await congSupsQuery.get();
       stats['congSupervisions'] = supervisionsSnap.size;
 
-      final cellsSnap = await _db
+      Query<Map<String, dynamic>> congCellsQuery = _db
           .collection('cells')
-          .where('congregationId', isEqualTo: user.congregationId)
-          .get();
+          .where('congregationId', isEqualTo: user.congregationId);
+      if (churchId != null) {
+        congCellsQuery = congCellsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final cellsSnap = await congCellsQuery.get();
       stats['congCells'] = cellsSnap.size;
 
-      final membersSnap = await _db
+      Query<Map<String, dynamic>> congMembersQuery = _db
           .collection('cell_members')
-          .where('congregationId', isEqualTo: user.congregationId)
-          .get();
+          .where('congregationId', isEqualTo: user.congregationId);
+      if (churchId != null) {
+        congMembersQuery = congMembersQuery.where('churchId', isEqualTo: churchId);
+      }
+      final membersSnap = await congMembersQuery.get();
       final activeCongMembers = membersSnap.docs
           .where((d) => (d.data())['isActive'] != false)
           .length;
       stats['congMembers'] = activeCongMembers;
 
-      final meetingsSnap = await _db
+      Query<Map<String, dynamic>> congMeetingsQuery = _db
           .collection('meetings')
-          .where('congregationId', isEqualTo: user.congregationId)
-          .get();
+          .where('congregationId', isEqualTo: user.congregationId);
+      if (churchId != null) {
+        congMeetingsQuery = congMeetingsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final meetingsSnap = await congMeetingsQuery.get();
       stats['congWeeklyMeetings'] = _countRecentMeetings(meetingsSnap.docs);
     }
 
     // ── Admin (tudo) ──
     if (user.role == UserRole.admin) {
-      final churchId = context.read<AuthProvider>().churchId;
-
       Query<Map<String, dynamic>> congQuery = _db.collection('congregations');
       if (churchId != null) {
         congQuery = congQuery.where('churchId', isEqualTo: churchId);

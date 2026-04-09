@@ -33,9 +33,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  void setChurchId(String churchId) {
+  Future<void> setChurchId(String churchId) async {
     _churchId = churchId;
-    _authService.saveChurchId(churchId);
+    await _authService.saveChurchId(churchId);
     notifyListeners();
   }
 

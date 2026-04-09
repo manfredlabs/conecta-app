@@ -195,6 +195,7 @@ class CellProvider extends ChangeNotifier {
         cellId: old.cellId,
         supervisionId: old.supervisionId,
         congregationId: old.congregationId,
+        churchId: old.churchId,
         isLeader: data['isLeader'] as bool? ?? old.isLeader,
         isHelper: data['isHelper'] as bool? ?? old.isHelper,
         isVisitor: data['isVisitor'] as bool? ?? old.isVisitor,

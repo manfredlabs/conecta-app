@@ -569,6 +569,15 @@ class FirestoreService {
       for (final doc in cellsSnap.docs) {
         await doc.reference.update({'leaderName': userData['name']});
       }
+
+      // Update supervisorName on supervisions
+      final supSnap = await _db
+          .collection('supervisions')
+          .where('supervisorId', isEqualTo: userId)
+          .get();
+      for (final doc in supSnap.docs) {
+        await doc.reference.update({'supervisorName': userData['name']});
+      }
     }
   }
 
