@@ -1429,11 +1429,60 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ],
                   ],
 
+                  // ── Tornar Co-líder ──
+                  if (!_member.isLeader &&
+                      !_member.isVisitor &&
+                      _member.isActive &&
+                      _canPromoteToLeader) ...[
+                    const SizedBox(height: 16),
+                    Card(
+                      color: primaryColor.withValues(alpha: 0.04),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _confirmPromoteToLeader,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  color: primaryColor,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  'Tornar Co-líder',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: primaryColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
                   // ── Tornar/Remover Auxiliar ──
                   if (!_member.isLeader &&
                       !_member.isVisitor &&
                       _member.isActive) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     Card(
                       color: primaryColor.withValues(alpha: 0.08),
                       child: InkWell(
@@ -1464,55 +1513,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   _member.isHelper
                                       ? 'Remover como Auxiliar'
                                       : 'Tornar Auxiliar',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: primaryColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  // ── Tornar Co-líder ──
-                  if (!_member.isLeader &&
-                      !_member.isVisitor &&
-                      _member.isActive &&
-                      _canPromoteToLeader) ...[
-                    const SizedBox(height: 8),
-                    Card(
-                      color: primaryColor.withValues(alpha: 0.04),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _confirmPromoteToLeader,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: primaryColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.star_rounded,
-                                  color: primaryColor,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  'Tornar Co-líder',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: primaryColor,
