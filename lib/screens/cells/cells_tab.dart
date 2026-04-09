@@ -28,7 +28,7 @@ class _CellsTabState extends State<CellsTab> {
 
     switch (user.role) {
       case UserRole.admin:
-        context.read<HierarchyProvider>().listenToCongregations();
+        context.read<HierarchyProvider>().listenToCongregations(churchId: auth.churchId);
         break;
       case UserRole.pastor:
         context.read<CellProvider>().listenToCells(

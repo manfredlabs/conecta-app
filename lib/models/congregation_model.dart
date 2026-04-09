@@ -3,12 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Congregation {
   final String id;
   final String name;
+  final String? churchId;
   final String? pastorId;
   final String? pastorName;
 
   Congregation({
     required this.id,
     required this.name,
+    this.churchId,
     this.pastorId,
     this.pastorName,
   });
@@ -18,6 +20,7 @@ class Congregation {
     return Congregation(
       id: doc.id,
       name: data['name'] ?? '',
+      churchId: data['churchId'],
       pastorId: data['pastorId'],
       pastorName: data['pastorName'],
     );
@@ -26,6 +29,7 @@ class Congregation {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
+      'churchId': churchId,
       'pastorId': pastorId,
       'pastorName': pastorName,
     };

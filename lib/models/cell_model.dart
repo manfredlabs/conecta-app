@@ -5,6 +5,7 @@ class CellGroup {
   final String name;
   final String supervisionId;
   final String congregationId;
+  final String? churchId;
   final String? leaderId;
   final String? leaderName;
   final String? meetingDay;
@@ -16,6 +17,7 @@ class CellGroup {
     required this.name,
     required this.supervisionId,
     required this.congregationId,
+    this.churchId,
     this.leaderId,
     this.leaderName,
     this.meetingDay,
@@ -30,6 +32,7 @@ class CellGroup {
       name: data['name'] ?? '',
       supervisionId: data['supervisionId'] ?? '',
       congregationId: data['congregationId'] ?? '',
+      churchId: data['churchId'],
       leaderId: data['leaderId'],
       leaderName: data['leaderName'],
       meetingDay: data['meetingDay'],
@@ -43,6 +46,7 @@ class CellGroup {
       'name': name,
       'supervisionId': supervisionId,
       'congregationId': congregationId,
+      'churchId': churchId,
       'leaderId': leaderId,
       'leaderName': leaderName,
       'meetingDay': meetingDay,
@@ -55,6 +59,7 @@ class CellGroup {
     String? name,
     String? supervisionId,
     String? congregationId,
+    String? churchId,
     String? leaderId,
     String? leaderName,
     String? meetingDay,
@@ -66,6 +71,7 @@ class CellGroup {
       name: name ?? this.name,
       supervisionId: supervisionId ?? this.supervisionId,
       congregationId: congregationId ?? this.congregationId,
+      churchId: churchId ?? this.churchId,
       leaderId: leaderId ?? this.leaderId,
       leaderName: leaderName ?? this.leaderName,
       meetingDay: meetingDay ?? this.meetingDay,

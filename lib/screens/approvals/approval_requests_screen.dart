@@ -11,11 +11,12 @@ class ApprovalRequestsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final churchId = context.read<AuthProvider>().churchId;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Solicitações')),
       body: StreamBuilder<List<ApprovalRequest>>(
-        stream: FirestoreService().getPendingApprovalRequests(),
+        stream: FirestoreService().getPendingApprovalRequests(churchId: churchId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

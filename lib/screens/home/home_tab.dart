@@ -258,19 +258,36 @@ class _HomeTabState extends State<HomeTab> {
 
     // ── Admin (tudo) ──
     if (user.role == UserRole.admin) {
-      final congSnap = await _db.collection('congregations').get();
+      final churchId = context.read<AuthProvider>().churchId;
+
+      Query<Map<String, dynamic>> congQuery = _db.collection('congregations');
+      if (churchId != null) {
+        congQuery = congQuery.where('churchId', isEqualTo: churchId);
+      }
+      final congSnap = await congQuery.get();
       stats['adminCongregations'] = congSnap.size;
 
-      final cellsSnap = await _db.collection('cells').get();
+      Query<Map<String, dynamic>> cellsQuery = _db.collection('cells');
+      if (churchId != null) {
+        cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+      }
+      final cellsSnap = await cellsQuery.get();
       stats['adminCells'] = cellsSnap.size;
 
-      final membersSnap = await _db.collection('cell_members').get();
+      Query<Map<String, dynamic>> membersQuery = _db.collection('cell_members');
+      if (churchId != null) {
+        membersQuery = membersQuery.where('churchId', isEqualTo: churchId);
+      }
+      final membersSnap = await membersQuery.get();
       stats['adminMembers'] = membersSnap.size;
 
-      final pendingSnap = await _db
+      Query<Map<String, dynamic>> pendingQuery = _db
           .collection('approval_requests')
-          .where('status', isEqualTo: 'pending')
-          .get();
+          .where('status', isEqualTo: 'pending');
+      if (churchId != null) {
+        pendingQuery = pendingQuery.where('churchId', isEqualTo: churchId);
+      }
+      final pendingSnap = await pendingQuery.get();
       stats['pendingApprovals'] = pendingSnap.size;
     }
 

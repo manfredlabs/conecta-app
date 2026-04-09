@@ -18,19 +18,33 @@ class ConectaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CellProvider()),
         ChangeNotifierProvider(create: (_) => HierarchyProvider()),
       ],
-      child: MaterialApp(
-        title: 'Conecta',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('pt', 'BR')],
-        locale: const Locale('pt', 'BR'),
-        initialRoute: AppRoutes.login,
-        routes: AppRoutes.routes,
+      child: Consumer<AuthProvider>(
+        builder: (context, auth, _) {
+          // Decide initial route based on auth + church state
+          String initialRoute;
+          if (auth.isLoggedIn) {
+            initialRoute = AppRoutes.home;
+          } else if (auth.hasChurch) {
+            initialRoute = AppRoutes.login;
+          } else {
+            initialRoute = AppRoutes.churchSelection;
+          }
+
+          return MaterialApp(
+            title: 'Conecta',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('pt', 'BR')],
+            locale: const Locale('pt', 'BR'),
+            initialRoute: initialRoute,
+            routes: AppRoutes.routes,
+          );
+        },
       ),
     );
   }

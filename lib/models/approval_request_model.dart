@@ -10,6 +10,7 @@ class ApprovalRequest {
   final String cellMemberId;
   final String cellId;
   final String cellName;
+  final String? churchId;
   final String requestedBy;
   final String requestedByName;
   final ApprovalStatus status;
@@ -25,6 +26,7 @@ class ApprovalRequest {
     required this.cellMemberId,
     required this.cellId,
     required this.cellName,
+    this.churchId,
     required this.requestedBy,
     required this.requestedByName,
     required this.status,
@@ -43,6 +45,7 @@ class ApprovalRequest {
       cellMemberId: data['cellMemberId'] ?? '',
       cellId: data['cellId'] ?? '',
       cellName: data['cellName'] ?? '',
+      churchId: data['churchId'],
       requestedBy: data['requestedBy'] ?? '',
       requestedByName: data['requestedByName'] ?? '',
       status: ApprovalStatus.values.firstWhere(
@@ -63,6 +66,7 @@ class ApprovalRequest {
       'cellMemberId': cellMemberId,
       'cellId': cellId,
       'cellName': cellName,
+      'churchId': churchId,
       'requestedBy': requestedBy,
       'requestedByName': requestedByName,
       'status': status.name,

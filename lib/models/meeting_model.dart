@@ -44,6 +44,7 @@ class Meeting {
   final String cellId;
   final String supervisionId;
   final String congregationId;
+  final String? churchId;
   final DateTime date;
   final List<String> presentMemberIds;
   final Map<String, String> memberRoles;
@@ -56,6 +57,7 @@ class Meeting {
     required this.cellId,
     required this.supervisionId,
     required this.congregationId,
+    this.churchId,
     required this.date,
     required this.presentMemberIds,
     this.memberRoles = const {},
@@ -71,6 +73,7 @@ class Meeting {
       cellId: data['cellId'] ?? '',
       supervisionId: data['supervisionId'] ?? '',
       congregationId: data['congregationId'] ?? '',
+      churchId: data['churchId'],
       date: data['date'] != null
           ? (data['date'] as Timestamp).toDate()
           : DateTime.now(),
@@ -90,6 +93,7 @@ class Meeting {
       'cellId': cellId,
       'supervisionId': supervisionId,
       'congregationId': congregationId,
+      'churchId': churchId,
       'date': Timestamp.fromDate(date),
       'presentMemberIds': presentMemberIds,
       'memberRoles': memberRoles,

@@ -7,21 +7,36 @@ class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   AppUser? _appUser;
+  String? _churchId;
   bool _isLoading = false;
   String? _error;
 
   AppUser? get appUser => _appUser;
+  String? get churchId => _churchId ?? _appUser?.churchId;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _appUser != null;
   String? get error => _error;
   User? get firebaseUser => _authService.currentUser;
+  bool get hasChurch => churchId != null && churchId!.isNotEmpty;
 
   Future<void> init() async {
+    // Load saved churchId from local storage
+    _churchId = await _authService.getSavedChurchId();
+
     final user = _authService.currentUser;
     if (user != null) {
       _appUser = await _authService.getAppUser(user.uid);
+      if (_appUser?.churchId != null) {
+        _churchId = _appUser!.churchId;
+      }
       notifyListeners();
     }
+  }
+
+  void setChurchId(String churchId) {
+    _churchId = churchId;
+    _authService.saveChurchId(churchId);
+    notifyListeners();
   }
 
   Future<bool> signIn(String email, String password) async {
@@ -33,6 +48,8 @@ class AuthProvider extends ChangeNotifier {
       _appUser = await _authService.signIn(email, password);
       if (_appUser == null) {
         _error = 'Usuário não encontrado no sistema.';
+      } else if (_appUser!.churchId != null) {
+        _churchId = _appUser!.churchId;
       }
       return _appUser != null;
     } on FirebaseAuthException catch (e) {
@@ -50,6 +67,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     await _authService.signOut();
     _appUser = null;
+    _churchId = null;
     notifyListeners();
   }
 
@@ -57,6 +75,9 @@ class AuthProvider extends ChangeNotifier {
     final user = _authService.currentUser;
     if (user != null) {
       _appUser = await _authService.getAppUser(user.uid);
+      if (_appUser?.churchId != null) {
+        _churchId = _appUser!.churchId;
+      }
       notifyListeners();
     }
   }

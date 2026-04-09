@@ -75,17 +75,20 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
         id: '',
         name: visitor.name,
         congregationId: cell.congregationId,
+        churchId: cell.churchId,
         gender: visitor.gender,
         baptized: visitor.baptized,
         birthDate: visitor.birthDate,
       );
 
-      final userId = context.read<AuthProvider>().appUser?.id ?? '';
+      final auth = context.read<AuthProvider>();
+      final userId = auth.appUser?.id ?? '';
       final cmId = await cellProvider.addPersonAndCellMember(
         person: person,
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
+        churchId: auth.churchId,
         isVisitor: true,
         changedBy: userId,
       );

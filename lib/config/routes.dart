@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/auth/church_selection_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/shell/main_shell.dart';
 import '../screens/hierarchy/supervision_list_screen.dart';
@@ -26,6 +27,7 @@ import '../screens/members/congregation_members_screen.dart';
 import '../screens/approvals/approval_requests_screen.dart';
 
 class AppRoutes {
+  static const String churchSelection = '/church-selection';
   static const String login = '/login';
   static const String home = '/home';
   static const String supervisionList = '/supervision-list';
@@ -53,6 +55,7 @@ class AppRoutes {
   static const String approvalRequests = '/approval-requests';
 
   static Map<String, WidgetBuilder> get routes => {
+        churchSelection: (_) => const ChurchSelectionScreen(),
         login: (_) => const LoginScreen(),
         home: (_) => const MainShell(),
         supervisionList: (_) => const SupervisionListScreen(),

@@ -244,11 +244,26 @@ async function main() {
   const colecoes = [
     'meetings', 'member_history', 'approval_requests',
     'cell_members', 'members', 'people',
-    'cells', 'supervisions', 'congregations', 'users',
+    'cells', 'supervisions', 'congregations', 'users', 'churches',
   ];
   for (const col of colecoes) {
     await limparColecao(db, col);
   }
+
+  // ═════════════════════════════════════════
+  //  FASE 0.5: CRIAR IGREJA
+  // ═════════════════════════════════════════
+  console.log('\n══════════════════════════════════════');
+  console.log('  FASE 0.5 — IGREJA');
+  console.log('══════════════════════════════════════\n');
+
+  const churchRef = await addDoc(collection(db, 'churches'), {
+    name: 'Igreja Maranata',
+    code: 'maranata',
+    createdAt: Timestamp.now(),
+  });
+  const churchId = churchRef.id;
+  console.log(`  ⛪ Igreja Maranata (${churchId})`);
 
   // ═════════════════════════════════════════
   //  FASE 1: CONGREGAÇÕES (sem pastor)
@@ -261,6 +276,7 @@ async function main() {
   for (let i = 0; i < 3; i++) {
     const ref = await addDoc(collection(db, 'congregations'), {
       name: nomesCongregacoes[i],
+      churchId,
       pastorId: null,
       pastorName: null,
     });
@@ -299,6 +315,7 @@ async function main() {
       birthDate: Timestamp.fromDate(birthDate),
       email: null,
       congregationId: congregacoes[congIdx].id,
+      churchId,
       userId: null,
     });
     batchCount++;
@@ -370,6 +387,7 @@ async function main() {
     const ref = await addDoc(collection(db, 'supervisions'), {
       name: `Supervisão ${nomesSupervisoes[i]}`,
       congregationId: congregacoes[congIdx].id,
+      churchId,
       supervisorId: null,
       supervisorName: null,
     });
@@ -395,6 +413,7 @@ async function main() {
       name: cellName,
       supervisionId: sup.id,
       congregationId: congregacoes[sup.congIdx].id,
+      churchId,
       leaderId: null,
       leaderName: null,
       meetingDay: pick(diasSemana),
@@ -436,6 +455,7 @@ async function main() {
       cellId: cell.id,
       supervisionId: sup.id,
       congregationId: congId,
+      churchId,
       isLeader: true,
       isHelper: false,
       isVisitor: false,
@@ -453,6 +473,7 @@ async function main() {
         cellId: cell.id,
         supervisionId: sup.id,
         congregationId: congId,
+        churchId,
         isLeader: false,
         isHelper: false,
         isVisitor: false,
@@ -495,6 +516,7 @@ async function main() {
     name: 'Caio Admin',
     email: 'admin@conecta.com',
     role: 'admin',
+    churchId,
     congregationId: congregacoes[0].id,
     supervisionId: null,
     cellId: null,
@@ -509,6 +531,7 @@ async function main() {
       name: `Pr. ${p.name}`,
       email: p.email,
       role: 'pastor',
+      churchId,
       congregationId: congregacoes[p.congIdx].id,
       supervisionId: null,
       cellId: null,
@@ -527,6 +550,7 @@ async function main() {
       name: s.name,
       email: s.email,
       role: 'supervisor',
+      churchId,
       congregationId: congregacoes[s.congIdx].id,
       supervisionId: supervisoesDb[s.supIdx].id,
       cellId: null,
@@ -547,6 +571,7 @@ async function main() {
       name: l.name,
       email: l.email,
       role: 'leader',
+      churchId,
       congregationId: congregacoes[lData.congIdx].id,
       supervisionId: supervisoesDb[lData.supIdx].id,
       cellId: cell.id,
@@ -602,6 +627,7 @@ async function main() {
   console.log('  RESUMO FINAL');
   console.log('══════════════════════════════════════\n');
 
+  console.log(`  ⛪  Igreja Maranata (${churchId})`);
   console.log(`  📍  ${congregacoes.length} Congregações`);
   console.log(`  🔷  ${supervisoesDb.length} Supervisões (4 células cada)`);
   console.log(`  🟢  ${celulasDb.length} Células`);

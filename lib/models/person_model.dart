@@ -9,6 +9,7 @@ class Person {
   final DateTime? birthDate;
   final String? email;
   final String congregationId;
+  final String? churchId;
   final String? userId;
 
   Person({
@@ -20,6 +21,7 @@ class Person {
     this.birthDate,
     this.email,
     required this.congregationId,
+    this.churchId,
     this.userId,
   });
 
@@ -36,6 +38,7 @@ class Person {
           : null,
       email: data['email'],
       congregationId: data['congregationId'] ?? '',
+      churchId: data['churchId'],
       userId: data['userId'],
     );
   }
@@ -49,6 +52,7 @@ class Person {
       'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
       'email': email,
       'congregationId': congregationId,
+      'churchId': churchId,
       'userId': userId,
     };
   }

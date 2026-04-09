@@ -21,19 +21,19 @@ class HierarchyProvider extends ChangeNotifier {
   Congregation? get selectedCongregation => _selectedCongregation;
   Supervision? get selectedSupervision => _selectedSupervision;
 
-  void listenToCongregations() {
+  void listenToCongregations({String? churchId}) {
     _congregationsSub?.cancel();
     _congregationsSub =
-        _firestoreService.getCongregations().listen((list) {
+        _firestoreService.getCongregations(churchId: churchId).listen((list) {
       _congregations = list;
       notifyListeners();
     });
   }
 
-  void listenToSupervisions({String? congregationId}) {
+  void listenToSupervisions({String? congregationId, String? churchId}) {
     _supervisionsSub?.cancel();
     _supervisionsSub = _firestoreService
-        .getSupervisions(congregationId: congregationId)
+        .getSupervisions(congregationId: congregationId, churchId: churchId)
         .listen((list) {
       _supervisions = list;
       notifyListeners();

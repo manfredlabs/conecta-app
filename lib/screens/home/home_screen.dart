@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     switch (user.role) {
       case UserRole.admin:
-        context.read<HierarchyProvider>().listenToCongregations();
+        context.read<HierarchyProvider>().listenToCongregations(churchId: auth.churchId);
         break;
       case UserRole.pastor:
         context
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               auth.signOut().then((_) {
                 if (mounted) {
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pushReplacementNamed(context, '/church-selection');
                 }
               });
             },

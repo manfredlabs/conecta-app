@@ -347,6 +347,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         cellMemberId: _member.id,
                         cellId: cell.id,
                         cellName: cell.name,
+                        churchId: context.read<AuthProvider>().churchId,
                         requestedBy: user.id,
                         requestedByName: user.name,
                         status: ApprovalStatus.pending,

@@ -42,11 +42,12 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   Future<void> _loadAllMembers() async {
     setState(() => _loadingMembers = true);
     final firestoreService = FirestoreService();
-    final members = await firestoreService.searchAllNonVisitorCellMembers();
+    final churchId = context.read<AuthProvider>().churchId;
+    final members = await firestoreService.searchAllNonVisitorCellMembers(churchId: churchId);
     final cellIds = members.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
-      firestoreService.getUserRolesByName(),
+      firestoreService.getUserRolesByName(churchId: churchId),
     ]);
 
     if (mounted) {
@@ -167,13 +168,16 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
     final cellProvider = context.read<CellProvider>();
     final cell = cellProvider.selectedCell!;
-    final userId = context.read<AuthProvider>().appUser?.id ?? '';
+    final auth = context.read<AuthProvider>();
+    final userId = auth.appUser?.id ?? '';
+    final churchId = auth.churchId;
 
     if (_isVisitor) {
       final person = Person(
         id: '',
         name: _nameController.text.trim(),
         congregationId: cell.congregationId,
+        churchId: churchId,
         gender: _gender,
         baptized: false,
         birthDate: _birthDate,
@@ -183,6 +187,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
+        churchId: churchId,
         isVisitor: true,
         changedBy: userId,
       );
@@ -211,6 +216,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
+        churchId: churchId,
         changedBy: userId,
       );
     }

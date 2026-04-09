@@ -8,6 +8,7 @@ class Member {
   final String cellId;
   final String supervisionId;
   final String congregationId;
+  final String? churchId;
   final bool isVisitor;
   final bool isLeader;
   final bool isHelper;
@@ -25,6 +26,7 @@ class Member {
     required this.cellId,
     required this.supervisionId,
     required this.congregationId,
+    this.churchId,
     this.isVisitor = false,
     this.isLeader = false,
     this.isHelper = false,
@@ -45,6 +47,7 @@ class Member {
       cellId: data['cellId'] ?? '',
       supervisionId: data['supervisionId'] ?? '',
       congregationId: data['congregationId'] ?? '',
+      churchId: data['churchId'],
       isVisitor: data['isVisitor'] ?? false,
       isLeader: data['isLeader'] ?? false,
       isHelper: data['isHelper'] ?? false,
@@ -66,6 +69,7 @@ class Member {
       'cellId': cellId,
       'supervisionId': supervisionId,
       'congregationId': congregationId,
+      'churchId': churchId,
       'isVisitor': isVisitor,
       'isLeader': isLeader,
       'isHelper': isHelper,

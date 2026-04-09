@@ -7,6 +7,7 @@ class AppUser {
   final String name;
   final String email;
   final UserRole role;
+  final String? churchId;
   final String? congregationId;
   final String? supervisionId;
   final String? cellId;
@@ -19,6 +20,7 @@ class AppUser {
     required this.name,
     required this.email,
     required this.role,
+    this.churchId,
     this.congregationId,
     this.supervisionId,
     this.cellId,
@@ -37,6 +39,7 @@ class AppUser {
         (r) => r.name == data['role'],
         orElse: () => UserRole.leader,
       ),
+      churchId: data['churchId'],
       congregationId: data['congregationId'],
       supervisionId: data['supervisionId'],
       cellId: data['cellId'],
@@ -53,6 +56,7 @@ class AppUser {
       'name': name,
       'email': email,
       'role': role.name,
+      'churchId': churchId,
       'congregationId': congregationId,
       'supervisionId': supervisionId,
       'cellId': cellId,

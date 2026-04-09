@@ -96,7 +96,7 @@ class ProfileTab extends StatelessWidget {
                     onTap: () {
                       auth.signOut().then((_) {
                         if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.pushReplacementNamed(context, '/church-selection');
                         }
                       });
                     },

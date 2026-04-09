@@ -95,16 +95,23 @@ class _EditCellScreenState extends State<EditCellScreen> {
 
     final firestoreService = FirestoreService();
     final db = FirebaseFirestore.instance;
+    final churchId = context.read<AuthProvider>().churchId;
 
     // Load all people from the church (all congregations)
-    final peopleSnap = await db.collection('people').get();
+    Query<Map<String, dynamic>> peopleQuery = db.collection('people');
+    if (churchId != null) {
+      peopleQuery = peopleQuery.where('churchId', isEqualTo: churchId);
+    }
+    final peopleSnap = await peopleQuery.get();
     final people = peopleSnap.docs.map((d) => Person.fromFirestore(d)).toList();
 
     // Load cell_members to know which cells each person belongs to
-    final cellMembersSnap = await db
-        .collection('cell_members')
-        .where('isVisitor', isEqualTo: false)
-        .get();
+    Query<Map<String, dynamic>> cmQuery = db.collection('cell_members')
+        .where('isVisitor', isEqualTo: false);
+    if (churchId != null) {
+      cmQuery = cmQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellMembersSnap = await cmQuery.get();
     final cellMembers = cellMembersSnap.docs
         .map((d) => CellMember.fromFirestore(d))
         .toList();
@@ -112,7 +119,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
     final cellIds = cellMembers.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
-      firestoreService.getUserRolesByName(),
+      firestoreService.getUserRolesByName(churchId: churchId),
     ]);
     final cellNames = results[0] as Map<String, String>;
     final nameRoles = results[1] as Map<String, String>;
@@ -415,6 +422,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
             cellId: cell.id,
             supervisionId: cell.supervisionId,
             congregationId: cell.congregationId,
+            churchId: cell.churchId,
             isLeader: true,
           ));
           if (newCmId != null) {

@@ -63,6 +63,7 @@ class CellProvider extends ChangeNotifier {
         cellId: cell.id,
         supervisionId: cell.supervisionId,
         congregationId: cell.congregationId,
+        churchId: cell.churchId,
         isLeader: true,
       ));
     }
@@ -148,6 +149,7 @@ class CellProvider extends ChangeNotifier {
     required String cellId,
     required String supervisionId,
     required String congregationId,
+    String? churchId,
     bool isVisitor = false,
     bool isLeader = false,
     bool isHelper = false,
@@ -161,6 +163,7 @@ class CellProvider extends ChangeNotifier {
         cellId: cellId,
         supervisionId: supervisionId,
         congregationId: congregationId,
+        churchId: churchId,
         isVisitor: isVisitor,
         isLeader: isLeader,
         isHelper: isHelper,

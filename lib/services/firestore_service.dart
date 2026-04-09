@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/church_model.dart';
 import '../models/congregation_model.dart';
 import '../models/supervision_model.dart';
 import '../models/cell_model.dart';
@@ -12,10 +13,35 @@ import '../models/user_model.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // ─── Churches ───
+
+  Future<Church?> getChurchByCode(String code) async {
+    final snap = await _db
+        .collection('churches')
+        .where('code', isEqualTo: code.toLowerCase().trim())
+        .limit(1)
+        .get();
+    if (snap.docs.isEmpty) return null;
+    return Church.fromFirestore(snap.docs.first);
+  }
+
+  Future<Church?> getChurch(String id) async {
+    final doc = await _db.collection('churches').doc(id).get();
+    return doc.exists ? Church.fromFirestore(doc) : null;
+  }
+
+  Future<DocumentReference> addChurch(Church church) {
+    return _db.collection('churches').add(church.toMap());
+  }
+
   // ─── Congregations ───
 
-  Stream<List<Congregation>> getCongregations() {
-    return _db.collection('congregations').snapshots().map(
+  Stream<List<Congregation>> getCongregations({String? churchId}) {
+    Query<Map<String, dynamic>> query = _db.collection('congregations');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    return query.snapshots().map(
           (snap) =>
               snap.docs.map((d) => Congregation.fromFirestore(d)).toList(),
         );
@@ -36,8 +62,11 @@ class FirestoreService {
 
   // ─── Supervisions ───
 
-  Stream<List<Supervision>> getSupervisions({String? congregationId}) {
+  Stream<List<Supervision>> getSupervisions({String? congregationId, String? churchId}) {
     Query<Map<String, dynamic>> query = _db.collection('supervisions');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
     if (congregationId != null) {
       query = query.where('congregationId', isEqualTo: congregationId);
     }
@@ -61,8 +90,12 @@ class FirestoreService {
     String? supervisionId,
     String? congregationId,
     String? leaderId,
+    String? churchId,
   }) {
     Query<Map<String, dynamic>> query = _db.collection('cells');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
     if (supervisionId != null) {
       query = query.where('supervisionId', isEqualTo: supervisionId);
     }
@@ -120,8 +153,12 @@ class FirestoreService {
   }
 
   /// Returns a map of member name (lowercase) → user role for all users
-  Future<Map<String, String>> getUserRolesByName() async {
-    final snap = await _db.collection('users').get();
+  Future<Map<String, String>> getUserRolesByName({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('users');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    final snap = await query.get();
     final map = <String, String>{};
     for (final doc in snap.docs) {
       final data = doc.data();
@@ -162,12 +199,14 @@ class FirestoreService {
     return snap.docs.map((d) => Member.fromFirestore(d)).toList();
   }
 
-  Future<List<Member>> searchAllActiveMembers() async {
-    final snap = await _db
-        .collection('members')
+  Future<List<Member>> searchAllActiveMembers({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('members')
         .where('isActive', isEqualTo: true)
-        .where('isVisitor', isEqualTo: false)
-        .get();
+        .where('isVisitor', isEqualTo: false);
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    final snap = await query.get();
     return snap.docs.map((d) => Member.fromFirestore(d)).toList();
   }
 
@@ -223,8 +262,12 @@ class FirestoreService {
   }
 
   /// Search people by name (all active, non-visitor across church)
-  Future<List<Person>> searchAllPeople() async {
-    final snap = await _db.collection('people').get();
+  Future<List<Person>> searchAllPeople({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('people');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    final snap = await query.get();
     return snap.docs.map((d) => Person.fromFirestore(d)).toList();
   }
 
@@ -258,11 +301,13 @@ class FirestoreService {
     return snap.docs.map((d) => CellMember.fromFirestore(d)).toList();
   }
 
-  Future<List<CellMember>> searchAllNonVisitorCellMembers() async {
-    final snap = await _db
-        .collection('cell_members')
-        .where('isVisitor', isEqualTo: false)
-        .get();
+  Future<List<CellMember>> searchAllNonVisitorCellMembers({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('cell_members')
+        .where('isVisitor', isEqualTo: false);
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    final snap = await query.get();
     return snap.docs.map((d) => CellMember.fromFirestore(d)).toList();
   }
 
@@ -308,6 +353,7 @@ class FirestoreService {
     required String cellId,
     required String supervisionId,
     required String congregationId,
+    String? churchId,
     bool isVisitor = false,
     bool isLeader = false,
     bool isHelper = false,
@@ -321,6 +367,7 @@ class FirestoreService {
       cellId: cellId,
       supervisionId: supervisionId,
       congregationId: congregationId,
+      churchId: churchId,
       isVisitor: isVisitor,
       isLeader: isLeader,
       isHelper: isHelper,
@@ -344,6 +391,7 @@ class FirestoreService {
     required String cellId,
     required String supervisionId,
     required String congregationId,
+    String? churchId,
     bool isVisitor = false,
     String changedBy = '',
   }) async {
@@ -354,6 +402,7 @@ class FirestoreService {
       cellId: cellId,
       supervisionId: supervisionId,
       congregationId: congregationId,
+      churchId: churchId,
       isVisitor: isVisitor,
     );
     final ref = await addCellMember(cellMember);
@@ -416,8 +465,12 @@ class FirestoreService {
     String? cellId,
     String? supervisionId,
     String? congregationId,
+    String? churchId,
   }) {
     Query<Map<String, dynamic>> query = _db.collection('meetings');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
     if (cellId != null) {
       query = query.where('cellId', isEqualTo: cellId);
     }
@@ -448,8 +501,12 @@ class FirestoreService {
 
   // ─── Users ───
 
-  Stream<List<AppUser>> getUsers() {
-    return _db.collection('users').snapshots().map(
+  Stream<List<AppUser>> getUsers({String? churchId}) {
+    Query<Map<String, dynamic>> query = _db.collection('users');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    return query.snapshots().map(
           (snap) => snap.docs.map((d) => AppUser.fromFirestore(d)).toList(),
         );
   }
@@ -512,12 +569,14 @@ class FirestoreService {
 
   // ─── Approval Requests ───
 
-  Stream<List<ApprovalRequest>> getPendingApprovalRequests() {
-    return _db
+  Stream<List<ApprovalRequest>> getPendingApprovalRequests({String? churchId}) {
+    Query<Map<String, dynamic>> query = _db
         .collection('approval_requests')
-        .where('status', isEqualTo: 'pending')
-        .snapshots()
-        .map((snap) {
+        .where('status', isEqualTo: 'pending');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    return query.snapshots().map((snap) {
       final list =
           snap.docs.map((d) => ApprovalRequest.fromFirestore(d)).toList();
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
