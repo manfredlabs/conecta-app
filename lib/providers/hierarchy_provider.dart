@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/congregation_model.dart';
 import '../models/supervision_model.dart';
@@ -43,7 +42,10 @@ class HierarchyProvider extends ChangeNotifier {
   void selectCongregation(Congregation congregation) {
     _selectedCongregation = congregation;
     notifyListeners();
-    listenToSupervisions(congregationId: congregation.id);
+    listenToSupervisions(
+      congregationId: congregation.id,
+      churchId: congregation.churchId,
+    );
   }
 
   Future<void> updateCongregation(String id, Map<String, dynamic> data) async {
@@ -63,10 +65,9 @@ class HierarchyProvider extends ChangeNotifier {
 
   Future<void> updateSupervision(String id, Map<String, dynamic> data) async {
     await _firestoreService.updateSupervision(id, data);
-    // Re-fetch to update selectedSupervision
-    final doc = await FirebaseFirestore.instance.collection('supervisions').doc(id).get();
-    if (doc.exists) {
-      _selectedSupervision = Supervision.fromFirestore(doc);
+    final updated = await _firestoreService.getSupervision(id);
+    if (updated != null) {
+      _selectedSupervision = updated;
       notifyListeners();
     }
   }

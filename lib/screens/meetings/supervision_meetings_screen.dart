@@ -49,18 +49,25 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
 
   void _listenMeetings() {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final user = context.read<AuthProvider>().appUser;
+    final auth = context.read<AuthProvider>();
+    final user = auth.appUser;
+    final churchId = auth.churchId;
     final supervisionId = args is String ? args : user?.supervisionId;
     if (supervisionId == null) return;
 
     // Ensure cells are loaded for name mapping
     context.read<CellProvider>().listenToCells(
           supervisionId: supervisionId,
+          churchId: churchId,
         );
 
-    _meetingsSub = FirebaseFirestore.instance
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
         .collection('meetings')
-        .where('supervisionId', isEqualTo: supervisionId)
+        .where('supervisionId', isEqualTo: supervisionId);
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    _meetingsSub = query
         .snapshots()
         .listen((snap) {
       if (mounted) {

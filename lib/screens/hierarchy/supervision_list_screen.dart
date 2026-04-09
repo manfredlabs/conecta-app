@@ -52,7 +52,7 @@ class SupervisionListScreen extends StatelessWidget {
             onTap: () {
               hierarchy.selectSupervision(supervision);
               final cellProvider = context.read<CellProvider>();
-              cellProvider.listenToCells(supervisionId: supervision.id);
+              cellProvider.listenToCells(supervisionId: supervision.id, churchId: supervision.churchId);
               Navigator.pushNamed(context, '/supervision-hub');
             },
             child: Padding(

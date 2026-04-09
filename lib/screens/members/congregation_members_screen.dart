@@ -45,30 +45,40 @@ class _CongregationMembersScreenState
     final hierarchy = context.read<HierarchyProvider>();
     final congregation = hierarchy.selectedCongregation;
     if (congregation == null) return;
+    final churchId = congregation.churchId;
 
-    final supsSnap = await _db
+    Query<Map<String, dynamic>> supsQuery = _db
         .collection('supervisions')
-        .where('congregationId', isEqualTo: congregation.id)
-        .get();
+        .where('congregationId', isEqualTo: congregation.id);
+    if (churchId != null) {
+      supsQuery = supsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final supsSnap = await supsQuery.get();
     final supNames = <String, String>{};
     for (final doc in supsSnap.docs) {
       supNames[doc.id] = (doc.data())['name'] ?? 'Supervisão';
     }
 
-    final cellsSnap = await _db
+    Query<Map<String, dynamic>> cellsQuery = _db
         .collection('cells')
-        .where('congregationId', isEqualTo: congregation.id)
-        .get();
+        .where('congregationId', isEqualTo: congregation.id);
+    if (churchId != null) {
+      cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellsSnap = await cellsQuery.get();
     final cells =
         cellsSnap.docs.map((d) => CellGroup.fromFirestore(d)).toList();
     final cellNames = {for (var c in cells) c.id: c.name};
     final cellLeaderIds = {for (var c in cells) c.id: c.leaderId};
     final cellToSup = {for (var c in cells) c.id: c.supervisionId};
 
-    final membersSnap = await _db
+    Query<Map<String, dynamic>> membersQuery = _db
         .collection('cell_members')
-        .where('congregationId', isEqualTo: congregation.id)
-        .get();
+        .where('congregationId', isEqualTo: congregation.id);
+    if (churchId != null) {
+      membersQuery = membersQuery.where('churchId', isEqualTo: churchId);
+    }
+    final membersSnap = await membersQuery.get();
     final members = membersSnap.docs
         .map((d) => CellMember.fromFirestore(d))
         .where((m) => m.isActive)

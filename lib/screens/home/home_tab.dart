@@ -337,7 +337,7 @@ class _HomeTabState extends State<HomeTab> {
     if (!mounted || !supDoc.exists) return;
     final supervision = Supervision.fromFirestore(supDoc);
     hierarchyProvider.selectSupervision(supervision);
-    cellProvider.listenToCells(supervisionId: supervision.id);
+    cellProvider.listenToCells(supervisionId: supervision.id, churchId: supervision.churchId);
     await Navigator.pushNamed(context, '/supervision-hub');
     if (mounted) _loadStats();
   }

@@ -42,20 +42,27 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
     final hierarchy = context.read<HierarchyProvider>();
     final supervision = hierarchy.selectedSupervision;
     if (supervision == null) return;
+    final churchId = supervision.churchId;
 
-    final cellsSnap = await _db
+    Query<Map<String, dynamic>> cellsQuery = _db
         .collection('cells')
-        .where('supervisionId', isEqualTo: supervision.id)
-        .get();
+        .where('supervisionId', isEqualTo: supervision.id);
+    if (churchId != null) {
+      cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellsSnap = await cellsQuery.get();
     final cells =
         cellsSnap.docs.map((d) => CellGroup.fromFirestore(d)).toList();
     final cellNames = {for (var c in cells) c.id: c.name};
     final cellLeaderIds = {for (var c in cells) c.id: c.leaderId};
 
-    final membersSnap = await _db
+    Query<Map<String, dynamic>> membersQuery = _db
         .collection('cell_members')
-        .where('supervisionId', isEqualTo: supervision.id)
-        .get();
+        .where('supervisionId', isEqualTo: supervision.id);
+    if (churchId != null) {
+      membersQuery = membersQuery.where('churchId', isEqualTo: churchId);
+    }
+    final membersSnap = await membersQuery.get();
     final members = membersSnap.docs
         .map((d) => CellMember.fromFirestore(d))
         .where((m) => m.isActive)

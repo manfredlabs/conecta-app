@@ -84,6 +84,11 @@ class FirestoreService {
     return _db.collection('supervisions').doc(id).update(data);
   }
 
+  Future<Supervision?> getSupervision(String id) async {
+    final doc = await _db.collection('supervisions').doc(id).get();
+    return doc.exists ? Supervision.fromFirestore(doc) : null;
+  }
+
   // ─── Cells ───
 
   Stream<List<CellGroup>> getCells({

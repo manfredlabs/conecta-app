@@ -27,21 +27,28 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
 
   Future<void> _loadData() async {
     final user = context.read<AuthProvider>().appUser;
+    final churchId = context.read<AuthProvider>().churchId;
     if (user == null || user.congregationId == null) return;
 
-    final supsSnap = await _db
+    Query<Map<String, dynamic>> supsQuery = _db
         .collection('supervisions')
-        .where('congregationId', isEqualTo: user.congregationId)
-        .get();
+        .where('congregationId', isEqualTo: user.congregationId);
+    if (churchId != null) {
+      supsQuery = supsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final supsSnap = await supsQuery.get();
     final supNames = <String, String>{};
     for (final doc in supsSnap.docs) {
       supNames[doc.id] = doc.data()['name'] ?? '';
     }
 
-    final cellsSnap = await _db
+    Query<Map<String, dynamic>> cellsQuery = _db
         .collection('cells')
-        .where('congregationId', isEqualTo: user.congregationId)
-        .get();
+        .where('congregationId', isEqualTo: user.congregationId);
+    if (churchId != null) {
+      cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellsSnap = await cellsQuery.get();
     final cells = cellsSnap.docs.map((d) => CellGroup.fromFirestore(d)).toList()
       ..sort((a, b) {
         final supCmp = (supNames[a.supervisionId] ?? '')

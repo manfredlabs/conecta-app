@@ -52,18 +52,23 @@ class _CongregationMeetingsScreenState
 
   Future<void> _loadData() async {
     final user = context.read<AuthProvider>().appUser;
+    final churchId = context.read<AuthProvider>().churchId;
     if (user == null || user.congregationId == null) return;
 
     // Ensure cells are loaded
     context.read<CellProvider>().listenToCells(
           congregationId: user.congregationId,
+          churchId: churchId,
         );
 
     // Load supervision names
-    final supsSnap = await FirebaseFirestore.instance
+    Query<Map<String, dynamic>> supsQuery = FirebaseFirestore.instance
         .collection('supervisions')
-        .where('congregationId', isEqualTo: user.congregationId)
-        .get();
+        .where('congregationId', isEqualTo: user.congregationId);
+    if (churchId != null) {
+      supsQuery = supsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final supsSnap = await supsQuery.get();
     final supNames = <String, String>{};
     for (final doc in supsSnap.docs) {
       supNames[doc.id] = doc.data()['name'] ?? '';
@@ -71,10 +76,13 @@ class _CongregationMeetingsScreenState
     if (mounted) setState(() => _supervisionNames = supNames);
 
     // Load cell names + map cell→supervision
-    final cellsSnap = await FirebaseFirestore.instance
+    Query<Map<String, dynamic>> cellsQuery = FirebaseFirestore.instance
         .collection('cells')
-        .where('congregationId', isEqualTo: user.congregationId)
-        .get();
+        .where('congregationId', isEqualTo: user.congregationId);
+    if (churchId != null) {
+      cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellsSnap = await cellsQuery.get();
     final names = <String, String>{};
     final cellToSup = <String, String>{};
     for (final doc in cellsSnap.docs) {
@@ -89,9 +97,13 @@ class _CongregationMeetingsScreenState
     }
 
     // Listen to meetings
-    _meetingsSub = FirebaseFirestore.instance
+    Query<Map<String, dynamic>> meetingsQuery = FirebaseFirestore.instance
         .collection('meetings')
-        .where('congregationId', isEqualTo: user.congregationId)
+        .where('congregationId', isEqualTo: user.congregationId);
+    if (churchId != null) {
+      meetingsQuery = meetingsQuery.where('churchId', isEqualTo: churchId);
+    }
+    _meetingsSub = meetingsQuery
         .snapshots()
         .listen((snap) {
       if (mounted) {

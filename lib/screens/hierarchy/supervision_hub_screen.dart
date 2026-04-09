@@ -31,11 +31,15 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
     final hierarchy = context.read<HierarchyProvider>();
     final supervision = hierarchy.selectedSupervision;
     if (supervision == null) return;
+    final churchId = supervision.churchId;
 
-    final membersSnap = await _db
+    Query<Map<String, dynamic>> membersQuery = _db
         .collection('cell_members')
-        .where('supervisionId', isEqualTo: supervision.id)
-        .get();
+        .where('supervisionId', isEqualTo: supervision.id);
+    if (churchId != null) {
+      membersQuery = membersQuery.where('churchId', isEqualTo: churchId);
+    }
+    final membersSnap = await membersQuery.get();
     final activeDocs = membersSnap.docs
         .where((d) => (d.data())['isActive'] != false)
         .toList();
@@ -43,20 +47,26 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
         .where((d) => (d.data())['isVisitor'] == true)
         .length;
 
-    final cellsSnap = await _db
+    Query<Map<String, dynamic>> cellsQuery = _db
         .collection('cells')
-        .where('supervisionId', isEqualTo: supervision.id)
-        .get();
+        .where('supervisionId', isEqualTo: supervision.id);
+    if (churchId != null) {
+      cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final cellsSnap = await cellsQuery.get();
 
     // Semáforo: quantas células reuniram esta semana
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekCutoff = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
-    final meetingsSnap = await _db
+    Query<Map<String, dynamic>> meetingsQuery = _db
         .collection('meetings')
-        .where('supervisionId', isEqualTo: supervision.id)
-        .get();
+        .where('supervisionId', isEqualTo: supervision.id);
+    if (churchId != null) {
+      meetingsQuery = meetingsQuery.where('churchId', isEqualTo: churchId);
+    }
+    final meetingsSnap = await meetingsQuery.get();
     final cellsMetThisWeek = <String>{};
     for (final mDoc in meetingsSnap.docs) {
       final data = mDoc.data();

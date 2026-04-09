@@ -33,16 +33,18 @@ class _CellsTabState extends State<CellsTab> {
       case UserRole.pastor:
         context.read<CellProvider>().listenToCells(
               congregationId: user.congregationId,
+              churchId: auth.churchId,
             );
         break;
       case UserRole.supervisor:
         context.read<CellProvider>().listenToCells(
               supervisionId: user.supervisionId,
+              churchId: auth.churchId,
             );
         _loadSupervision(user.supervisionId);
         break;
       case UserRole.leader:
-        context.read<CellProvider>().listenToCells(leaderId: user.id);
+        context.read<CellProvider>().listenToCells(leaderId: user.id, churchId: auth.churchId);
         break;
     }
   }

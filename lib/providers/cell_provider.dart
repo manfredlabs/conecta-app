@@ -47,11 +47,14 @@ class CellProvider extends ChangeNotifier {
     if (!hasLeader) {
       // Resolve personId from people collection via userId
       String personId = '';
-      final peopleSnap = await FirebaseFirestore.instance
+      Query<Map<String, dynamic>> pQuery = FirebaseFirestore.instance
           .collection('people')
           .where('userId', isEqualTo: cell.leaderId)
-          .limit(1)
-          .get();
+          .limit(1);
+      if (cell.churchId != null) {
+        pQuery = pQuery.where('churchId', isEqualTo: cell.churchId);
+      }
+      final peopleSnap = await pQuery.get();
       if (peopleSnap.docs.isNotEmpty) {
         personId = peopleSnap.docs.first.id;
       }
@@ -73,6 +76,7 @@ class CellProvider extends ChangeNotifier {
     String? supervisionId,
     String? congregationId,
     String? leaderId,
+    String? churchId,
   }) {
     _cellsSub?.cancel();
     _cellsSub = _firestoreService
@@ -80,6 +84,7 @@ class CellProvider extends ChangeNotifier {
           supervisionId: supervisionId,
           congregationId: congregationId,
           leaderId: leaderId,
+          churchId: churchId,
         )
         .listen((cells) {
       _cells = cells;

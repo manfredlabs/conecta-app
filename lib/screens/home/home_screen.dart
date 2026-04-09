@@ -33,15 +33,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case UserRole.pastor:
         context
             .read<HierarchyProvider>()
-            .listenToSupervisions(congregationId: user.congregationId);
+            .listenToSupervisions(congregationId: user.congregationId, churchId: auth.churchId);
         break;
       case UserRole.supervisor:
         context
             .read<CellProvider>()
-            .listenToCells(supervisionId: user.supervisionId);
+            .listenToCells(supervisionId: user.supervisionId, churchId: auth.churchId);
         break;
       case UserRole.leader:
-        context.read<CellProvider>().listenToCells(leaderId: user.id);
+        context.read<CellProvider>().listenToCells(leaderId: user.id, churchId: auth.churchId);
         break;
     }
   }
@@ -213,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   hierarchy.selectSupervision(supervision);
                   context
                       .read<CellProvider>()
-                      .listenToCells(supervisionId: supervision.id);
+                      .listenToCells(supervisionId: supervision.id, churchId: supervision.churchId);
                   Navigator.pushNamed(context, '/cell-list');
                 },
               ),
