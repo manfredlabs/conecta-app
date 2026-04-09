@@ -39,8 +39,10 @@ class _HomeTabState extends State<HomeTab> {
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1);
     return docs.where((d) {
-      final date = (d.data() as Map<String, dynamic>)['date'] as Timestamp;
-      return date.toDate().isAfter(monthStart) || date.toDate().isAtSameMomentAs(monthStart);
+      final ts = (d.data() as Map<String, dynamic>)['date'];
+      if (ts == null || ts is! Timestamp) return false;
+      final date = ts.toDate();
+      return date.isAfter(monthStart) || date.isAtSameMomentAs(monthStart);
     }).length;
   }
 
@@ -87,7 +89,9 @@ class _HomeTabState extends State<HomeTab> {
         if (meetingsSnap.docs.isNotEmpty) {
           DateTime latest = DateTime(2000);
           for (final mDoc in meetingsSnap.docs) {
-            final date = (mDoc.data()['date'] as Timestamp).toDate();
+            final ts = mDoc.data()['date'];
+            if (ts == null || ts is! Timestamp) continue;
+            final date = ts.toDate();
             if (date.isAfter(latest)) latest = date;
           }
           lastMeetingDays = DateTime.now().difference(latest).inDays;
@@ -138,7 +142,9 @@ class _HomeTabState extends State<HomeTab> {
         if (meetingsSnap.docs.isNotEmpty) {
           DateTime latest = DateTime(2000);
           for (final mDoc in meetingsSnap.docs) {
-            final date = (mDoc.data()['date'] as Timestamp).toDate();
+            final ts = mDoc.data()['date'];
+            if (ts == null || ts is! Timestamp) continue;
+            final date = ts.toDate();
             if (date.isAfter(latest)) latest = date;
           }
           lastMeetingDays = DateTime.now().difference(latest).inDays;
@@ -204,7 +210,9 @@ class _HomeTabState extends State<HomeTab> {
       final cellsMetThisWeek = <String>{};
       for (final mDoc in meetingsSnap.docs) {
         final data = mDoc.data() as Map<String, dynamic>;
-        final date = (data['date'] as Timestamp).toDate();
+        final ts = data['date'];
+        if (ts == null || ts is! Timestamp) continue;
+        final date = ts.toDate();
         if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
           final cellId = data['cellId'] as String? ?? '';
           if (cellId.isNotEmpty) cellsMetThisWeek.add(cellId);

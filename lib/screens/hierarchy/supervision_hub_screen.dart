@@ -60,7 +60,9 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
     final cellsMetThisWeek = <String>{};
     for (final mDoc in meetingsSnap.docs) {
       final data = mDoc.data();
-      final date = (data['date'] as Timestamp).toDate();
+      final ts = data['date'];
+      if (ts == null || ts is! Timestamp) continue;
+      final date = ts.toDate();
       if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
         final cellId = data['cellId'] as String? ?? '';
         if (cellId.isNotEmpty) cellsMetThisWeek.add(cellId);

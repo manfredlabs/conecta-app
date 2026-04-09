@@ -220,7 +220,7 @@ class _MemberCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      member.name[0].toUpperCase(),
+                      member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,

@@ -373,26 +373,38 @@ class FirestoreService {
       String personId, Map<String, dynamic> data) async {
     await updatePerson(personId, data);
     if (data.containsKey('name')) {
+      final newName = data['name'] as String;
+
+      // Sync to all cell_members with this personId
       final snap = await _db
           .collection('cell_members')
           .where('personId', isEqualTo: personId)
           .get();
       for (final doc in snap.docs) {
-        await doc.reference.update({'personName': data['name']});
+        await doc.reference.update({'personName': newName});
       }
-      // Also update leaderName on cells where this person is leader
-      final leaderSnap = await _db
-          .collection('cell_members')
-          .where('personId', isEqualTo: personId)
-          .where('isLeader', isEqualTo: true)
-          .get();
-      for (final doc in leaderSnap.docs) {
-        final cellId = doc.data()['cellId'];
-        if (cellId != null) {
-          await _db
-              .collection('cells')
-              .doc(cellId)
-              .update({'leaderName': data['name']});
+
+      // Get person's userId for main leader / supervisor checks
+      final personDoc = await _db.collection('people').doc(personId).get();
+      final userId = personDoc.data()?['userId'] as String?;
+
+      if (userId != null) {
+        // Sync leaderName on cells where this person is MAIN leader
+        final cellsSnap = await _db
+            .collection('cells')
+            .where('leaderId', isEqualTo: userId)
+            .get();
+        for (final doc in cellsSnap.docs) {
+          await doc.reference.update({'leaderName': newName});
+        }
+
+        // Sync supervisorName on supervisions where this person is supervisor
+        final supSnap = await _db
+            .collection('supervisions')
+            .where('supervisorId', isEqualTo: userId)
+            .get();
+        for (final doc in supSnap.docs) {
+          await doc.reference.update({'supervisorName': newName});
         }
       }
     }
