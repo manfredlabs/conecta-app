@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cell_member_model.dart';
+import '../../models/person_model.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
@@ -93,30 +94,72 @@ class _EditCellScreenState extends State<EditCellScreen> {
     setState(() => _loadingMembers = true);
 
     final firestoreService = FirestoreService();
-    final members = await firestoreService.searchAllNonVisitorCellMembers();
-    final congMembers = members
-        .where((m) => m.congregationId == cell.congregationId)
+    final db = FirebaseFirestore.instance;
+
+    // Load all people from the church (all congregations)
+    final peopleSnap = await db.collection('people').get();
+    final people = peopleSnap.docs.map((d) => Person.fromFirestore(d)).toList();
+
+    // Load cell_members to know which cells each person belongs to
+    final cellMembersSnap = await db
+        .collection('cell_members')
+        .where('isVisitor', isEqualTo: false)
+        .get();
+    final cellMembers = cellMembersSnap.docs
+        .map((d) => CellMember.fromFirestore(d))
         .toList();
-    final cellIds = congMembers.map((m) => m.cellId).toSet();
+
+    final cellIds = cellMembers.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
       firestoreService.getUserRolesByName(),
     ]);
+    final cellNames = results[0] as Map<String, String>;
+    final nameRoles = results[1] as Map<String, String>;
+
+    // Build personId → cell info mapping
+    final personCells = <String, List<String>>{};
+    final personToCellMember = <String, CellMember>{};
+    for (final m in cellMembers) {
+      if (m.personId.isEmpty) continue;
+      final cellName = cellNames[m.cellId] ?? '';
+      final label = m.isActive ? cellName : '$cellName (Inativo)';
+      personCells.putIfAbsent(m.personId, () => []);
+      if (label.isNotEmpty) personCells[m.personId]!.add(label);
+      // Keep the first (or leader) cell_member for role display
+      if (!personToCellMember.containsKey(m.personId) || m.isLeader) {
+        personToCellMember[m.personId] = m;
+      }
+    }
+
+    // Create CellMember-like entries for people not in any cell
+    final allMembers = <CellMember>[];
+    for (final person in people) {
+      if (personToCellMember.containsKey(person.id)) {
+        allMembers.add(personToCellMember[person.id]!);
+      } else {
+        // Person not in any cell — create a synthetic entry
+        allMembers.add(CellMember(
+          id: '',
+          personId: person.id,
+          personName: person.name,
+          cellId: '',
+          supervisionId: '',
+          congregationId: person.congregationId,
+          isActive: true,
+          isLeader: false,
+          isHelper: false,
+          isVisitor: false,
+          person: person,
+        ));
+      }
+    }
 
     if (mounted) {
-      final personCells = <String, List<String>>{};
-      for (final m in congMembers) {
-        if (m.personId.isEmpty) continue;
-        final cellName = (results[0] as Map<String, String>)[m.cellId] ?? '';
-        final label = m.isActive ? cellName : '$cellName (Inativo)';
-        personCells.putIfAbsent(m.personId, () => []);
-        if (label.isNotEmpty) personCells[m.personId]!.add(label);
-      }
-
       setState(() {
-        _allMembers = congMembers;
-        _cellNames = results[0] as Map<String, String>;
-        _nameRoles = results[1] as Map<String, String>;
+        _allMembers = allMembers;
+        _cellNames = cellNames;
+        _nameRoles = nameRoles;
         _personCells = personCells;
         _loadingMembers = false;
       });
@@ -192,6 +235,99 @@ class _EditCellScreenState extends State<EditCellScreen> {
     });
   }
 
+  void _confirmLeaderChange() {
+    final firstName = _selectedLeaderName?.split(' ').first ?? '';
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.swap_horiz_rounded,
+                size: 28,
+                color: primaryColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Alterar líder para $firstName?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O líder atual será removido e $firstName assumirá a liderança desta célula.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _save();
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Confirmar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final suffix = _nameController.text.trim();
     if (suffix.isEmpty) return;
@@ -230,17 +366,16 @@ class _EditCellScreenState extends State<EditCellScreen> {
             .limit(1)
             .get();
 
-        // Find old leader's cell_member in this cell
+        // Find ALL leaders in this cell (main + co-leader)
         final oldLeaderCmSnap = await db
             .collection('cell_members')
             .where('cellId', isEqualTo: cell.id)
             .where('isLeader', isEqualTo: true)
-            .limit(1)
             .get();
 
-        // 1. Demote old leader
-        if (oldLeaderCmSnap.docs.isNotEmpty) {
-          final oldCm = oldLeaderCmSnap.docs.first;
+        // 1. Demote all current leaders (except if one is the new leader)
+        for (final oldCm in oldLeaderCmSnap.docs) {
+          if (oldCm.data()['personId'] == _selectedLeaderPersonId) continue;
           await cellProvider.updateCellMember(oldCm.id, {
             'isLeader': false,
           });
@@ -323,8 +458,15 @@ class _EditCellScreenState extends State<EditCellScreen> {
               .where((d) => d.id != cell.id)
               .toList();
           if (otherCells.isEmpty) {
+            // Check if old leader is a supervisor
+            final supSnap = await db
+                .collection('supervisions')
+                .where('supervisorId', isEqualTo: _originalLeaderId)
+                .limit(1)
+                .get();
+            final isSupervisor = supSnap.docs.isNotEmpty;
             await db.collection('users').doc(_originalLeaderId).update({
-              'role': 'leader',
+              'role': isSupervisor ? 'supervisor' : 'member',
               'cellId': FieldValue.delete(),
             });
           }
@@ -332,6 +474,11 @@ class _EditCellScreenState extends State<EditCellScreen> {
       }
 
       await cellProvider.updateCell(cell.id, cellUpdate);
+
+      // Refresh user state so home screen reflects role changes
+      if (leaderChanged && mounted) {
+        await context.read<AuthProvider>().refreshUser();
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -880,7 +1027,14 @@ class _EditCellScreenState extends State<EditCellScreen> {
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: _saving ? null : _save,
+                onPressed: _saving ? null : () {
+                  final leaderChanged = _selectedLeaderPersonId != null;
+                  if (leaderChanged) {
+                    _confirmLeaderChange();
+                  } else {
+                    _save();
+                  }
+                },
                 icon: _saving
                     ? const SizedBox(
                         width: 20,

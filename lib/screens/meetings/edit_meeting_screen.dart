@@ -414,19 +414,24 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
   Widget _buildMemberTile(CellMember member) {
     final isPresent = _presentMemberIds.contains(member.id);
 
+    final cell = context.read<CellProvider>().selectedCell;
     // Use snapshot role if available
     final String snapshotRole = _memberRoles[member.id] ?? '';
     final Color roleColor;
     final String roleLabel;
     if (snapshotRole.isNotEmpty) {
       roleColor = RoleColors.forSnapshot(snapshotRole, Theme.of(context));
-      roleLabel = snapshotRole == 'leader'
-          ? 'Líder'
-          : snapshotRole == 'helper'
-              ? 'Auxiliar'
-              : snapshotRole == 'visitor'
-                  ? 'Visitante'
-                  : 'Membro';
+      if (snapshotRole == 'leader' && cell != null && cell.leaderId != null && member.person?.userId != null && member.person?.userId != cell.leaderId) {
+        roleLabel = 'Co-líder';
+      } else {
+        roleLabel = snapshotRole == 'leader'
+            ? 'Líder'
+            : snapshotRole == 'helper'
+                ? 'Auxiliar'
+                : snapshotRole == 'visitor'
+                    ? 'Visitante'
+                    : 'Membro';
+      }
     } else {
       roleColor = RoleColors.forMember(
         theme: Theme.of(context),
@@ -434,13 +439,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
         isHelper: member.isHelper,
         isVisitor: member.isVisitor,
       );
-      roleLabel = member.isLeader
-          ? 'Líder'
-          : member.isHelper
-              ? 'Auxiliar'
-              : member.isVisitor
-                  ? 'Visitante'
-                  : 'Membro';
+      roleLabel = RoleColors.roleLabel(member, mainLeaderId: cell?.leaderId);
     }
 
     return Card(

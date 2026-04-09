@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cell_member_model.dart';
+import '../../models/person_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/hierarchy_provider.dart';
 import '../../services/firestore_service.dart';
 
@@ -64,30 +66,68 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
     setState(() => _loadingMembers = true);
 
     final firestoreService = FirestoreService();
-    final members = await firestoreService.searchAllNonVisitorCellMembers();
-    final congMembers = members
-        .where((m) => m.congregationId == supervision.congregationId)
+    final db = FirebaseFirestore.instance;
+
+    // Load all people from the church (all congregations)
+    final peopleSnap = await db.collection('people').get();
+    final people = peopleSnap.docs.map((d) => Person.fromFirestore(d)).toList();
+
+    // Load cell_members to know which cells each person belongs to
+    final cellMembersSnap = await db
+        .collection('cell_members')
+        .where('isVisitor', isEqualTo: false)
+        .get();
+    final cellMembers = cellMembersSnap.docs
+        .map((d) => CellMember.fromFirestore(d))
         .toList();
-    final cellIds = congMembers.map((m) => m.cellId).toSet();
+
+    final cellIds = cellMembers.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
       firestoreService.getUserRolesByName(),
     ]);
+    final cellNames = results[0] as Map<String, String>;
+    final nameRoles = results[1] as Map<String, String>;
+
+    final personCells = <String, List<String>>{};
+    final personToCellMember = <String, CellMember>{};
+    for (final m in cellMembers) {
+      if (m.personId.isEmpty) continue;
+      final cellName = cellNames[m.cellId] ?? '';
+      final label = m.isActive ? cellName : '$cellName (Inativo)';
+      personCells.putIfAbsent(m.personId, () => []);
+      if (label.isNotEmpty) personCells[m.personId]!.add(label);
+      if (!personToCellMember.containsKey(m.personId) || m.isLeader) {
+        personToCellMember[m.personId] = m;
+      }
+    }
+
+    final allMembers = <CellMember>[];
+    for (final person in people) {
+      if (personToCellMember.containsKey(person.id)) {
+        allMembers.add(personToCellMember[person.id]!);
+      } else {
+        allMembers.add(CellMember(
+          id: '',
+          personId: person.id,
+          personName: person.name,
+          cellId: '',
+          supervisionId: '',
+          congregationId: person.congregationId,
+          isActive: true,
+          isLeader: false,
+          isHelper: false,
+          isVisitor: false,
+          person: person,
+        ));
+      }
+    }
 
     if (mounted) {
-      final personCells = <String, List<String>>{};
-      for (final m in congMembers) {
-        if (m.personId.isEmpty) continue;
-        final cellName = (results[0] as Map<String, String>)[m.cellId] ?? '';
-        final label = m.isActive ? cellName : '$cellName (Inativo)';
-        personCells.putIfAbsent(m.personId, () => []);
-        if (label.isNotEmpty) personCells[m.personId]!.add(label);
-      }
-
       setState(() {
-        _allMembers = congMembers;
-        _cellNames = results[0] as Map<String, String>;
-        _nameRoles = results[1] as Map<String, String>;
+        _allMembers = allMembers;
+        _cellNames = cellNames;
+        _nameRoles = nameRoles;
         _personCells = personCells;
         _loadingMembers = false;
       });
@@ -163,6 +203,99 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
     });
   }
 
+  void _confirmSupervisorChange() {
+    final firstName = _selectedSupervisorName?.split(' ').first ?? '';
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.swap_horiz_rounded,
+                size: 28,
+                color: primaryColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Alterar supervisor para $firstName?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O supervisor atual será removido e $firstName assumirá esta supervisão.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _save();
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Confirmar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final suffix = _nameController.text.trim();
     if (suffix.isEmpty) return;
@@ -200,8 +333,8 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
             'supervisionId': supervision.id,
           });
 
-          // Handle old supervisor
-          if (_originalSupervisorId != null) {
+          // Handle old supervisor (skip if same person)
+          if (_originalSupervisorId != null && _originalSupervisorId != newUserId) {
             final cellsSnap = await db
                 .collection('cells')
                 .where('leaderId', isEqualTo: _originalSupervisorId)
@@ -211,7 +344,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
             final leadsCell = cellsSnap.docs.isNotEmpty;
 
             final oldUpdate = <String, dynamic>{
-              'role': leadsCell ? 'leader' : 'leader',
+              'role': leadsCell ? 'leader' : 'member',
               'supervisionId': FieldValue.delete(),
             };
             if (!leadsCell) {
@@ -233,11 +366,22 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
         await hierarchy.updateSupervision(supervision.id, updateData);
       }
 
+      // Refresh user state so home screen reflects role changes
+      if (supervisorChanged && mounted) {
+        await context.read<AuthProvider>().refreshUser();
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Supervisão atualizada!')),
         );
         Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -569,7 +713,16 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: _saving ? null : _save,
+                onPressed: _saving ? null : () {
+                  final supervisorChanged =
+                      _selectedSupervisorId != _originalSupervisorId &&
+                          _selectedSupervisorId != null;
+                  if (supervisorChanged) {
+                    _confirmSupervisorChange();
+                  } else {
+                    _save();
+                  }
+                },
                 icon: _saving
                     ? const SizedBox(
                         width: 20,

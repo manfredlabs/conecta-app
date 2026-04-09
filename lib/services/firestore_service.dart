@@ -548,6 +548,7 @@ class FirestoreService {
     await _db.collection('approval_requests').doc(requestId).update({
       'status': 'approved',
       'resolvedAt': FieldValue.serverTimestamp(),
+      'resolvedBy': changedBy,
     });
 
     // Track history
@@ -576,6 +577,7 @@ class FirestoreService {
     await _db.collection('approval_requests').doc(requestId).update({
       'status': 'rejected',
       'resolvedAt': FieldValue.serverTimestamp(),
+      'resolvedBy': changedBy,
     });
 
     await addMemberHistory(

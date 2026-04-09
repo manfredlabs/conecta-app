@@ -20,6 +20,7 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
   final _searchController = TextEditingController();
   List<CellMember> _members = [];
   Map<String, String> _cellNames = {};
+  Map<String, String?> _cellLeaderIds = {};
   bool _loading = true;
   String _searchQuery = '';
   String _filterCell = 'Todas';
@@ -49,6 +50,7 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
     final cells =
         cellsSnap.docs.map((d) => CellGroup.fromFirestore(d)).toList();
     final cellNames = {for (var c in cells) c.id: c.name};
+    final cellLeaderIds = {for (var c in cells) c.id: c.leaderId};
 
     final membersSnap = await _db
         .collection('cell_members')
@@ -75,6 +77,7 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
       setState(() {
         _members = members;
         _cellNames = cellNames;
+        _cellLeaderIds = cellLeaderIds;
         _cellFilterOptions = ['Todas', ...cellNames.values.toList()..sort()];
         _loading = false;
       });
@@ -228,6 +231,7 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
                             return _MemberCard(
                               member: member,
                               cellName: cellName,
+                              mainLeaderId: _cellLeaderIds[member.cellId],
                               onTap: () async {
                                 final cellProvider =
                                     context.read<CellProvider>();
@@ -258,19 +262,18 @@ class _SupervisionMembersScreenState extends State<SupervisionMembersScreen> {
 class _MemberCard extends StatelessWidget {
   final CellMember member;
   final String cellName;
+  final String? mainLeaderId;
   final VoidCallback onTap;
 
   const _MemberCard({
     required this.member,
     required this.cellName,
+    this.mainLeaderId,
     required this.onTap,
   });
 
   String get _roleLabel {
-    if (member.isLeader) return 'Líder';
-    if (member.isHelper) return 'Auxiliar';
-    if (member.isVisitor) return 'Visitante';
-    return 'Membro';
+    return RoleColors.roleLabel(member, mainLeaderId: mainLeaderId);
   }
 
   Color _roleColor(ThemeData theme) {

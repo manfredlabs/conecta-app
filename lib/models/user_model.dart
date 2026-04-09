@@ -40,6 +40,7 @@ class AppUser {
       congregationId: data['congregationId'],
       supervisionId: data['supervisionId'],
       cellId: data['cellId'],
+      personId: data['personId'],
       gender: data['gender'],
       birthDate: data['birthDate'] != null
           ? (data['birthDate'] as Timestamp).toDate()

@@ -67,6 +67,9 @@ class Permissions {
         user.supervisionId == cell.supervisionId) {
       return true;
     }
+    if (user.role == UserRole.leader && user.id == cell.leaderId) {
+      return true;
+    }
     return false;
   }
 

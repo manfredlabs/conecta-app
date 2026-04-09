@@ -49,6 +49,15 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     return Permissions.canPromoteToLeader(user, cell);
   }
 
+  bool get _isCoLeader {
+    if (!_member.isLeader) return false;
+    final cell = context.read<CellProvider>().selectedCell;
+    if (cell == null || cell.leaderId == null) return false;
+    final memberUserId = _member.person?.userId;
+    if (memberUserId == null || memberUserId.isEmpty) return false;
+    return memberUserId != cell.leaderId;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -106,7 +115,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   }
 
   String get _appBarTitle {
-    if (_member.isLeader) return 'Editar Líder';
+    if (_member.isLeader) return _isCoLeader ? 'Editar Co-líder' : 'Editar Líder';
     if (_member.isHelper) return 'Editar Auxiliar';
     if (_member.isVisitor) return 'Editar Visitante';
     if (!_member.isActive) return 'Editar Inativo';
@@ -816,7 +825,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Promover $firstName a líder?',
+              'Tornar $firstName co-líder?',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 17,
@@ -825,7 +834,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Esta pessoa passará a liderar esta célula.',
+              'Esta pessoa passará a co-liderar esta célula.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ),
@@ -870,10 +879,16 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         await cellProvider.updatePersonAndSync(
                             _member.personId, {'baptized': true});
                       }
+                      if (_member.person?.userId != null && _member.person!.userId!.isNotEmpty) {
+                        await FirestoreService().updateUser(
+                          _member.person!.userId!,
+                          {'role': 'leader', 'cellId': _member.cellId},
+                        );
+                      }
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('$firstName agora é líder!'),
+                            content: Text('$firstName agora é co-líder!'),
                           ),
                         );
                         Navigator.pop(context);
@@ -885,7 +900,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Promover'),
+                    child: const Text('Confirmar'),
                   ),
                 ),
               ],
@@ -897,7 +912,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     );
   }
 
-  void _confirmDemoteLeader() {
+  void _confirmRemoveCoLeader() {
     final firstName = _nameController.text.trim().split(' ').first;
 
     showModalBottomSheet(
@@ -934,7 +949,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Remover $firstName como líder?',
+              'Remover $firstName como co-líder?',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 17,
@@ -943,7 +958,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Escolha o que fazer com $firstName.\nDepois, selecione o novo líder.',
+              'Esta pessoa voltará a ser membro da célula.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ),
@@ -951,26 +966,72 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Row(
               children: [
                 Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _selectNewLeader(inactivate: false);
-                    },
-                    style: FilledButton.styleFrom(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Rebaixar'),
+                    child: const Text('Cancelar'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(ctx);
-                      _selectNewLeader(inactivate: true);
+                      final cellProvider = context.read<CellProvider>();
+                      final userId = context.read<AuthProvider>().appUser?.id ?? '';
+                      await cellProvider.updateCellMember(_member.id, {
+                        'isLeader': false,
+                      });
+                      await FirestoreService().addMemberHistory(
+                        cellMemberId: _member.id,
+                        action: 'role_change',
+                        from: 'leader',
+                        to: 'member',
+                        changedBy: userId,
+                        cellId: _member.cellId,
+                      );
+                      // Downgrade user role if they have an account
+                      if (_member.person?.userId != null && _member.person!.userId!.isNotEmpty) {
+                        final memberUid = _member.person!.userId!;
+                        final db = FirebaseFirestore.instance;
+                        // Check if this person is a supervisor
+                        final supSnap = await db
+                            .collection('supervisions')
+                            .where('supervisorId', isEqualTo: memberUid)
+                            .limit(1)
+                            .get();
+                        // Check if leader of other cells
+                        final otherCellsSnap = await db
+                            .collection('cells')
+                            .where('leaderId', isEqualTo: memberUid)
+                            .limit(1)
+                            .get();
+                        if (supSnap.docs.isNotEmpty) {
+                          // Keep as supervisor
+                        } else if (otherCellsSnap.docs.isNotEmpty) {
+                          // Keep as leader
+                        } else {
+                          await FirestoreService().updateUser(
+                            memberUid,
+                            {'role': 'member'},
+                          );
+                        }
+                      }
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$firstName não é mais co-líder.'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.red[400],
@@ -979,341 +1040,16 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Inativar'),
+                    child: const Text('Remover'),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey[700],
-                  side: BorderSide(color: Colors.grey[300]!),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Cancelar'),
-              ),
             ),
             const SizedBox(height: 8),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _selectNewLeader({required bool inactivate}) async {
-    final cell = context.read<CellProvider>().selectedCell;
-    final user = context.read<AuthProvider>().appUser;
-    if (cell == null || user == null) return;
-
-    // Show loading modal immediately
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final service = FirestoreService();
-    final allMembers = await service.getCellMembersByCongregation(cell.congregationId);
-
-    // Load supplementary data (cell names + user roles)
-    final cellIds = allMembers.map((m) => m.cellId).toSet();
-    final results = await Future.wait([
-      service.getCellNames(cellIds),
-      service.getUserRolesByName(),
-    ]);
-    final cellNameMap = results[0] as Map<String, String>;
-    final nameRoles = results[1] as Map<String, String>;
-
-    // Build personCells map (personId → list of cell names)
-    final personCells = <String, List<String>>{};
-    for (final m in allMembers) {
-      if (m.personId.isEmpty) continue;
-      final cellName = cellNameMap[m.cellId] ?? '';
-      personCells.putIfAbsent(m.personId, () => []);
-      if (cellName.isNotEmpty) personCells[m.personId]!.add(cellName);
-    }
-
-    // Filter: exclude the leader being demoted
-    final candidates = allMembers
-        .where((m) => m.id != _member.id && m.personId != _member.personId)
-        .toList();
-
-    // Sort by role priority (leader > helper > member) then name
-    int rolePriority(CellMember m) {
-      if (m.isLeader) return 0;
-      if (m.isHelper) return 1;
-      return 2;
-    }
-    candidates.sort((a, b) {
-      final rp = rolePriority(a).compareTo(rolePriority(b));
-      if (rp != 0) return rp;
-      return a.name.compareTo(b.name);
-    });
-
-    // Dedup by personId (keeps highest role)
-    final seen = <String>{};
-    final deduped = candidates.where((m) {
-      if (m.personId.isEmpty) return true;
-      if (seen.contains(m.personId)) return false;
-      seen.add(m.personId);
-      return true;
-    }).toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
-
-    final sameCellMembers = deduped.where((m) => m.cellId == cell.id).toList();
-    final otherCellMembers = deduped.where((m) => m.cellId != cell.id).toList();
-
-    // Find user's cell_member record (if any) to reuse in demotion
-    final userCellMember = deduped.where((m) =>
-        m.name.toLowerCase() == user.name.toLowerCase()).firstOrNull;
-
-    // Remove user from regular lists (they'll appear as "Eu mesmo" instead)
-    if (userCellMember != null) {
-      sameCellMembers.removeWhere((m) => m.id == userCellMember.id);
-      otherCellMembers.removeWhere((m) => m.id == userCellMember.id);
-    }
-
-    if (!mounted) return;
-    Navigator.pop(context); // dismiss loading spinner
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => _NewLeaderSelector(
-        sameCellMembers: sameCellMembers,
-        otherCellMembers: otherCellMembers,
-        cellNameMap: cellNameMap,
-        nameRoles: nameRoles,
-        personCells: personCells,
-        currentCell: cell,
-        showSelfOption: true,
-        selfName: user.name,
-        selfRole: user.roleDisplayName,
-        onSelected: (newLeader) {
-          Navigator.pop(ctx);
-          _executeDemotion(newLeader: newLeader, inactivate: inactivate);
-        },
-        onSelfSelected: () {
-          Navigator.pop(ctx);
-          if (userCellMember != null) {
-            _executeDemotion(newLeader: userCellMember, inactivate: inactivate);
-          } else {
-            _executeDemotionWithSelf(inactivate: inactivate);
-          }
-        },
-      ),
-    );
-  }
-
-  Future<void> _executeDemotion({
-    required CellMember newLeader,
-    required bool inactivate,
-  }) async {
-    final cellProvider = context.read<CellProvider>();
-    final cell = cellProvider.selectedCell;
-    if (cell == null) return;
-
-    setState(() => _saving = true);
-
-    try {
-      final userId = context.read<AuthProvider>().appUser?.id ?? '';
-      // 1. Demote current leader
-      await cellProvider.updateCellMember(_member.id, {
-        'isLeader': false,
-        if (inactivate) 'isActive': false,
-      });
-      await FirestoreService().addMemberHistory(
-        cellMemberId: _member.id,
-        action: 'role_change',
-        from: 'leader',
-        to: 'member',
-        changedBy: userId,
-        cellId: _member.cellId,
-      );
-      if (inactivate) {
-        await FirestoreService().addMemberHistory(
-          cellMemberId: _member.id,
-          action: 'status_change',
-          from: 'active',
-          to: 'inactive',
-          changedBy: userId,
-          cellId: _member.cellId,
-        );
-      }
-
-      // 2. Promote new leader
-      if (newLeader.cellId == cell.id) {
-        final fromRole = newLeader.isHelper ? 'helper' : 'member';
-        await cellProvider.updateCellMember(newLeader.id, {
-          'isLeader': true,
-          'isHelper': false,
-        });
-        await FirestoreService().addMemberHistory(
-          cellMemberId: newLeader.id,
-          action: 'role_change',
-          from: fromRole,
-          to: 'leader',
-          changedBy: userId,
-          cellId: cell.id,
-        );
-      } else {
-        final newCmId = await cellProvider.addNewCellMember(CellMember(
-          id: '',
-          personId: newLeader.personId,
-          personName: newLeader.name,
-          cellId: cell.id,
-          supervisionId: cell.supervisionId,
-          congregationId: cell.congregationId,
-          isLeader: true,
-        ));
-        if (newCmId != null) {
-          await FirestoreService().addMemberHistory(
-            cellMemberId: newCmId,
-            action: 'joined',
-            changedBy: userId,
-            cellId: cell.id,
-          );
-          await FirestoreService().addMemberHistory(
-            cellMemberId: newCmId,
-            action: 'role_change',
-            from: 'member',
-            to: 'leader',
-            changedBy: userId,
-            cellId: cell.id,
-          );
-        }
-      }
-
-      // 3. Update cell doc
-      await cellProvider.updateCell(cell.id, {
-        'leaderName': newLeader.name,
-      });
-
-      if (mounted) {
-        final firstName = _nameController.text.trim().split(' ').first;
-        final action = inactivate ? 'inativado' : 'rebaixado a membro';
-        final newFirst = newLeader.name.split(' ').first;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$firstName foi $action. $newFirst é o novo líder!'),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  Future<void> _executeDemotionWithSelf({required bool inactivate}) async {
-    final cellProvider = context.read<CellProvider>();
-    final cell = cellProvider.selectedCell;
-    final user = context.read<AuthProvider>().appUser;
-    if (cell == null || user == null) return;
-
-    setState(() => _saving = true);
-
-    try {
-      // 1. Demote current leader
-      await cellProvider.updateCellMember(_member.id, {
-        'isLeader': false,
-        if (inactivate) 'isActive': false,
-      });
-      await FirestoreService().addMemberHistory(
-        cellMemberId: _member.id,
-        action: 'role_change',
-        from: 'leader',
-        to: 'member',
-        changedBy: user.id,
-        cellId: _member.cellId,
-      );
-      if (inactivate) {
-        await FirestoreService().addMemberHistory(
-          cellMemberId: _member.id,
-          action: 'status_change',
-          from: 'active',
-          to: 'inactive',
-          changedBy: user.id,
-          cellId: _member.cellId,
-        );
-      }
-
-      // 2. Resolve personId (create person record if needed)
-      var personId = user.personId ?? '';
-      if (personId.isEmpty) {
-        final db = FirebaseFirestore.instance;
-        // Try to find existing person by userId
-        final existingPerson = await db
-            .collection('people')
-            .where('userId', isEqualTo: user.id)
-            .limit(1)
-            .get();
-        if (existingPerson.docs.isNotEmpty) {
-          personId = existingPerson.docs.first.id;
-        } else {
-          // Create a person record for this user
-          final newPersonRef = await db.collection('people').add({
-            'name': user.name,
-            'userId': user.id,
-            'congregationId': cell.congregationId,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-          personId = newPersonRef.id;
-        }
-      }
-
-      // 3. Create cell_member doc for self as leader
-      await cellProvider.addNewCellMember(CellMember(
-        id: '',
-        personId: personId,
-        personName: user.name,
-        cellId: cell.id,
-        supervisionId: cell.supervisionId,
-        congregationId: cell.congregationId,
-        isLeader: true,
-      ));
-
-      // 3. Update cell doc
-      await cellProvider.updateCell(cell.id, {
-        'leaderName': user.name,
-        'leaderId': user.id,
-      });
-
-      if (mounted) {
-        final firstName = _nameController.text.trim().split(' ').first;
-        final action = inactivate ? 'inativado' : 'rebaixado a membro';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$firstName foi $action. Você é o novo líder!'),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
   }
 
   Future<void> _save() async {
@@ -1732,7 +1468,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ),
                   ],
 
-                  // ── Promover a Líder ──
+                  // ── Tornar Co-líder ──
                   if (!_member.isLeader &&
                       !_member.isVisitor &&
                       _member.isActive &&
@@ -1763,7 +1499,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Text(
-                                  'Promover a Líder',
+                                  'Tornar Co-líder',
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: primaryColor,
@@ -1773,6 +1509,54 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                               Icon(
                                 Icons.chevron_right_rounded,
                                 color: primaryColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // ── Remover como Co-líder ──
+                  if (_isCoLeader &&
+                      _member.isActive &&
+                      _canDemoteLeader) ...[
+                    const SizedBox(height: 8),
+                    Card(
+                      color: Colors.red.withValues(alpha: 0.05),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _confirmRemoveCoLeader,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.person_remove_rounded,
+                                  color: Colors.red[400],
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  'Remover como Co-líder',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red[400],
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.red[400],
                               ),
                             ],
                           ),

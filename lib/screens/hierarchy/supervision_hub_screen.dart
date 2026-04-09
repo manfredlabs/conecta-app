@@ -98,21 +98,6 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
         final canEdit = user != null &&
             Permissions.canEditSupervision(user, supervision);
 
-        // Semáforo cor
-        Color semaphoreColor;
-        if (_totalCells == 0) {
-          semaphoreColor = Colors.grey;
-        } else {
-          final pct = _cellsMet / _totalCells;
-          if (pct >= 0.75) {
-            semaphoreColor = Colors.green;
-          } else if (pct >= 0.50) {
-            semaphoreColor = Colors.orange;
-          } else {
-            semaphoreColor = Colors.red;
-          }
-        }
-
         return Scaffold(
           body: CustomScrollView(
             slivers: [
@@ -226,16 +211,6 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                       subtitle: _loading
                           ? 'Carregando...'
                           : '$_cellsMet/$_totalCells células reuniram esta semana',
-                      trailing: _loading
-                          ? null
-                          : Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: semaphoreColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
                       onTap: () async {
                         await Navigator.pushNamed(
                           context,
@@ -390,12 +365,16 @@ class _HeaderChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],

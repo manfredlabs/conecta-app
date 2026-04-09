@@ -449,13 +449,8 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
       isHelper: member.isHelper,
       isVisitor: member.isVisitor,
     );
-    final roleLabel = member.isLeader
-        ? 'Líder'
-        : member.isHelper
-            ? 'Auxiliar'
-            : member.isVisitor
-                ? 'Visitante'
-                : 'Membro';
+    final cell = context.read<CellProvider>().selectedCell;
+    final roleLabel = RoleColors.roleLabel(member, mainLeaderId: cell?.leaderId);
 
     return Card(
       margin: EdgeInsets.zero,

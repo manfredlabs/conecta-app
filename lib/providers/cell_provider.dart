@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/cell_model.dart';
 import '../models/member_model.dart';
@@ -44,9 +45,20 @@ class CellProvider extends ChangeNotifier {
     final snap = await _firestoreService.getCellMembersByCell(cell.id);
     final hasLeader = snap.any((m) => m.isLeader);
     if (!hasLeader) {
+      // Resolve personId from people collection via userId
+      String personId = '';
+      final peopleSnap = await FirebaseFirestore.instance
+          .collection('people')
+          .where('userId', isEqualTo: cell.leaderId)
+          .limit(1)
+          .get();
+      if (peopleSnap.docs.isNotEmpty) {
+        personId = peopleSnap.docs.first.id;
+      }
+
       await _firestoreService.addCellMember(CellMember(
         id: '',
-        personId: '',
+        personId: personId,
         personName: cell.leaderName!,
         cellId: cell.id,
         supervisionId: cell.supervisionId,
@@ -186,7 +198,10 @@ class CellProvider extends ChangeNotifier {
     if (data.containsKey('personName') || data.containsKey('isLeader')) {
       final member = _cellMembers.where((m) => m.id == id).firstOrNull;
       if (member != null && member.isLeader && _selectedCell != null) {
-        if (data.containsKey('personName')) {
+        // Only sync leaderName for the MAIN leader (not co-leader)
+        final isMainLeader = member.person?.userId != null &&
+            member.person?.userId == _selectedCell!.leaderId;
+        if (isMainLeader && data.containsKey('personName')) {
           await _firestoreService.updateCell(
             _selectedCell!.id,
             {'leaderName': data['personName']},

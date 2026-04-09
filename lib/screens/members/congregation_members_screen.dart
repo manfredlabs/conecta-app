@@ -21,6 +21,7 @@ class _CongregationMembersScreenState
   final _searchController = TextEditingController();
   List<CellMember> _members = [];
   Map<String, String> _cellNames = {};
+  Map<String, String?> _cellLeaderIds = {};
   Map<String, String> _supNames = {};
   Map<String, String> _cellToSup = {};
   bool _loading = true;
@@ -61,6 +62,7 @@ class _CongregationMembersScreenState
     final cells =
         cellsSnap.docs.map((d) => CellGroup.fromFirestore(d)).toList();
     final cellNames = {for (var c in cells) c.id: c.name};
+    final cellLeaderIds = {for (var c in cells) c.id: c.leaderId};
     final cellToSup = {for (var c in cells) c.id: c.supervisionId};
 
     final membersSnap = await _db
@@ -88,6 +90,7 @@ class _CongregationMembersScreenState
       setState(() {
         _members = members;
         _cellNames = cellNames;
+        _cellLeaderIds = cellLeaderIds;
         _supNames = supNames;
         _cellToSup = cellToSup;
         _supFilterOptions = ['Todas', ...supNames.values.toList()..sort()];
@@ -250,6 +253,7 @@ class _CongregationMembersScreenState
                               member: member,
                               cellName: cellName,
                               supervisionName: supName,
+                              mainLeaderId: _cellLeaderIds[member.cellId],
                               onTap: () async {
                                 final cellProvider =
                                     context.read<CellProvider>();
@@ -281,20 +285,19 @@ class _MemberCard extends StatelessWidget {
   final CellMember member;
   final String cellName;
   final String? supervisionName;
+  final String? mainLeaderId;
   final VoidCallback onTap;
 
   const _MemberCard({
     required this.member,
     required this.cellName,
     this.supervisionName,
+    this.mainLeaderId,
     required this.onTap,
   });
 
   String get _roleLabel {
-    if (member.isLeader) return 'Líder';
-    if (member.isHelper) return 'Auxiliar';
-    if (member.isVisitor) return 'Visitante';
-    return 'Membro';
+    return RoleColors.roleLabel(member, mainLeaderId: mainLeaderId);
   }
 
   Color _roleColor(ThemeData theme) {

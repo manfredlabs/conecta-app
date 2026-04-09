@@ -125,6 +125,7 @@ class CellMembersScreen extends StatelessWidget {
                           member: member,
                           canManage: canManage,
                           locked: false,
+                          mainLeaderId: cell.leaderId,
                         )),
                     if (inactiveMembers.isNotEmpty) ...[
                       Padding(
@@ -153,6 +154,7 @@ class CellMembersScreen extends StatelessWidget {
                             member: member,
                             inactive: true,
                             canManage: canManage,
+                            mainLeaderId: cell.leaderId,
                           )),
                     ],
                   ],
@@ -168,14 +170,10 @@ class _MemberCard extends StatelessWidget {
   final bool inactive;
   final bool canManage;
   final bool locked;
-  const _MemberCard({required this.member, this.inactive = false, this.canManage = false, this.locked = false});
+  final String? mainLeaderId;
+  const _MemberCard({required this.member, this.inactive = false, this.canManage = false, this.locked = false, this.mainLeaderId});
 
-  String get _roleLabel {
-    if (member.isLeader) return 'Líder';
-    if (member.isHelper) return 'Auxiliar';
-    if (member.isVisitor) return 'Visitante';
-    return 'Membro';
-  }
+  String get _roleLabel => RoleColors.roleLabel(member, mainLeaderId: mainLeaderId);
 
   Color _roleColor(ThemeData theme) {
     return RoleColors.forMember(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/permissions.dart';
+import '../../utils/role_colors.dart';
 import '../../models/meeting_model.dart';
 import '../../models/cell_member_model.dart';
 
@@ -101,14 +102,14 @@ class MeetingDetailScreen extends StatelessWidget {
     );
   }
 
-  String _roleLabel(CellMember m) {
-    if (m.isLeader) return 'Líder';
-    if (m.isHelper) return 'Auxiliar';
-    if (m.isVisitor) return 'Visitante';
-    return 'Membro';
+  String _roleLabel(CellMember m, {String? mainLeaderId}) {
+    return RoleColors.roleLabel(m, mainLeaderId: mainLeaderId);
   }
 
-  String _snapshotRoleLabel(String role) {
+  String _snapshotRoleLabel(String role, {CellMember? member, String? mainLeaderId}) {
+    if (role == 'leader' && member != null && mainLeaderId != null && member.person?.userId != null && member.person?.userId != mainLeaderId) {
+      return 'Co-líder';
+    }
     switch (role) {
       case 'leader':
         return 'Líder';
@@ -244,8 +245,8 @@ class MeetingDetailScreen extends StatelessWidget {
                     _MemberRow(
                       name: presentMembers[i].name,
                       role: meeting.memberRoles.containsKey(presentMembers[i].id)
-                          ? _snapshotRoleLabel(meeting.memberRoles[presentMembers[i].id]!)
-                          : _roleLabel(presentMembers[i]),
+                          ? _snapshotRoleLabel(meeting.memberRoles[presentMembers[i].id]!, member: presentMembers[i], mainLeaderId: cell?.leaderId)
+                          : _roleLabel(presentMembers[i], mainLeaderId: cell?.leaderId),
                       roleColor: _roleColor(presentMembers[i], theme),
                       isPresent: true,
                     ),
@@ -283,8 +284,8 @@ class MeetingDetailScreen extends StatelessWidget {
                     _MemberRow(
                       name: absentMembers[i].name,
                       role: meeting.memberRoles.containsKey(absentMembers[i].id)
-                          ? _snapshotRoleLabel(meeting.memberRoles[absentMembers[i].id]!)
-                          : _roleLabel(absentMembers[i]),
+                          ? _snapshotRoleLabel(meeting.memberRoles[absentMembers[i].id]!, member: absentMembers[i], mainLeaderId: cell?.leaderId)
+                          : _roleLabel(absentMembers[i], mainLeaderId: cell?.leaderId),
                       roleColor: _roleColor(absentMembers[i], theme),
                       isPresent: false,
                     ),

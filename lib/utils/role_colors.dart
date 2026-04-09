@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/cell_member_model.dart';
 
 /// Centralized role colors used across the app.
 /// Leader uses theme primary, so it requires a ThemeData parameter.
@@ -36,5 +37,20 @@ class RoleColors {
       default:
         return member;
     }
+  }
+
+  /// Returns the role label for a cell member, distinguishing co-leader.
+  /// [mainLeaderId] is the cell's leaderId (userId from cell doc).
+  static String roleLabel(CellMember member, {String? mainLeaderId}) {
+    if (member.isLeader) {
+      final memberUserId = member.person?.userId;
+      if (mainLeaderId != null && memberUserId != null && memberUserId != mainLeaderId) {
+        return 'Co-líder';
+      }
+      return 'Líder';
+    }
+    if (member.isHelper) return 'Auxiliar';
+    if (member.isVisitor) return 'Visitante';
+    return 'Membro';
   }
 }

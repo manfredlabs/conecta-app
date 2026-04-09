@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/permissions.dart';
@@ -53,7 +54,7 @@ class CellHubScreen extends StatelessWidget {
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: 180,
+                expandedHeight: 220,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
@@ -62,7 +63,7 @@ class CellHubScreen extends StatelessWidget {
                     ),
                     child: SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 48, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,6 +95,58 @@ class CellHubScreen extends StatelessWidget {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
+                                if (cell.congregationId.isNotEmpty || cell.supervisionId.isNotEmpty)
+                                  FutureBuilder<List<DocumentSnapshot>>(
+                                    future: Future.wait([
+                                      if (cell.congregationId.isNotEmpty)
+                                        FirebaseFirestore.instance
+                                            .collection('congregations')
+                                            .doc(cell.congregationId)
+                                            .get()
+                                      else
+                                        Future.value(null),
+                                      if (cell.supervisionId.isNotEmpty)
+                                        FirebaseFirestore.instance
+                                            .collection('supervisions')
+                                            .doc(cell.supervisionId)
+                                            .get()
+                                      else
+                                        Future.value(null),
+                                    ].whereType<Future<DocumentSnapshot>>().toList()),
+                                    builder: (context, snap) {
+                                      final docs = snap.data;
+                                      String congName = '';
+                                      String supName = '';
+                                      if (docs != null) {
+                                        int idx = 0;
+                                        if (cell.congregationId.isNotEmpty) {
+                                          congName = (docs[idx].data() as Map<String, dynamic>?)?['name'] as String? ?? '';
+                                          idx++;
+                                        }
+                                        if (cell.supervisionId.isNotEmpty && idx < docs.length) {
+                                          supName = (docs[idx].data() as Map<String, dynamic>?)?['name'] as String? ?? '';
+                                        }
+                                      }
+                                      return Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: [
+                                          if (congName.isNotEmpty)
+                                            _HeaderChip(
+                                              icon: Icons.church_rounded,
+                                              label: congName,
+                                              color: primaryColor,
+                                            ),
+                                          if (supName.isNotEmpty)
+                                            _HeaderChip(
+                                              icon: Icons.account_balance_rounded,
+                                              label: supName,
+                                              color: primaryColor,
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  ),
                                 if (scheduleText != null)
                                   _HeaderChip(
                                     icon: Icons.schedule_rounded,
@@ -297,12 +350,16 @@ class _HeaderChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
         ],

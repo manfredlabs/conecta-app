@@ -71,7 +71,9 @@ class Meeting {
       cellId: data['cellId'] ?? '',
       supervisionId: data['supervisionId'] ?? '',
       congregationId: data['congregationId'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
+      date: data['date'] != null
+          ? (data['date'] as Timestamp).toDate()
+          : DateTime.now(),
       presentMemberIds: List<String>.from(data['presentMemberIds'] ?? []),
       memberRoles: Map<String, String>.from(data['memberRoles'] ?? {}),
       visitors: (data['visitors'] as List<dynamic>?)
