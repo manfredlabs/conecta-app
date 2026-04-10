@@ -56,7 +56,7 @@ class _AgendaTabState extends State<AgendaTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Text(
                 'Agenda',
                 style: theme.textTheme.headlineMedium,
@@ -115,13 +115,10 @@ class _AgendaTabState extends State<AgendaTab> {
   ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE0E0E0).withValues(alpha: 0.5),
-        ),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TableCalendar<ChurchEvent>(
         locale: 'pt_BR',
@@ -131,6 +128,8 @@ class _AgendaTabState extends State<AgendaTab> {
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         calendarFormat: _calendarFormat,
         startingDayOfWeek: StartingDayOfWeek.sunday,
+        daysOfWeekHeight: 32,
+        rowHeight: 48,
         eventLoader: (day) => _eventsForDay(day, grouped),
         onDaySelected: (selected, focused) {
           setState(() {
