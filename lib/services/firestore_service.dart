@@ -220,6 +220,17 @@ class FirestoreService {
     return snap.docs.map((d) => Member.fromFirestore(d)).toList();
   }
 
+  /// Todos os membros (ativos + inativos) exceto visitantes — para aniversários
+  Future<List<Member>> getAllMembersForBirthdays({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('members')
+        .where('isVisitor', isEqualTo: false);
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    final snap = await query.get();
+    return snap.docs.map((d) => Member.fromFirestore(d)).toList();
+  }
+
   Future<List<CellGroup>> getCellListByCongregation(String congregationId) async {
     final snap = await _db
         .collection('cells')

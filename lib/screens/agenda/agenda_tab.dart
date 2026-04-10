@@ -71,7 +71,7 @@ class _AgendaTabState extends State<AgendaTab> {
     if (_loadingBirthdays) return;
     setState(() => _loadingBirthdays = true);
     final auth = context.read<AuthProvider>();
-    final members = await _service.searchAllActiveMembers(churchId: auth.churchId);
+    final members = await _service.getAllMembersForBirthdays(churchId: auth.churchId);
     if (mounted) {
       setState(() {
         _birthdayMembers = members.where((m) => m.birthDate != null).toList();
