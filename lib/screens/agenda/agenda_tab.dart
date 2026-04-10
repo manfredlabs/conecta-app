@@ -115,9 +115,10 @@ class _AgendaTabState extends State<AgendaTab> {
   ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFFE0E0E0).withValues(alpha: 0.5),
         ),
@@ -164,23 +165,25 @@ class _AgendaTabState extends State<AgendaTab> {
           weekdayStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
           ),
           weekendStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
           ),
         ),
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
+          cellMargin: const EdgeInsets.all(4),
           todayDecoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.1),
+            color: primaryColor.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
           todayTextStyle: TextStyle(
             color: primaryColor,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
           ),
           selectedDecoration: BoxDecoration(
             color: primaryColor,
@@ -188,17 +191,43 @@ class _AgendaTabState extends State<AgendaTab> {
           ),
           selectedTextStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
           ),
-          defaultTextStyle: const TextStyle(fontSize: 14),
-          weekendTextStyle: const TextStyle(fontSize: 14),
-          markerDecoration: BoxDecoration(
-            color: primaryColor,
-            shape: BoxShape.circle,
-          ),
-          markerSize: 6,
-          markersMaxCount: 3,
-          markerMargin: const EdgeInsets.symmetric(horizontal: 1),
+          defaultTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          weekendTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          // Hide default markers — we use custom builders
+          markersMaxCount: 0,
+        ),
+        calendarBuilders: CalendarBuilders<ChurchEvent>(
+          markerBuilder: (context, day, events) {
+            if (events.isEmpty) return null;
+            final isSelected = isSameDay(_selectedDay, day);
+            final isToday = isSameDay(day, DateTime.now());
+            final dotColor = isSelected
+                ? Colors.white
+                : isToday
+                    ? primaryColor
+                    : primaryColor.withValues(alpha: 0.7);
+            return Positioned(
+              bottom: 4,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  events.length > 3 ? 3 : events.length,
+                  (i) => Container(
+                    width: 5,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(
+                      color: dotColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
