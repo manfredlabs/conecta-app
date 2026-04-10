@@ -13,44 +13,21 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  late final PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   void _onTabTapped(int index) {
-    setState(() => _currentIndex = index);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _onPageChanged(int index) {
     setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
+      body: IndexedStack(
+        index: _currentIndex,
         children: [
           HomeTab(onSwitchTab: _onTabTapped),
-          BulletinTab(),
-          AgendaTab(),
-          ProfileTab(),
+          const BulletinTab(),
+          const AgendaTab(),
+          const ProfileTab(),
         ],
       ),
       bottomNavigationBar: Container(

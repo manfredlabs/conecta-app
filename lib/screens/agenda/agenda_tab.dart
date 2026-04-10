@@ -22,10 +22,7 @@ class AgendaTab extends StatefulWidget {
   State<AgendaTab> createState() => _AgendaTabState();
 }
 
-class _AgendaTabState extends State<AgendaTab> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _AgendaTabState extends State<AgendaTab> {
   final _service = FirestoreService();
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
@@ -91,9 +88,7 @@ class _AgendaTabState extends State<AgendaTab> with AutomaticKeepAliveClientMixi
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
     final auth = context.watch<AuthProvider>();
     final user = auth.appUser;
     if (user == null) return const Center(child: CircularProgressIndicator());

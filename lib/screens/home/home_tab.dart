@@ -18,10 +18,7 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
+class _HomeTabState extends State<HomeTab> {
   final _db = FirebaseFirestore.instance;
   Map<String, dynamic> _stats = {};
   bool _loading = true;
@@ -409,7 +406,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   @override
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final auth = context.watch<AuthProvider>();
     final user = auth.appUser;
 
