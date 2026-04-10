@@ -59,10 +59,9 @@ class _BulletinTabState extends State<BulletinTab> {
           ],
         ),
         floatingActionButton: isAdmin
-            ? FloatingActionButton.extended(
+            ? FloatingActionButton(
                 onPressed: () => _showUploadModal(context),
-                icon: const Icon(Icons.upload_file_rounded),
-                label: const Text('Enviar'),
+                child: const Icon(Icons.add_rounded),
               )
             : null,
       ),
@@ -559,6 +558,7 @@ class _BulletinTabState extends State<BulletinTab> {
     final titleController = TextEditingController();
     PlatformFile? selectedFile;
     bool uploading = false;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     showModalBottomSheet(
       context: context,
@@ -571,26 +571,42 @@ class _BulletinTabState extends State<BulletinTab> {
           builder: (ctx, setModalState) {
             return Padding(
               padding: EdgeInsets.fromLTRB(
-                20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20,
+                24, 28, 24, MediaQuery.of(ctx).viewInsets.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
+                  const SizedBox(height: 24),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.upload_file_rounded,
+                      size: 28,
+                      color: primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
                     'Enviar documento',
-                    style: Theme.of(ctx).textTheme.titleLarge,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'PDF ou Word',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -602,7 +618,6 @@ class _BulletinTabState extends State<BulletinTab> {
                     textCapitalization: TextCapitalization.sentences,
                   ),
                   const SizedBox(height: 16),
-                  // File picker
                   InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () async {
@@ -629,13 +644,13 @@ class _BulletinTabState extends State<BulletinTab> {
                                 ? _fileIcon(selectedFile!.extension ?? 'pdf')
                                 : Icons.attach_file_rounded,
                             color: selectedFile != null
-                                ? Theme.of(ctx).colorScheme.primary
+                                ? primaryColor
                                 : Colors.grey[500],
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              selectedFile?.name ?? 'Selecionar arquivo (PDF ou Word)',
+                              selectedFile?.name ?? 'Selecionar arquivo',
                               style: TextStyle(
                                 color: selectedFile != null
                                     ? const Color(0xFF2D3436)
@@ -650,37 +665,61 @@ class _BulletinTabState extends State<BulletinTab> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: uploading || selectedFile == null
-                          ? null
-                          : () async {
-                              final title = titleController.text.trim();
-                              if (title.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Informe o título')),
-                                );
-                                return;
-                              }
-                              setModalState(() => uploading = true);
-                              await _uploadBulletin(title, selectedFile!);
-                              if (ctx.mounted) Navigator.pop(ctx);
-                            },
-                      child: uploading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Enviar'),
-                    ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: uploading ? null : () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey[700],
+                            side: BorderSide(color: Colors.grey[300]!),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: uploading || selectedFile == null
+                              ? null
+                              : () async {
+                                  final title = titleController.text.trim();
+                                  if (title.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Informe o título')),
+                                    );
+                                    return;
+                                  }
+                                  setModalState(() => uploading = true);
+                                  await _uploadBulletin(title, selectedFile!);
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                },
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: uploading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Enviar'),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
                 ],
               ),
             );
