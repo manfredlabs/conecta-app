@@ -15,11 +15,16 @@ class BulletinTab extends StatefulWidget {
   State<BulletinTab> createState() => _BulletinTabState();
 }
 
-class _BulletinTabState extends State<BulletinTab> {
+class _BulletinTabState extends State<BulletinTab> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final _service = FirestoreService();
 
   @override
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final auth = context.watch<AuthProvider>();
     final user = auth.appUser;
     if (user == null) return const Center(child: CircularProgressIndicator());
