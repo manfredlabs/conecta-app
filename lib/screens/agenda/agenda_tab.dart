@@ -210,7 +210,7 @@ class _AgendaTabState extends State<AgendaTab> {
                     ? primaryColor
                     : primaryColor.withValues(alpha: 0.7);
             return Positioned(
-              bottom: 6,
+              bottom: 9,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(
