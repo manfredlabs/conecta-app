@@ -112,7 +112,12 @@ class _BulletinTabState extends State<BulletinTab> {
                 ),
           ),
           const SizedBox(height: 8),
-          ...previous.map((b) => _buildBulletinCard(b, isAdmin)),
+          ...previous.asMap().entries.map((entry) {
+            final widgets = <Widget>[];
+            if (entry.key > 0) widgets.add(const SizedBox(height: 8));
+            widgets.add(_buildBulletinCard(entry.value, isAdmin));
+            return Column(children: widgets);
+          }),
         ],
       ],
     );
@@ -273,7 +278,7 @@ class _BulletinTabState extends State<BulletinTab> {
     final theme = Theme.of(context);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _openBulletin(bulletin),
@@ -285,7 +290,7 @@ class _BulletinTabState extends State<BulletinTab> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.08),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
