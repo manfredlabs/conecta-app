@@ -20,15 +20,20 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = [
+      HomeTab(onSwitchTab: _onTabTapped),
+      const BulletinTab(),
+      const AgendaTab(),
+      const ProfileTab(),
+    ];
+
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          HomeTab(onSwitchTab: _onTabTapped),
-          const BulletinTab(),
-          const AgendaTab(),
-          const ProfileTab(),
-        ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: KeyedSubtree(
+          key: ValueKey(_currentIndex),
+          child: tabs[_currentIndex],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
