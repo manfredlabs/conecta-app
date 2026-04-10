@@ -270,10 +270,14 @@ class _HomeTabState extends State<HomeTab> {
         congMembersQuery = congMembersQuery.where('churchId', isEqualTo: churchId);
       }
       final membersSnap = await congMembersQuery.get();
-      final activeCongMembers = membersSnap.docs
+      final activeCongDocs = membersSnap.docs
           .where((d) => (d.data())['isActive'] != false)
+          .toList();
+      final congVisitors = activeCongDocs
+          .where((d) => (d.data())['isVisitor'] == true)
           .length;
-      stats['congMembers'] = activeCongMembers;
+      stats['congMembers'] = activeCongDocs.length - congVisitors;
+      stats['congVisitors'] = congVisitors;
 
       Query<Map<String, dynamic>> congMeetingsQuery = _db
           .collection('meetings')
@@ -283,6 +287,23 @@ class _HomeTabState extends State<HomeTab> {
       }
       final meetingsSnap = await congMeetingsQuery.get();
       stats['congWeeklyMeetings'] = _countRecentMeetings(meetingsSnap.docs);
+
+      // Células que reuniram esta semana
+      final congNow = DateTime.now();
+      final congWeekStart = congNow.subtract(Duration(days: congNow.weekday - 1));
+      final congWeekCutoff = DateTime(congWeekStart.year, congWeekStart.month, congWeekStart.day);
+      final congCellsMet = <String>{};
+      for (final mDoc in meetingsSnap.docs) {
+        final data = mDoc.data();
+        final ts = data['date'];
+        if (ts == null || ts is! Timestamp) continue;
+        final date = ts.toDate();
+        if (date.isAfter(congWeekCutoff) || date.isAtSameMomentAs(congWeekCutoff)) {
+          final cellId = data['cellId'] as String? ?? '';
+          if (cellId.isNotEmpty) congCellsMet.add(cellId);
+        }
+      }
+      stats['congCellsMet'] = congCellsMet.length;
     }
 
     // ── Admin (tudo) ──
@@ -294,19 +315,69 @@ class _HomeTabState extends State<HomeTab> {
       final congSnap = await congQuery.get();
       stats['adminCongregations'] = congSnap.size;
 
-      Query<Map<String, dynamic>> cellsQuery = _db.collection('cells');
-      if (churchId != null) {
-        cellsQuery = cellsQuery.where('churchId', isEqualTo: churchId);
-      }
-      final cellsSnap = await cellsQuery.get();
-      stats['adminCells'] = cellsSnap.size;
+      // Build per-congregation stats
+      final congList = <Map<String, dynamic>>[];
+      for (final congDoc in congSnap.docs) {
+        final congData = congDoc.data();
+        final congId = congDoc.id;
+        final congName = congData['name'] ?? 'Congregação';
 
-      Query<Map<String, dynamic>> membersQuery = _db.collection('cell_members');
-      if (churchId != null) {
-        membersQuery = membersQuery.where('churchId', isEqualTo: churchId);
+        Query<Map<String, dynamic>> supsQ = _db
+            .collection('supervisions')
+            .where('congregationId', isEqualTo: congId);
+        if (churchId != null) supsQ = supsQ.where('churchId', isEqualTo: churchId);
+        final supsSnap = await supsQ.get();
+
+        Query<Map<String, dynamic>> cellsQ = _db
+            .collection('cells')
+            .where('congregationId', isEqualTo: congId);
+        if (churchId != null) cellsQ = cellsQ.where('churchId', isEqualTo: churchId);
+        final cellsSnap = await cellsQ.get();
+
+        Query<Map<String, dynamic>> membersQ = _db
+            .collection('cell_members')
+            .where('congregationId', isEqualTo: congId);
+        if (churchId != null) membersQ = membersQ.where('churchId', isEqualTo: churchId);
+        final membersSnap = await membersQ.get();
+        final activeDocs = membersSnap.docs
+            .where((d) => (d.data())['isActive'] != false)
+            .toList();
+        final visitors = activeDocs
+            .where((d) => (d.data())['isVisitor'] == true)
+            .length;
+
+        Query<Map<String, dynamic>> meetingsQ = _db
+            .collection('meetings')
+            .where('congregationId', isEqualTo: congId);
+        if (churchId != null) meetingsQ = meetingsQ.where('churchId', isEqualTo: churchId);
+        final meetingsSnap = await meetingsQ.get();
+        final now2 = DateTime.now();
+        final ws2 = now2.subtract(Duration(days: now2.weekday - 1));
+        final wc2 = DateTime(ws2.year, ws2.month, ws2.day);
+        final cellsMet = <String>{};
+        for (final mDoc in meetingsSnap.docs) {
+          final data = mDoc.data();
+          final ts = data['date'];
+          if (ts == null || ts is! Timestamp) continue;
+          final date = ts.toDate();
+          if (date.isAfter(wc2) || date.isAtSameMomentAs(wc2)) {
+            final cellId = data['cellId'] as String? ?? '';
+            if (cellId.isNotEmpty) cellsMet.add(cellId);
+          }
+        }
+
+        congList.add({
+          'id': congId,
+          'name': congName,
+          'supervisions': supsSnap.size,
+          'cells': cellsSnap.size,
+          'members': activeDocs.length - visitors,
+          'visitors': visitors,
+          'cellsMet': cellsMet.length,
+        });
       }
-      final membersSnap = await membersQuery.get();
-      stats['adminMembers'] = membersSnap.size;
+      congList.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+      stats['adminCongList'] = congList;
 
       Query<Map<String, dynamic>> pendingQuery = _db
           .collection('approval_requests')
@@ -733,7 +804,23 @@ class _HomeTabState extends State<HomeTab> {
     final congSupervisions = _stats['congSupervisions'] ?? 0;
     final congCells = _stats['congCells'] ?? 0;
     final congMembers = _stats['congMembers'] ?? 0;
-    final congMeetings = _stats['congWeeklyMeetings'] ?? 0;
+    final congVisitors = _stats['congVisitors'] ?? 0;
+    final congCellsMet = _stats['congCellsMet'] ?? 0;
+
+    // Semáforo: cor baseada em % de células que reuniram
+    Color semaphoreColor;
+    if (congCells == 0) {
+      semaphoreColor = Colors.grey;
+    } else {
+      final pct = congCellsMet / congCells;
+      if (pct >= 0.75) {
+        semaphoreColor = Colors.green;
+      } else if (pct >= 0.50) {
+        semaphoreColor = Colors.orange;
+      } else {
+        semaphoreColor = Colors.red;
+      }
+    }
 
     return [
       _sectionTitle('Sua congregação'),
@@ -787,31 +874,23 @@ class _HomeTabState extends State<HomeTab> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    GestureDetector(
-                      onTap: () => _navigateToCongregationMembers(),
-                      child: _StatChip(
-                        icon: Icons.people_rounded,
-                        label: '$congMembers participantes',
-                        color: primaryColor,
-                      ),
+                    _StatChip(
+                      icon: Icons.people_rounded,
+                      label: '$congMembers membros',
+                      color: Colors.grey[600]!,
+                    ),
+                    _StatChip(
+                      icon: Icons.person_add_rounded,
+                      label: '$congVisitors visitantes',
+                      color: Colors.grey[600]!,
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.event_note_rounded,
-                        size: 15, color: Colors.grey[500]),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Este mês: $congMeetings reuniões',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
+                _StatChip(
+                  icon: Icons.groups_rounded,
+                  label: '$congCellsMet/$congCells células reuniram esta semana',
+                  color: semaphoreColor,
                 ),
               ],
             ),
@@ -819,6 +898,182 @@ class _HomeTabState extends State<HomeTab> {
         ),
       ),
     ];
+  }
+
+  Widget _buildPendingApprovalsCard(int count) {
+    final theme = Theme.of(context);
+    const orangeColor = Color(0xFFE17055);
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          await Navigator.pushNamed(context, '/approval-requests');
+          if (mounted) _loadStats();
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: orangeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.pending_actions_rounded,
+                    color: orangeColor, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Solicitações pendentes',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Aguardando aprovação',
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: orangeColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminCongCard(Map<String, dynamic> cong) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final congId = cong['id'] as String;
+    final congName = cong['name'] as String;
+    final sups = cong['supervisions'] as int;
+    final cells = cong['cells'] as int;
+    final members = cong['members'] as int;
+    final visitors = cong['visitors'] as int;
+    final cellsMet = cong['cellsMet'] as int;
+
+    Color semaphoreColor;
+    if (cells == 0) {
+      semaphoreColor = Colors.grey;
+    } else {
+      final pct = cellsMet / cells;
+      if (pct >= 0.75) {
+        semaphoreColor = Colors.green;
+      } else if (pct >= 0.50) {
+        semaphoreColor = Colors.orange;
+      } else {
+        semaphoreColor = Colors.red;
+      }
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          final hierarchy = context.read<HierarchyProvider>();
+          final doc = await _db.collection('congregations').doc(congId).get();
+          if (doc.exists && mounted) {
+            hierarchy.selectCongregation(Congregation.fromFirestore(doc));
+            await Navigator.pushNamed(context, '/congregation-hub');
+            if (mounted) _loadStats();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.church_rounded,
+                        color: primaryColor, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          congName,
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          '$sups supervisões · $cells células',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _StatChip(
+                    icon: Icons.people_rounded,
+                    label: '$members membros',
+                    color: Colors.grey[600]!,
+                  ),
+                  _StatChip(
+                    icon: Icons.person_add_rounded,
+                    label: '$visitors visitantes',
+                    color: Colors.grey[600]!,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _StatChip(
+                icon: Icons.groups_rounded,
+                label: '$cellsMet/$cells células reuniram esta semana',
+                color: semaphoreColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildQuickStats(BuildContext context, AppUser user) {
@@ -845,35 +1100,20 @@ class _HomeTabState extends State<HomeTab> {
 
     // Admin
     if (user.role == UserRole.admin) {
-      final color = Theme.of(context).colorScheme.primary;
       final pendingCount = _stats['pendingApprovals'] ?? 0;
-      sections.addAll([
-        if (pendingCount > 0) ...[
-          _StatTile(
-            icon: Icons.pending_actions_rounded,
-            color: Colors.orange[700]!,
-            title: '$pendingCount Solicitaç${pendingCount == 1 ? 'ão' : 'ões'}',
-            subtitle: 'Aguardando aprovação',
-            onTap: () => Navigator.pushNamed(context, '/approval-requests'),
-          ),
-          const SizedBox(height: 8),
-        ],
-        _StatTile(
-          icon: Icons.account_balance_rounded,
-          color: color,
-          title: '${_stats['adminCongregations'] ?? 0} Congregações',
-          subtitle: '${_stats['adminCells'] ?? 0} células no total',
-          onTap: () => widget.onSwitchTab?.call(1),
-        ),
-        const SizedBox(height: 8),
-        _StatTile(
-          icon: Icons.people_rounded,
-          color: color,
-          title: '${_stats['adminMembers'] ?? 0} Membros',
-          subtitle: 'Em toda a rede',
-          onTap: () => widget.onSwitchTab?.call(1),
-        ),
-      ]);
+      if (pendingCount > 0) {
+        if (sections.isNotEmpty) sections.add(const SizedBox(height: 28));
+        sections.add(_buildPendingApprovalsCard(pendingCount));
+      }
+      final congList = (_stats['adminCongList'] as List<Map<String, dynamic>>?) ?? [];
+      if (congList.isNotEmpty) {
+        if (sections.isNotEmpty) sections.add(const SizedBox(height: 28));
+        sections.add(_sectionTitle('Congregações'));
+        for (var i = 0; i < congList.length; i++) {
+          if (i > 0) sections.add(const SizedBox(height: 12));
+          sections.add(_buildAdminCongCard(congList[i]));
+        }
+      }
     }
 
     // Líder sem célula

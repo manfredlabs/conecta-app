@@ -27,7 +27,9 @@ class _CongregationMembersScreenState
   bool _loading = true;
   String _searchQuery = '';
   String _filterSup = 'Todas';
+  String _filterCell = 'Todas';
   List<String> _supFilterOptions = ['Todas'];
+  List<String> _cellFilterOptions = ['Todas'];
 
   @override
   void initState() {
@@ -104,6 +106,7 @@ class _CongregationMembersScreenState
         _supNames = supNames;
         _cellToSup = cellToSup;
         _supFilterOptions = ['Todas', ...supNames.values.toList()..sort()];
+        _cellFilterOptions = ['Todas', ...cellNames.values.toList()..sort()];
         _loading = false;
       });
     }
@@ -127,6 +130,15 @@ class _CongregationMembersScreenState
             .map((e) => e.key)
             .toSet();
         list = list.where((m) => cellIdsInSup.contains(m.cellId)).toList();
+      }
+    }
+    if (_filterCell != 'Todas') {
+      final cellId = _cellNames.entries
+          .where((e) => e.value == _filterCell)
+          .map((e) => e.key)
+          .firstOrNull;
+      if (cellId != null) {
+        list = list.where((m) => m.cellId == cellId).toList();
       }
     }
     return list;
@@ -189,7 +201,10 @@ class _CongregationMembersScreenState
                             label: Text(option),
                             selected: selected,
                             onSelected: (_) =>
-                                setState(() => _filterSup = option),
+                                setState(() {
+                                  _filterSup = option;
+                                  _filterCell = 'Todas';
+                                }),
                             showCheckmark: false,
                             selectedColor: Theme.of(context)
                                 .colorScheme
@@ -216,6 +231,70 @@ class _CongregationMembersScreenState
                       }).toList(),
                     ),
                   ),
+                // Cell filter chips
+                Builder(
+                  builder: (_) {
+                    List<String> cellOptions;
+                    if (_filterSup == 'Todas') {
+                      cellOptions = _cellFilterOptions;
+                    } else {
+                      final supId = _supNames.entries
+                          .where((e) => e.value == _filterSup)
+                          .map((e) => e.key)
+                          .firstOrNull;
+                      final cellsInSup = _cellToSup.entries
+                          .where((e) => e.value == supId)
+                          .map((e) => e.key)
+                          .toSet();
+                      final names = cellsInSup
+                          .map((id) => _cellNames[id])
+                          .whereType<String>()
+                          .toList()
+                        ..sort();
+                      cellOptions = ['Todas', ...names];
+                    }
+                    if (cellOptions.length <= 2) return const SizedBox.shrink();
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+                      child: Row(
+                        children: cellOptions.map((option) {
+                          final selected = _filterCell == option;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(option),
+                              selected: selected,
+                              onSelected: (_) =>
+                                  setState(() => _filterCell = option),
+                              showCheckmark: false,
+                              selectedColor: Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
+                                  .withValues(alpha: 0.1),
+                              labelStyle: TextStyle(
+                                fontSize: 13,
+                                fontWeight:
+                                    selected ? FontWeight.w600 : FontWeight.w400,
+                                color: selected
+                                    ? Theme.of(context).colorScheme.tertiary
+                                    : Colors.grey[600],
+                              ),
+                              side: BorderSide(
+                                color: selected
+                                    ? Theme.of(context).colorScheme.tertiary
+                                    : Colors.grey[300]!,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
+                ),
                 // Count
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),

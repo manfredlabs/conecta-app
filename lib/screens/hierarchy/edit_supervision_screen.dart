@@ -334,34 +334,56 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
 
           await hierarchy.updateSupervision(supervision.id, updateData);
 
-          // Update new supervisor's user doc
-          await db.collection('users').doc(newUserId).update({
-            'role': 'supervisor',
-            'supervisionId': supervision.id,
-          });
+          // Only promote if current role is lower than supervisor
+          final newUserDoc = await db.collection('users').doc(newUserId).get();
+          final currentRole = newUserDoc.data()?['role'] as String? ?? 'leader';
+          const higherRoles = {'admin', 'pastor'};
+          if (!higherRoles.contains(currentRole)) {
+            await db.collection('users').doc(newUserId).update({
+              'role': 'supervisor',
+              'supervisionId': supervision.id,
+            });
+          } else {
+            // Keep role, just link supervision
+            await db.collection('users').doc(newUserId).update({
+              'supervisionId': supervision.id,
+            });
+          }
 
           // Handle old supervisor (skip if same person)
           if (_originalSupervisorId != null && _originalSupervisorId != newUserId) {
-            final cellsSnap = await db
-                .collection('cells')
-                .where('leaderId', isEqualTo: _originalSupervisorId)
-                .limit(1)
-                .get();
+            // Check if old supervisor has a higher role (pastor/admin)
+            final oldUserDoc = await db.collection('users').doc(_originalSupervisorId).get();
+            final oldRole = oldUserDoc.data()?['role'] as String? ?? 'leader';
 
-            final leadsCell = cellsSnap.docs.isNotEmpty;
+            if (!higherRoles.contains(oldRole)) {
+              final cellsSnap = await db
+                  .collection('cells')
+                  .where('leaderId', isEqualTo: _originalSupervisorId)
+                  .limit(1)
+                  .get();
 
-            final oldUpdate = <String, dynamic>{
-              'role': leadsCell ? 'leader' : 'member',
-              'supervisionId': FieldValue.delete(),
-            };
-            if (!leadsCell) {
-              oldUpdate['cellId'] = FieldValue.delete();
+              final leadsCell = cellsSnap.docs.isNotEmpty;
+
+              final oldUpdate = <String, dynamic>{
+                'role': leadsCell ? 'leader' : 'member',
+                'supervisionId': FieldValue.delete(),
+              };
+              if (!leadsCell) {
+                oldUpdate['cellId'] = FieldValue.delete();
+              }
+
+              await db
+                  .collection('users')
+                  .doc(_originalSupervisorId)
+                  .update(oldUpdate);
+            } else {
+              // Higher role — just unlink supervision
+              await db
+                  .collection('users')
+                  .doc(_originalSupervisorId)
+                  .update({'supervisionId': FieldValue.delete()});
             }
-
-            await db
-                .collection('users')
-                .doc(_originalSupervisorId)
-                .update(oldUpdate);
           }
         } else {
           // Person has no user account — just update supervision reference

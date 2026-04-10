@@ -449,32 +449,54 @@ class _EditCellScreenState extends State<EditCellScreen> {
           cellUpdate['leaderId'] = newLeaderUserId;
         }
 
-        // 4. Update user roles
+        // 4. Update user roles — only promote if current role is lower
         if (newLeaderUserId != null) {
-          await db.collection('users').doc(newLeaderUserId).update({
-            'role': 'leader',
-            'cellId': cell.id,
-          });
+          final newUserDoc = await db.collection('users').doc(newLeaderUserId).get();
+          final currentRole = newUserDoc.data()?['role'] as String? ?? 'member';
+          const higherRoles = {'admin', 'pastor', 'supervisor'};
+          if (!higherRoles.contains(currentRole)) {
+            await db.collection('users').doc(newLeaderUserId).update({
+              'role': 'leader',
+              'cellId': cell.id,
+            });
+          } else {
+            // Keep role, just link cell
+            await db.collection('users').doc(newLeaderUserId).update({
+              'cellId': cell.id,
+            });
+          }
         }
         if (_originalLeaderId != null && _originalLeaderId != newLeaderUserId) {
-          // Check if old leader leads other cells
-          final otherCellsSnap = await db
-              .collection('cells')
-              .where('leaderId', isEqualTo: _originalLeaderId)
-              .get();
-          final otherCells = otherCellsSnap.docs
-              .where((d) => d.id != cell.id)
-              .toList();
-          if (otherCells.isEmpty) {
-            // Check if old leader is a supervisor
-            final supSnap = await db
-                .collection('supervisions')
-                .where('supervisorId', isEqualTo: _originalLeaderId)
-                .limit(1)
+          // Check if old leader has a higher role (pastor/admin/supervisor)
+          final oldUserDoc = await db.collection('users').doc(_originalLeaderId).get();
+          final oldRole = oldUserDoc.data()?['role'] as String? ?? 'member';
+          const higherRoles = {'admin', 'pastor', 'supervisor'};
+
+          if (!higherRoles.contains(oldRole)) {
+            // Check if old leader leads other cells
+            final otherCellsSnap = await db
+                .collection('cells')
+                .where('leaderId', isEqualTo: _originalLeaderId)
                 .get();
-            final isSupervisor = supSnap.docs.isNotEmpty;
+            final otherCells = otherCellsSnap.docs
+                .where((d) => d.id != cell.id)
+                .toList();
+            if (otherCells.isEmpty) {
+              // Check if old leader is a supervisor
+              final supSnap = await db
+                  .collection('supervisions')
+                  .where('supervisorId', isEqualTo: _originalLeaderId)
+                  .limit(1)
+                  .get();
+              final isSupervisor = supSnap.docs.isNotEmpty;
+              await db.collection('users').doc(_originalLeaderId).update({
+                'role': isSupervisor ? 'supervisor' : 'member',
+                'cellId': FieldValue.delete(),
+              });
+            }
+          } else {
+            // Higher role — just unlink cell
             await db.collection('users').doc(_originalLeaderId).update({
-              'role': isSupervisor ? 'supervisor' : 'member',
               'cellId': FieldValue.delete(),
             });
           }

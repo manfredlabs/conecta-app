@@ -30,6 +30,8 @@ class _CongregationMeetingsScreenState
     extends State<CongregationMeetingsScreen> {
   static _MeetingFilter _savedFilter = _MeetingFilter.threeMonths;
   _MeetingFilter _filter = _savedFilter;
+  String _filterSup = 'Todas';
+  String _filterCell = 'Todas';
 
   List<Meeting> _meetings = [];
   Map<String, String> _cellNames = {};
@@ -146,17 +148,70 @@ class _CongregationMeetingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final tertiaryColor = theme.colorScheme.tertiary;
     final cutoff = _filterDate();
-    final filtered = _meetings
+    var filtered = _meetings
         .where(
             (m) => m.date.isAfter(cutoff) || m.date.isAtSameMomentAs(cutoff))
         .toList();
+
+    // Apply supervision filter
+    if (_filterSup != 'Todas') {
+      final supId = _supervisionNames.entries
+          .where((e) => e.value == _filterSup)
+          .map((e) => e.key)
+          .firstOrNull;
+      if (supId != null) {
+        final cellIdsInSup = _cellToSupervision.entries
+            .where((e) => e.value == supId)
+            .map((e) => e.key)
+            .toSet();
+        filtered = filtered.where((m) => cellIdsInSup.contains(m.cellId)).toList();
+      }
+    }
+
+    // Apply cell filter
+    if (_filterCell != 'Todas') {
+      final cellId = _cellNames.entries
+          .where((e) => e.value == _filterCell)
+          .map((e) => e.key)
+          .firstOrNull;
+      if (cellId != null) {
+        filtered = filtered.where((m) => m.cellId == cellId).toList();
+      }
+    }
+
+    // Build supervision filter options
+    final supOptions = ['Todas', ..._supervisionNames.values.toList()..sort()];
+
+    // Build cell filter options (scoped to supervision if selected)
+    List<String> cellOptions;
+    if (_filterSup == 'Todas') {
+      cellOptions = ['Todas', ..._cellNames.values.toList()..sort()];
+    } else {
+      final supId = _supervisionNames.entries
+          .where((e) => e.value == _filterSup)
+          .map((e) => e.key)
+          .firstOrNull;
+      final cellsInSup = _cellToSupervision.entries
+          .where((e) => e.value == supId)
+          .map((e) => e.key)
+          .toSet();
+      final names = cellsInSup
+          .map((id) => _cellNames[id])
+          .whereType<String>()
+          .toList()
+        ..sort();
+      cellOptions = ['Todas', ...names];
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reuniões')),
       body: Column(
         children: [
-          // Filter chips
+          // Period filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
@@ -172,23 +227,16 @@ class _CongregationMeetingsScreenState
                       _filter = f;
                       _savedFilter = f;
                     }),
-                    selectedColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    checkmarkColor: Theme.of(context).colorScheme.primary,
+                    selectedColor: primaryColor.withValues(alpha: 0.1),
+                    checkmarkColor: primaryColor,
                     labelStyle: TextStyle(
                       fontSize: 13,
                       fontWeight:
                           selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[600],
+                      color: selected ? primaryColor : Colors.grey[600],
                     ),
                     side: BorderSide(
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[300]!,
+                      color: selected ? primaryColor : Colors.grey[300]!,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -198,6 +246,83 @@ class _CongregationMeetingsScreenState
               }).toList(),
             ),
           ),
+
+          // Supervision filter chips
+          if (supOptions.length > 2)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: Row(
+                children: supOptions.map((option) {
+                  final selected = _filterSup == option;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(option),
+                      selected: selected,
+                      onSelected: (_) => setState(() {
+                        _filterSup = option;
+                        _filterCell = 'Todas';
+                      }),
+                      showCheckmark: false,
+                      selectedColor: theme.colorScheme.secondary
+                          .withValues(alpha: 0.1),
+                      labelStyle: TextStyle(
+                        fontSize: 13,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w400,
+                        color: selected
+                            ? theme.colorScheme.secondary
+                            : Colors.grey[600],
+                      ),
+                      side: BorderSide(
+                        color: selected
+                            ? theme.colorScheme.secondary
+                            : Colors.grey[300]!,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+          // Cell filter chips
+          if (cellOptions.length > 2)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: Row(
+                children: cellOptions.map((option) {
+                  final selected = _filterCell == option;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(option),
+                      selected: selected,
+                      onSelected: (_) =>
+                          setState(() => _filterCell = option),
+                      showCheckmark: false,
+                      selectedColor: tertiaryColor.withValues(alpha: 0.1),
+                      labelStyle: TextStyle(
+                        fontSize: 13,
+                        fontWeight:
+                            selected ? FontWeight.w600 : FontWeight.w400,
+                        color: selected ? tertiaryColor : Colors.grey[600],
+                      ),
+                      side: BorderSide(
+                        color: selected ? tertiaryColor : Colors.grey[300]!,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
 
           // List
           Expanded(

@@ -57,7 +57,7 @@ class ApprovalRequestsScreen extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final req = requests[index];
-              return _RequestCard(request: req);
+              return _RequestCard(key: ValueKey(req.id), request: req);
             },
           );
         },
@@ -69,7 +69,7 @@ class ApprovalRequestsScreen extends StatelessWidget {
 class _RequestCard extends StatefulWidget {
   final ApprovalRequest request;
 
-  const _RequestCard({required this.request});
+  const _RequestCard({super.key, required this.request});
 
   @override
   State<_RequestCard> createState() => _RequestCardState();
@@ -92,13 +92,17 @@ class _RequestCardState extends State<_RequestCard> {
 
     setState(() => _loading = true);
     final userId = context.read<AuthProvider>().appUser?.id ?? '';
-    await FirestoreService().approveRequest(widget.request.id, changedBy: userId);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('${widget.request.personName} agora é membro!')),
-      );
+    try {
+      await FirestoreService().approveRequest(widget.request.id, changedBy: userId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('${widget.request.personName} agora é membro!')),
+        );
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -116,11 +120,15 @@ class _RequestCardState extends State<_RequestCard> {
 
     setState(() => _loading = true);
     final userId = context.read<AuthProvider>().appUser?.id ?? '';
-    await FirestoreService().rejectRequest(widget.request.id, changedBy: userId);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitação rejeitada')),
-      );
+    try {
+      await FirestoreService().rejectRequest(widget.request.id, changedBy: userId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Solicitação rejeitada')),
+        );
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 

@@ -61,8 +61,12 @@ class _BulletinTabState extends State<BulletinTab> {
         ),
         floatingActionButton: isAdmin
             ? FloatingActionButton(
+                heroTag: 'bulletin_fab',
                 onPressed: () => _showUploadModal(context),
-                child: const Icon(Icons.add_rounded),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                child: const Icon(Icons.add, size: 28),
               )
             : null,
       ),
