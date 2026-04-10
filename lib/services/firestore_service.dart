@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../models/church_model.dart';
 import '../models/congregation_model.dart';
 import '../models/supervision_model.dart';
@@ -9,9 +11,11 @@ import '../models/cell_member_model.dart';
 import '../models/approval_request_model.dart';
 import '../models/meeting_model.dart';
 import '../models/user_model.dart';
+import '../models/bulletin_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // ─── Churches ───
 
@@ -699,4 +703,68 @@ class FirestoreService {
       );
     }
   }
+
+  // ─── Bulletins ───
+
+  Stream<List<Bulletin>> getBulletins({String? churchId}) {
+    Query<Map<String, dynamic>> query = _db
+        .collection('bulletins')
+        .orderBy('weekStart', descending: true);
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    return query.snapshots().map(
+          (snap) => snap.docs.map((d) => Bulletin.fromFirestore(d)).toList(),
+        );
+  }
+
+  Future<String> addBulletin(Bulletin bulletin) async {
+    final ref = await _db.collection('bulletins').add(bulletin.toMap());
+    return ref.id;
+  }
+
+  Future<void> deleteBulletin(String bulletinId) async {
+    final doc = await _db.collection('bulletins').doc(bulletinId).get();
+    if (!doc.exists) return;
+    final bulletin = Bulletin.fromFirestore(doc);
+
+    // Delete file from Storage
+    if (bulletin.storagePath.isNotEmpty) {
+      try {
+        await _storage.ref(bulletin.storagePath).delete();
+      } catch (_) {
+        // File might already be deleted
+      }
+    }
+
+    await _db.collection('bulletins').doc(bulletinId).delete();
+  }
+
+  /// Upload file to Firebase Storage and return (downloadUrl, storagePath)
+  Future<(String url, String path)> uploadBulletinFile({
+    required String churchId,
+    required String bulletinId,
+    required String fileName,
+    required File file,
+  }) async {
+    final storagePath = 'churches/$churchId/bulletins/$bulletinId/$fileName';
+    final ref = _storage.ref(storagePath);
+    await ref.putFile(file);
+    final url = await ref.getDownloadURL();
+    return (url, storagePath);
+  }
+
+  Future<void> updateBulletinUrls({
+    required String bulletinId,
+    required String fileUrl,
+    required String storagePath,
+  }) async {
+    await _db.collection('bulletins').doc(bulletinId).update({
+      'fileUrl': fileUrl,
+      'storagePath': storagePath,
+    });
+  }
+
+  /// Referência direta ao Storage para download
+  Reference storageRef(String path) => _storage.ref(path);
 }

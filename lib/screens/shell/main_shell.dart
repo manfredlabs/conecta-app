@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../home/home_tab.dart';
-import '../cells/cells_tab.dart';
+import '../bulletin/bulletin_tab.dart';
 import '../agenda/agenda_tab.dart';
 import '../profile/profile_tab.dart';
 
@@ -48,7 +48,7 @@ class _MainShellState extends State<MainShell> {
         onPageChanged: _onPageChanged,
         children: [
           HomeTab(onSwitchTab: _onTabTapped),
-          CellsTab(),
+          BulletinTab(),
           AgendaTab(),
           ProfileTab(),
         ],
@@ -67,9 +67,9 @@ class _MainShellState extends State<MainShell> {
               label: 'Início',
             ),
             NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups_rounded),
-              label: 'Células',
+              icon: Icon(Icons.article_outlined),
+              selectedIcon: Icon(Icons.article_rounded),
+              label: 'Boletim',
             ),
             NavigationDestination(
               icon: Icon(Icons.calendar_month_outlined),
