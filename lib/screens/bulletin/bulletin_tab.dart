@@ -279,6 +279,9 @@ class _BulletinTabState extends State<BulletinTab> {
 
     return Card(
       margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _openBulletin(bulletin),
@@ -290,16 +293,16 @@ class _BulletinTabState extends State<BulletinTab> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _fileIcon(bulletin.fileType),
-                  color: Colors.grey[600],
+                  color: theme.colorScheme.primary,
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,12 +310,11 @@ class _BulletinTabState extends State<BulletinTab> {
                     Text(
                       bulletin.title,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 2),
                     Text(
-                      bulletin.weekLabel,
+                      '${bulletin.weekLabel}  ·  ${bulletin.fileType.toUpperCase()}',
                       style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
                     ),
                   ],
