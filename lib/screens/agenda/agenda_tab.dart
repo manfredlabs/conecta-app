@@ -31,6 +31,11 @@ class _AgendaTabState extends State<AgendaTab> {
   List<Member> _birthdayMembers = [];
   bool _loadingBirthdays = false;
 
+  // Cache de eventos para evitar rebuild do calendário inteiro
+  List<ChurchEvent> _cachedEvents = [];
+  Map<DateTime, List<ChurchEvent>> _cachedGrouped = {};
+  Stream<List<ChurchEvent>>? _eventsStream;
+
   DateTime _normalizeDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
   Map<DateTime, List<ChurchEvent>> _groupByDay(List<ChurchEvent> events) {
@@ -42,13 +47,11 @@ class _AgendaTabState extends State<AgendaTab> {
     return map;
   }
 
-  /// Aniversários mapeados para o mês focado (dia/mês match)
   Map<DateTime, List<_Birthday>> _groupBirthdays() {
     final map = <DateTime, List<_Birthday>>{};
     if (!_showBirthdays) return map;
     for (final m in _birthdayMembers) {
       if (m.birthDate == null) continue;
-      // Mapeia aniversário para o ano do mês focado
       final key = DateTime(_focusedDay.year, m.birthDate!.month, m.birthDate!.day);
       map.putIfAbsent(_normalizeDay(key), () => []).add(
         _Birthday(name: m.name, date: m.birthDate!),
@@ -85,6 +88,14 @@ class _AgendaTabState extends State<AgendaTab> {
     if (_showBirthdays && _birthdayMembers.isEmpty) {
       _loadBirthdays();
     }
+  }
+
+  void _onDaySelected(DateTime selected, DateTime focused) {
+    if (isSameDay(_selectedDay, selected)) return;
+    setState(() {
+      _selectedDay = selected;
+      _focusedDay = focused;
+    });
   }
 
   @override
@@ -126,23 +137,27 @@ class _AgendaTabState extends State<AgendaTab> {
             ),
             Expanded(
               child: StreamBuilder<List<ChurchEvent>>(
-                stream: _service.getEvents(churchId: auth.churchId),
+                stream: _eventsStream ??= _service.getEvents(churchId: auth.churchId),
                 builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
+                  if (snap.connectionState == ConnectionState.waiting &&
+                      _cachedEvents.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final events = snap.data ?? [];
-                  final grouped = _groupByDay(events);
+                  if (snap.hasData) {
+                    _cachedEvents = snap.data!;
+                    _cachedGrouped = _groupByDay(_cachedEvents);
+                  }
+
                   final birthdays = _groupBirthdays();
 
                   return Column(
                     children: [
-                      _buildCalendar(grouped, birthdays, primaryColor, theme),
+                      _buildCalendar(_cachedGrouped, birthdays, primaryColor, theme),
                       const SizedBox(height: 4),
                       Expanded(
                         child: _buildEventList(
-                          _eventsForDay(_selectedDay, grouped),
+                          _eventsForDay(_selectedDay, _cachedGrouped),
                           _birthdaysForDay(_selectedDay, birthdays),
                           isAdmin,
                           theme,
@@ -196,12 +211,7 @@ class _AgendaTabState extends State<AgendaTab> {
         daysOfWeekHeight: 32,
         rowHeight: 48,
         eventLoader: (day) => _eventsForDay(day, grouped),
-        onDaySelected: (selected, focused) {
-          setState(() {
-            _selectedDay = selected;
-            _focusedDay = focused;
-          });
-        },
+        onDaySelected: _onDaySelected,
         onFormatChanged: (format) {
           setState(() => _calendarFormat = format);
         },
