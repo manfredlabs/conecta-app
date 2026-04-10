@@ -213,26 +213,33 @@ class _BulletinTabState extends State<BulletinTab> {
   // ─── Ações ───
 
   Future<void> _openBulletin(Bulletin bulletin) async {
-    // Baixar e abrir o arquivo
-    _showLoadingDialog('Abrindo...');
+    if (bulletin.storagePath.isEmpty || bulletin.fileUrl.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível localizar o arquivo na base de dados')),
+        );
+      }
+      return;
+    }
+
+    _showLoadingDialog();
     try {
       final dir = await _getTemporaryDirectory();
       final filePath = '${dir.path}/${bulletin.fileName}';
       final file = File(filePath);
 
       if (!await file.exists()) {
-        // Download do Storage
         final ref = FirestoreService().storageRef(bulletin.storagePath);
         await ref.writeToFile(file);
       }
 
-      if (mounted) Navigator.of(context).pop(); // dismiss loading
+      if (mounted) Navigator.of(context).pop();
       await OpenFilex.open(filePath);
     } catch (e) {
       if (mounted) Navigator.of(context).pop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao abrir: $e'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Não foi possível abrir o documento. Tente novamente.')),
         );
       }
     }
@@ -473,18 +480,34 @@ class _BulletinTabState extends State<BulletinTab> {
     }
   }
 
-  void _showLoadingDialog(String message) {
+  void _showLoadingDialog() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 20),
-            Text(message),
-          ],
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Text(
+                'Abrindo documento...',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: const Color(0xFF2D3436),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
