@@ -210,6 +210,11 @@ class _AgendaTabState extends State<AgendaTab> {
         startingDayOfWeek: StartingDayOfWeek.sunday,
         daysOfWeekHeight: 32,
         rowHeight: 48,
+        availableGestures: AvailableGestures.all,
+        availableCalendarFormats: const {
+          CalendarFormat.month: 'Mês',
+          CalendarFormat.week: 'Semana',
+        },
         eventLoader: (day) => _eventsForDay(day, grouped),
         onDaySelected: _onDaySelected,
         onFormatChanged: (format) {
