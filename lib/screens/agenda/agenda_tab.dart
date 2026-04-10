@@ -210,19 +210,12 @@ class _AgendaTabState extends State<AgendaTab> {
                     : primaryColor.withValues(alpha: 0.7);
             return Positioned(
               bottom: 9,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(
-                  events.length > 3 ? 3 : events.length,
-                  (i) => Container(
-                    width: 5,
-                    height: 5,
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    decoration: BoxDecoration(
-                      color: dotColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+              child: Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  shape: BoxShape.circle,
                 ),
               ),
             );
