@@ -91,14 +91,52 @@ class _BulletinTabState extends State<BulletinTab> {
   }
 
   Widget _buildBulletinList(List<Bulletin> bulletins, bool isAdmin) {
-    return ListView.separated(
+    final thisWeek = bulletins.where((b) => b.isCurrentWeek).toList();
+    final previous = bulletins.where((b) => !b.isCurrentWeek).toList();
+
+    return ListView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-      itemCount: bulletins.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final b = bulletins[index];
-        return _buildBulletinCard(b, isAdmin, highlighted: b.isCurrentWeek);
-      },
+      children: [
+        // Esta semana
+        _sectionTitle('Esta semana'),
+        const SizedBox(height: 8),
+        if (thisWeek.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Nenhum documento esta semana',
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            ),
+          ),
+        ...thisWeek.asMap().entries.map((e) {
+          return Padding(
+            padding: EdgeInsets.only(top: e.key > 0 ? 8 : 0),
+            child: _buildBulletinCard(e.value, isAdmin, highlighted: true),
+          );
+        }),
+        // Anteriores
+        if (previous.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _sectionTitle('Anteriores'),
+          const SizedBox(height: 8),
+          ...previous.asMap().entries.map((e) {
+            return Padding(
+              padding: EdgeInsets.only(top: e.key > 0 ? 8 : 0),
+              child: _buildBulletinCard(e.value, isAdmin),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[600],
+          ),
     );
   }
 
@@ -110,13 +148,11 @@ class _BulletinTabState extends State<BulletinTab> {
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: highlighted
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: primaryColor.withValues(alpha: 0.4), width: 1.5),
-            )
-          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: highlighted ? primaryColor.withValues(alpha: 0.03) : null,
+      clipBehavior: Clip.antiAlias,
+      color: highlighted ? primaryColor.withValues(alpha: 0.04) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _openBulletin(bulletin),
