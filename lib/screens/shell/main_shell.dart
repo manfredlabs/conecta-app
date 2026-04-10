@@ -13,6 +13,18 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  late final List<Widget> _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabs = [
+      HomeTab(onSwitchTab: _onTabTapped),
+      const BulletinTab(),
+      const AgendaTab(),
+      const ProfileTab(),
+    ];
+  }
 
   void _onTabTapped(int index) {
     setState(() => _currentIndex = index);
@@ -20,19 +32,12 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = [
-      HomeTab(onSwitchTab: _onTabTapped),
-      const BulletinTab(),
-      const AgendaTab(),
-      const ProfileTab(),
-    ];
-
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: KeyedSubtree(
           key: ValueKey(_currentIndex),
-          child: tabs[_currentIndex],
+          child: _tabs[_currentIndex],
         ),
       ),
       bottomNavigationBar: Container(

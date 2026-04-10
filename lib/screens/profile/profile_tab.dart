@@ -14,143 +14,221 @@ class ProfileTab extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 32),
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
-            // Avatar
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+            child: Text(
+              'Perfil',
+              style: theme.textTheme.headlineMedium,
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  // User card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: primaryColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          user.name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user.email,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.roleDisplayName,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Logout
+                  GestureDetector(
+                    onTap: () {
+                      _showLogoutSheet(context, auth);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF7675).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.logout_rounded,
+                                color: Color(0xFFFF7675), size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Sair da conta',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFFF7675),
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutSheet(BuildContext context, AuthProvider auth) {
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF7675).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                size: 28,
+                color: Color(0xFFFF7675),
               ),
             ),
             const SizedBox(height: 16),
-
-            Text(
-              user.name,
-              style: Theme.of(context).textTheme.titleLarge,
+            const Text(
+              'Sair da conta',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
-              user.email,
-              style: Theme.of(context).textTheme.bodyMedium,
+              'Tem certeza que deseja sair?',
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                user.roleDisplayName,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Menu items
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _ProfileMenuItem(
-                    icon: Icons.edit_outlined,
-                    title: 'Editar Perfil',
-                    onTap: () =>
-                        Navigator.pushNamed(context, '/edit-profile'),
+                    child: const Text('Cancelar'),
                   ),
-                  _ProfileMenuItem(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notificações',
-                    onTap: () {},
-                  ),
-                  _ProfileMenuItem(
-                    icon: Icons.info_outline,
-                    title: 'Sobre o Conecta',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 16),
-                  _ProfileMenuItem(
-                    icon: Icons.logout_rounded,
-                    title: 'Sair',
-                    isDestructive: true,
-                    onTap: () {
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
                       auth.signOut().then((_) {
                         if (context.mounted) {
                           Navigator.pushReplacementNamed(context, '/church-selection');
                         }
                       });
                     },
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  const _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.isDestructive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isDestructive ? Colors.red : null;
-
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: color ?? Colors.grey[600]),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: color,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF7675),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                    ),
+                    child: const Text('Sair'),
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
