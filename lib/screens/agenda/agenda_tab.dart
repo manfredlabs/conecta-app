@@ -115,7 +115,7 @@ class _AgendaTabState extends State<AgendaTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 12, 16),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Row(
                 children: [
                   Expanded(
@@ -131,6 +131,9 @@ class _AgendaTabState extends State<AgendaTab> {
                       color: _showBirthdays ? primaryColor : Colors.grey[400],
                     ),
                     tooltip: 'Aniversários',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
