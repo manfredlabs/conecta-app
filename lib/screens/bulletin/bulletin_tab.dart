@@ -35,7 +35,7 @@ class _BulletinTabState extends State<BulletinTab> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Text(
-                'Boletim',
+                'Documentos',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
             ),
@@ -77,12 +77,12 @@ class _BulletinTabState extends State<BulletinTab> {
           Icon(Icons.article_outlined, size: 64, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
-            'Nenhum boletim disponível',
+            'Nenhum documento disponível',
             style: TextStyle(color: Colors.grey[400], fontSize: 16),
           ),
           const SizedBox(height: 4),
           Text(
-            'O admin pode enviar boletins semanais',
+            'O admin pode enviar documentos',
             style: TextStyle(color: Colors.grey[350], fontSize: 13),
           ),
         ],
@@ -91,197 +91,32 @@ class _BulletinTabState extends State<BulletinTab> {
   }
 
   Widget _buildBulletinList(List<Bulletin> bulletins, bool isAdmin) {
-    // Separar: boletim da semana vs anteriores
-    final currentWeek = bulletins.where((b) => b.isCurrentWeek).toList();
-    final previous = bulletins.where((b) => !b.isCurrentWeek).toList();
-
-    final hasCurrentWeek = currentWeek.isNotEmpty;
-
-    return ListView(
+    return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-      children: [
-        // Card destaque da semana
-        _buildWeekHighlight(hasCurrentWeek ? currentWeek.first : null, isAdmin),
-        if (previous.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            'Anteriores',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-          ),
-          const SizedBox(height: 8),
-          ...previous.asMap().entries.map((entry) {
-            final widgets = <Widget>[];
-            if (entry.key > 0) widgets.add(const SizedBox(height: 8));
-            widgets.add(_buildBulletinCard(entry.value, isAdmin));
-            return Column(children: widgets);
-          }),
-        ],
-      ],
+      itemCount: bulletins.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final b = bulletins[index];
+        return _buildBulletinCard(b, isAdmin, highlighted: b.isCurrentWeek);
+      },
     );
   }
 
-  Widget _buildWeekHighlight(Bulletin? bulletin, bool isAdmin) {
+
+  Widget _buildBulletinCard(Bulletin bulletin, bool isAdmin, {bool highlighted = false}) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-
-    if (bulletin == null) {
-      // Nenhum boletim esta semana
-      return Card(
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.orange.withValues(alpha: 0.4), width: 1.5),
-        ),
-        color: Colors.orange.withValues(alpha: 0.03),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 26),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sem boletim esta semana',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Semana ${_currentWeekLabel()}',
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Boletim da semana existe — card em destaque
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: primaryColor.withValues(alpha: 0.4), width: 1.5),
-      ),
-      color: primaryColor.withValues(alpha: 0.03),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _openBulletin(bulletin),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(_fileIcon(bulletin.fileType), color: primaryColor, size: 26),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Esta semana',
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          bulletin.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isAdmin)
-                    _deleteButton(bulletin),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[500]),
-                  const SizedBox(width: 6),
-                  Text(
-                    bulletin.weekLabel,
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.insert_drive_file_outlined, size: 14, color: Colors.grey[500]),
-                  const SizedBox(width: 4),
-                  Text(
-                    bulletin.fileType.toUpperCase(),
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _openBulletin(bulletin),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text('Abrir boletim'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: primaryColor,
-                    side: BorderSide(color: primaryColor.withValues(alpha: 0.3)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBulletinCard(Bulletin bulletin, bool isAdmin) {
-    final theme = Theme.of(context);
+    final iconColor = highlighted ? primaryColor : Colors.grey[600]!;
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: highlighted
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: primaryColor.withValues(alpha: 0.4), width: 1.5),
+            )
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: highlighted ? primaryColor.withValues(alpha: 0.03) : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _openBulletin(bulletin),
@@ -293,12 +128,12 @@ class _BulletinTabState extends State<BulletinTab> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _fileIcon(bulletin.fileType),
-                  color: Colors.grey[600],
+                  color: iconColor,
                   size: 24,
                 ),
               ),
@@ -314,7 +149,7 @@ class _BulletinTabState extends State<BulletinTab> {
                       ),
                     ),
                     Text(
-                      '${bulletin.weekLabel}  ·  ${bulletin.fileType.toUpperCase()}',
+                      '${_formatDate(bulletin.createdAt)}  ·  ${bulletin.fileType.toUpperCase()}',
                       style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
                     ),
                   ],
@@ -333,7 +168,7 @@ class _BulletinTabState extends State<BulletinTab> {
     return IconButton(
       icon: Icon(Icons.delete_outline, color: Colors.red[300], size: 20),
       onPressed: () => _confirmDelete(bulletin),
-      tooltip: 'Excluir boletim',
+      tooltip: 'Excluir documento',
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
@@ -376,7 +211,7 @@ class _BulletinTabState extends State<BulletinTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Excluir boletim?'),
+        title: const Text('Excluir documento?'),
         content: Text('Tem certeza que deseja excluir "${bulletin.title}"?'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
@@ -398,7 +233,7 @@ class _BulletinTabState extends State<BulletinTab> {
         await _service.deleteBulletin(bulletin.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Boletim excluído')),
+            const SnackBar(content: Text('Documento excluído')),
           );
         }
       } catch (e) {
@@ -445,7 +280,7 @@ class _BulletinTabState extends State<BulletinTab> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Enviar boletim',
+                    'Enviar documento',
                     style: Theme.of(ctx).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 20),
@@ -453,7 +288,7 @@ class _BulletinTabState extends State<BulletinTab> {
                     controller: titleController,
                     decoration: const InputDecoration(
                       labelText: 'Título',
-                      hintText: 'Ex: Boletim 07/04 - 13/04',
+                      hintText: 'Ex: Boletim Semanal 07/04',
                     ),
                     textCapitalization: TextCapitalization.sentences,
                   ),
@@ -590,7 +425,7 @@ class _BulletinTabState extends State<BulletinTab> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Boletim enviado com sucesso!')),
+          const SnackBar(content: Text('Documento enviado com sucesso!')),
         );
       }
     } catch (e) {
@@ -619,11 +454,9 @@ class _BulletinTabState extends State<BulletinTab> {
     );
   }
 
-  String _currentWeekLabel() {
-    final monday = Bulletin.currentWeekStart();
-    final sunday = monday.add(const Duration(days: 6));
+  String _formatDate(DateTime date) {
     String pad(int n) => n.toString().padLeft(2, '0');
-    return '${pad(monday.day)}/${pad(monday.month)} - ${pad(sunday.day)}/${pad(sunday.month)}';
+    return '${pad(date.day)}/${pad(date.month)}/${date.year}';
   }
 
   IconData _fileIcon(String fileType) {

@@ -69,7 +69,7 @@ class _MainShellState extends State<MainShell> {
             NavigationDestination(
               icon: Icon(Icons.article_outlined),
               selectedIcon: Icon(Icons.article_rounded),
-              label: 'Boletim',
+              label: 'Docs',
             ),
             NavigationDestination(
               icon: Icon(Icons.calendar_month_outlined),
