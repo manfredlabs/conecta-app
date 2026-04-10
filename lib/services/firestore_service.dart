@@ -765,6 +765,15 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateBulletinTitle({
+    required String bulletinId,
+    required String title,
+  }) async {
+    await _db.collection('bulletins').doc(bulletinId).update({
+      'title': title,
+    });
+  }
+
   /// Referência direta ao Storage para download
   Reference storageRef(String path) => _storage.ref(path);
 }
