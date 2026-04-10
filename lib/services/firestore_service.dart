@@ -163,7 +163,7 @@ class FirestoreService {
   }
 
   /// Returns a map of member name (lowercase) → user role for all users
-  Future<Map<String, String>> getUserRolesByName({String? churchId}) async {
+  Future<Map<String, String>> getUserRolesByPersonId({String? churchId}) async {
     Query<Map<String, dynamic>> query = _db.collection('users');
     if (churchId != null) {
       query = query.where('churchId', isEqualTo: churchId);
@@ -172,9 +172,9 @@ class FirestoreService {
     final map = <String, String>{};
     for (final doc in snap.docs) {
       final data = doc.data();
-      final name = (data['name'] as String?)?.toLowerCase() ?? '';
+      final personId = data['personId'] as String? ?? '';
       final role = (data['role'] as String?) ?? 'leader';
-      if (name.isNotEmpty) map[name] = role;
+      if (personId.isNotEmpty) map[personId] = role;
     }
     return map;
   }

@@ -26,7 +26,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   // Member search state
   List<CellMember> _allMembers = [];
   Map<String, String> _cellNames = {};
-  Map<String, String> _nameRoles = {};
+  Map<String, String> _personIdRoles = {};
   Map<String, List<String>> _personCells = {}; // personId → cell names
   List<CellMember> _filteredMembers = [];
   CellMember? _selectedMember;
@@ -47,7 +47,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     final cellIds = members.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
-      firestoreService.getUserRolesByName(churchId: churchId),
+      firestoreService.getUserRolesByPersonId(churchId: churchId),
       firestoreService.searchAllPeople(churchId: churchId),
     ]);
 
@@ -91,7 +91,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       setState(() {
         _allMembers = [...members, ...orphanMembers];
         _cellNames = cellNames;
-        _nameRoles = nameRoles;
+        _personIdRoles = nameRoles;
         _personCells = personCells;
         _loadingMembers = false;
       });
@@ -164,8 +164,8 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   }
 
   String? _getRoleBadge(CellMember member) {
-    // Check user role by name match (pastor, supervisor)
-    final role = _nameRoles[member.name.toLowerCase()];
+    // Check user role by personId match (pastor, supervisor)
+    final role = _personIdRoles[member.personId];
     if (role == 'pastor') return 'Pastor';
     if (role == 'supervisor') return 'Supervisor';
     // Then member-level roles

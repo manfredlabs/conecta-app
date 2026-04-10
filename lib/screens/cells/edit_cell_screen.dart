@@ -34,7 +34,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
   List<CellMember> _allMembers = [];
   List<CellMember> _filteredMembers = [];
   Map<String, String> _cellNames = {};
-  Map<String, String> _nameRoles = {};
+  Map<String, String> _personIdRoles = {};
   Map<String, List<String>> _personCells = {};
   bool _loadingMembers = false;
   bool _isSearching = false;
@@ -119,7 +119,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
     final cellIds = cellMembers.map((m) => m.cellId).toSet();
     final results = await Future.wait([
       firestoreService.getCellNames(cellIds),
-      firestoreService.getUserRolesByName(churchId: churchId),
+      firestoreService.getUserRolesByPersonId(churchId: churchId),
     ]);
     final cellNames = results[0] as Map<String, String>;
     final nameRoles = results[1] as Map<String, String>;
@@ -166,7 +166,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
       setState(() {
         _allMembers = allMembers;
         _cellNames = cellNames;
-        _nameRoles = nameRoles;
+        _personIdRoles = nameRoles;
         _personCells = personCells;
         _loadingMembers = false;
       });
@@ -221,7 +221,7 @@ class _EditCellScreenState extends State<EditCellScreen> {
   }
 
   String? _getRoleBadge(CellMember member) {
-    final role = _nameRoles[member.name.toLowerCase()];
+    final role = _personIdRoles[member.personId];
     if (role == 'pastor') return 'Pastor';
     if (role == 'supervisor') return 'Supervisor';
     if (member.isLeader) return 'Líder';
