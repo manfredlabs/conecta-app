@@ -70,11 +70,11 @@ class AppUser {
       case UserRole.admin:
         return 'Administrador';
       case UserRole.pastor:
-        return 'Pastor de Congregação';
+        return 'Pastor';
       case UserRole.supervisor:
         return 'Supervisor';
       case UserRole.leader:
-        return 'Líder de Célula';
+        return 'Líder';
     }
   }
 }
