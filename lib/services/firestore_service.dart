@@ -713,7 +713,7 @@ class FirestoreService {
     }
     return query.snapshots().map((snap) {
       final list = snap.docs.map((d) => Bulletin.fromFirestore(d)).toList();
-      list.sort((a, b) => b.weekStart.compareTo(a.weekStart));
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
     });
   }

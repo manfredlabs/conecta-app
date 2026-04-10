@@ -532,7 +532,7 @@ class _BulletinTabState extends State<BulletinTab> {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        final ref = FirestoreService().storageRef(bulletin.storagePath);
+        final ref = _service.storageRef(bulletin.storagePath);
         await ref.writeToFile(file);
       }
 
@@ -549,7 +549,8 @@ class _BulletinTabState extends State<BulletinTab> {
   }
 
   Future<Directory> _getTemporaryDirectory() async {
-    final dir = await Directory.systemTemp.createTemp('bulletin_');
+    final dir = Directory('${Directory.systemTemp.path}/conecta_docs');
+    if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
   }
 
@@ -765,7 +766,7 @@ class _BulletinTabState extends State<BulletinTab> {
       );
 
       // Atualiza doc com URL e path do Storage
-      await FirestoreService().updateBulletinUrls(
+      await _service.updateBulletinUrls(
         bulletinId: bulletinId,
         fileUrl: url,
         storagePath: path,
