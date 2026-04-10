@@ -108,14 +108,14 @@ class _AgendaTabState extends State<AgendaTab> {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: Column(
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -174,7 +174,8 @@ class _AgendaTabState extends State<AgendaTab> {
             ),
           ],
         ),
-        floatingActionButton: isAdmin
+      ),
+      floatingActionButton: isAdmin
             ? FloatingActionButton(
                 heroTag: 'agenda_fab',
                 onPressed: () => _showEventModal(context),
@@ -184,7 +185,6 @@ class _AgendaTabState extends State<AgendaTab> {
                 child: const Icon(Icons.add, size: 28),
               )
             : null,
-      ),
     );
   }
 
