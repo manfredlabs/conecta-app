@@ -707,15 +707,15 @@ class FirestoreService {
   // ─── Bulletins ───
 
   Stream<List<Bulletin>> getBulletins({String? churchId}) {
-    Query<Map<String, dynamic>> query = _db
-        .collection('bulletins')
-        .orderBy('weekStart', descending: true);
+    Query<Map<String, dynamic>> query = _db.collection('bulletins');
     if (churchId != null) {
       query = query.where('churchId', isEqualTo: churchId);
     }
-    return query.snapshots().map(
-          (snap) => snap.docs.map((d) => Bulletin.fromFirestore(d)).toList(),
-        );
+    return query.snapshots().map((snap) {
+      final list = snap.docs.map((d) => Bulletin.fromFirestore(d)).toList();
+      list.sort((a, b) => b.weekStart.compareTo(a.weekStart));
+      return list;
+    });
   }
 
   Future<String> addBulletin(Bulletin bulletin) async {
