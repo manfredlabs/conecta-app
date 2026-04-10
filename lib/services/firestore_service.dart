@@ -12,6 +12,7 @@ import '../models/approval_request_model.dart';
 import '../models/meeting_model.dart';
 import '../models/user_model.dart';
 import '../models/bulletin_model.dart';
+import '../models/event_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -776,4 +777,31 @@ class FirestoreService {
 
   /// Referência direta ao Storage para download
   Reference storageRef(String path) => _storage.ref(path);
+
+  // ─── Events (Agenda) ───
+
+  Stream<List<ChurchEvent>> getEvents({String? churchId}) {
+    Query<Map<String, dynamic>> query = _db.collection('events');
+    if (churchId != null) {
+      query = query.where('churchId', isEqualTo: churchId);
+    }
+    return query.snapshots().map((snap) {
+      final list = snap.docs.map((d) => ChurchEvent.fromFirestore(d)).toList();
+      list.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      return list;
+    });
+  }
+
+  Future<String> addEvent(ChurchEvent event) async {
+    final ref = await _db.collection('events').add(event.toMap());
+    return ref.id;
+  }
+
+  Future<void> updateEvent(String eventId, Map<String, dynamic> data) async {
+    await _db.collection('events').doc(eventId).update(data);
+  }
+
+  Future<void> deleteEvent(String eventId) async {
+    await _db.collection('events').doc(eventId).delete();
+  }
 }
