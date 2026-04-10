@@ -281,79 +281,77 @@ class _AgendaTabState extends State<AgendaTab> {
     final hour =
         '${event.dateTime.hour.toString().padLeft(2, '0')}:${event.dateTime.minute.toString().padLeft(2, '0')}';
 
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      color: isToday ? primaryColor.withValues(alpha: 0.04) : null,
-      child: InkWell(
-        onTap: () => _showEventDetail(event, isAdmin),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.event_rounded, color: iconColor, size: 24),
+    return GestureDetector(
+      onTap: () => _showEventDetail(event, isAdmin),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isToday ? primaryColor.withValues(alpha: 0.04) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      event.title,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
-                        const SizedBox(width: 4),
-                        Text(
-                          hour,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey[500]),
-                        ),
-                        if (event.location.isNotEmpty) ...[
-                          const SizedBox(width: 10),
-                          Icon(Icons.location_on_outlined,
-                              size: 13, color: Colors.grey[500]),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              event.location,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey[500]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+              child: Icon(Icons.event_rounded, color: iconColor, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                      const SizedBox(width: 4),
+                      Text(
+                        hour,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: Colors.grey[500]),
+                      ),
+                      if (event.location.isNotEmpty) ...[
+                        const SizedBox(width: 10),
+                        Icon(Icons.location_on_outlined,
+                            size: 13, color: Colors.grey[500]),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            event.location,
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[500]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
+                        ),
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
-              if (isAdmin)
-                IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 20),
-                  onPressed: () => _showAdminActions(event),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                )
-              else
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
-            ],
-          ),
+            ),
+            if (isAdmin)
+              IconButton(
+                icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 20),
+                onPressed: () => _showAdminActions(event),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              )
+            else
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
+          ],
         ),
       ),
     );
