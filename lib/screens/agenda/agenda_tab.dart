@@ -115,7 +115,7 @@ class _AgendaTabState extends State<AgendaTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
               child: Row(
                 children: [
                   Expanded(
