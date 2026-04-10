@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/event_model.dart';
@@ -30,6 +31,23 @@ class _AgendaTabState extends State<AgendaTab> {
   bool _showBirthdays = false;
   List<Member> _birthdayMembers = [];
   bool _loadingBirthdays = false;
+
+  static const _prefKey = 'agenda_show_birthdays';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPref();
+  }
+
+  Future<void> _loadPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getBool(_prefKey) ?? false;
+    if (saved != _showBirthdays) {
+      setState(() => _showBirthdays = saved);
+      if (_showBirthdays && _birthdayMembers.isEmpty) _loadBirthdays();
+    }
+  }
 
   // Cache de eventos para evitar rebuild do calendário inteiro
   List<ChurchEvent> _cachedEvents = [];
@@ -83,8 +101,10 @@ class _AgendaTabState extends State<AgendaTab> {
     }
   }
 
-  void _toggleBirthdays() {
+  void _toggleBirthdays() async {
     setState(() => _showBirthdays = !_showBirthdays);
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool(_prefKey, _showBirthdays);
     if (_showBirthdays && _birthdayMembers.isEmpty) {
       _loadBirthdays();
     }
