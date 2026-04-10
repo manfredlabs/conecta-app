@@ -293,12 +293,12 @@ class _BulletinTabState extends State<BulletinTab> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _fileIcon(bulletin.fileType),
-                  color: theme.colorScheme.primary,
+                  color: Colors.grey[600],
                   size: 24,
                 ),
               ),
