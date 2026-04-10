@@ -148,7 +148,7 @@ class _AgendaTabState extends State<AgendaTab> {
                     onPressed: _toggleBirthdays,
                     icon: Icon(
                       Icons.cake_outlined,
-                      color: _showBirthdays ? primaryColor : Colors.grey[400],
+                      color: _showBirthdays ? const Color(0xFFFF7675) : Colors.grey[400],
                     ),
                     tooltip: 'Aniversários',
                     padding: EdgeInsets.zero,
