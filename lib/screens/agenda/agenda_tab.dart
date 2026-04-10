@@ -5,7 +5,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/event_model.dart';
+import '../../models/member_model.dart';
 import '../../models/user_model.dart';
+
+/// Representa um aniversário mapeado para o mês exibido
+class _Birthday {
+  final String name;
+  final DateTime date; // dia/mês original (ano ignorado)
+  _Birthday({required this.name, required this.date});
+}
 
 class AgendaTab extends StatefulWidget {
   const AgendaTab({super.key});
@@ -19,11 +27,12 @@ class _AgendaTabState extends State<AgendaTab> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
+  bool _showBirthdays = false;
+  List<Member> _birthdayMembers = [];
+  bool _loadingBirthdays = false;
 
-  /// Normaliza date para key do mapa (sem hora)
   DateTime _normalizeDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  /// Monta mapa {dia → [eventos]} para lookup rápido
   Map<DateTime, List<ChurchEvent>> _groupByDay(List<ChurchEvent> events) {
     final map = <DateTime, List<ChurchEvent>>{};
     for (final e in events) {
@@ -33,10 +42,49 @@ class _AgendaTabState extends State<AgendaTab> {
     return map;
   }
 
-  /// Eventos do dia selecionado
+  /// Aniversários mapeados para o mês focado (dia/mês match)
+  Map<DateTime, List<_Birthday>> _groupBirthdays() {
+    final map = <DateTime, List<_Birthday>>{};
+    if (!_showBirthdays) return map;
+    for (final m in _birthdayMembers) {
+      if (m.birthDate == null) continue;
+      // Mapeia aniversário para o ano do mês focado
+      final key = DateTime(_focusedDay.year, m.birthDate!.month, m.birthDate!.day);
+      map.putIfAbsent(_normalizeDay(key), () => []).add(
+        _Birthday(name: m.name, date: m.birthDate!),
+      );
+    }
+    return map;
+  }
+
   List<ChurchEvent> _eventsForDay(
       DateTime day, Map<DateTime, List<ChurchEvent>> grouped) {
     return grouped[_normalizeDay(day)] ?? [];
+  }
+
+  List<_Birthday> _birthdaysForDay(
+      DateTime day, Map<DateTime, List<_Birthday>> grouped) {
+    return grouped[_normalizeDay(day)] ?? [];
+  }
+
+  Future<void> _loadBirthdays() async {
+    if (_loadingBirthdays) return;
+    setState(() => _loadingBirthdays = true);
+    final auth = context.read<AuthProvider>();
+    final members = await _service.searchAllActiveMembers(churchId: auth.churchId);
+    if (mounted) {
+      setState(() {
+        _birthdayMembers = members.where((m) => m.birthDate != null).toList();
+        _loadingBirthdays = false;
+      });
+    }
+  }
+
+  void _toggleBirthdays() {
+    setState(() => _showBirthdays = !_showBirthdays);
+    if (_showBirthdays && _birthdayMembers.isEmpty) {
+      _loadBirthdays();
+    }
   }
 
   @override
@@ -56,10 +104,24 @@ class _AgendaTabState extends State<AgendaTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-              child: Text(
-                'Agenda',
-                style: theme.textTheme.headlineMedium,
+              padding: const EdgeInsets.fromLTRB(20, 24, 12, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Agenda',
+                      style: theme.textTheme.headlineMedium,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _toggleBirthdays,
+                    icon: Icon(
+                      Icons.cake_outlined,
+                      color: _showBirthdays ? primaryColor : Colors.grey[400],
+                    ),
+                    tooltip: 'Aniversários',
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -72,14 +134,16 @@ class _AgendaTabState extends State<AgendaTab> {
 
                   final events = snap.data ?? [];
                   final grouped = _groupByDay(events);
+                  final birthdays = _groupBirthdays();
 
                   return Column(
                     children: [
-                      _buildCalendar(grouped, primaryColor, theme),
+                      _buildCalendar(grouped, birthdays, primaryColor, theme),
                       const SizedBox(height: 4),
                       Expanded(
                         child: _buildEventList(
                           _eventsForDay(_selectedDay, grouped),
+                          _birthdaysForDay(_selectedDay, birthdays),
                           isAdmin,
                           theme,
                           primaryColor,
@@ -110,6 +174,7 @@ class _AgendaTabState extends State<AgendaTab> {
 
   Widget _buildCalendar(
     Map<DateTime, List<ChurchEvent>> grouped,
+    Map<DateTime, List<_Birthday>> birthdays,
     Color primaryColor,
     ThemeData theme,
   ) {
@@ -200,23 +265,50 @@ class _AgendaTabState extends State<AgendaTab> {
         ),
         calendarBuilders: CalendarBuilders<ChurchEvent>(
           markerBuilder: (context, day, events) {
-            if (events.isEmpty) return null;
+            final hasBirthday = birthdays[_normalizeDay(day)]?.isNotEmpty ?? false;
+            final hasEvent = events.isNotEmpty;
+            if (!hasEvent && !hasBirthday) return null;
+
             final isSelected = isSameDay(_selectedDay, day);
             final isToday = isSameDay(day, DateTime.now());
-            final dotColor = isSelected
+
+            Color eventDotColor = isSelected
                 ? Colors.white
                 : isToday
                     ? primaryColor
                     : primaryColor.withValues(alpha: 0.7);
-            return Positioned(
-              bottom: 9,
-              child: Container(
+
+            const birthdayColor = Color(0xFFFF7675);
+
+            final dots = <Widget>[];
+            if (hasEvent) {
+              dots.add(Container(
                 width: 5,
                 height: 5,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
                 decoration: BoxDecoration(
-                  color: dotColor,
+                  color: eventDotColor,
                   shape: BoxShape.circle,
                 ),
+              ));
+            }
+            if (hasBirthday) {
+              dots.add(Container(
+                width: 5,
+                height: 5,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : birthdayColor,
+                  shape: BoxShape.circle,
+                ),
+              ));
+            }
+
+            return Positioned(
+              bottom: 9,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: dots,
               ),
             );
           },
@@ -229,11 +321,14 @@ class _AgendaTabState extends State<AgendaTab> {
 
   Widget _buildEventList(
     List<ChurchEvent> dayEvents,
+    List<_Birthday> dayBirthdays,
     bool isAdmin,
     ThemeData theme,
     Color primaryColor,
   ) {
-    if (dayEvents.isEmpty) {
+    final totalItems = dayEvents.length + dayBirthdays.length;
+
+    if (totalItems == 0) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -253,10 +348,65 @@ class _AgendaTabState extends State<AgendaTab> {
 
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-      itemCount: dayEvents.length,
+      itemCount: totalItems,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, i) =>
-          _buildEventCard(dayEvents[i], isAdmin, theme, primaryColor),
+      itemBuilder: (context, i) {
+        if (i < dayBirthdays.length) {
+          return _buildBirthdayCard(dayBirthdays[i], theme);
+        }
+        return _buildEventCard(
+            dayEvents[i - dayBirthdays.length], isAdmin, theme, primaryColor);
+      },
+    );
+  }
+
+  Widget _buildBirthdayCard(_Birthday birthday, ThemeData theme) {
+    const birthdayColor = Color(0xFFFF7675);
+    final age = _focusedDay.year - birthday.date.year;
+
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: birthdayColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.cake_outlined, color: birthdayColor, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    birthday.name,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    age > 0 ? 'Aniversário · $age anos' : 'Aniversário',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
