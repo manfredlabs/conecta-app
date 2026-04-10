@@ -31,9 +31,20 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
   bool _isAdmin = false;
   bool _hasPendingRequest = false;
   bool _pendingCheckDone = false;
+  bool _editing = false;
+
+  // Original values to detect changes
+  String _origName = '';
+  String _origGender = 'M';
+  DateTime? _origBirthDate;
+
+  bool get _hasChanges =>
+      _nameController.text.trim() != _origName ||
+      _gender != _origGender ||
+      _birthDate != _origBirthDate;
 
   bool get _canEditPersonalData =>
-      _isAdmin || (_member.isVisitor && !_hasPendingRequest);
+      _editing && (_isAdmin || (_member.isVisitor && !_hasPendingRequest));
 
   bool get _canPromoteToLeader {
     final user = context.read<AuthProvider>().appUser;
@@ -71,6 +82,10 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
       _nameController.text = _member.name;
       _gender = _member.gender ?? 'M';
       _birthDate = _member.birthDate;
+
+      _origName = _member.name;
+      _origGender = _member.gender ?? 'M';
+      _origBirthDate = _member.birthDate;
 
       final user = context.read<AuthProvider>().appUser;
       final cell = context.read<CellProvider>().selectedCell;
@@ -1065,6 +1080,98 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     );
   }
 
+  Future<void> _confirmSave() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!_hasChanges) {
+      setState(() => _editing = false);
+      return;
+    }
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.save_rounded,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Salvar alterações?',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'As mudanças serão aplicadas em todos os registros.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+    await _save();
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -1113,8 +1220,20 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
 
+    final canToggleEdit = _isAdmin || (_member.isVisitor && !_hasPendingRequest);
+
     return Scaffold(
-      appBar: AppBar(title: Text(_appBarTitle)),
+      appBar: AppBar(
+        title: Text(_appBarTitle),
+        actions: [
+          if (canToggleEdit && !_editing)
+            IconButton(
+              icon: const Icon(Icons.edit_rounded),
+              tooltip: 'Editar',
+              onPressed: () => setState(() => _editing = true),
+            ),
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: Column(
@@ -1645,7 +1764,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton.icon(
-                  onPressed: _saving ? null : _save,
+                  onPressed: _saving ? null : _confirmSave,
                   icon: _saving
                       ? const SizedBox(
                           width: 20,

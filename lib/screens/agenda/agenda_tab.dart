@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/event_model.dart';
-import '../../models/member_model.dart';
+import '../../models/person_model.dart';
 import '../../models/user_model.dart';
 
 /// Representa um aniversário mapeado para o mês exibido
@@ -29,7 +29,7 @@ class _AgendaTabState extends State<AgendaTab> {
   DateTime _selectedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
   bool _showBirthdays = false;
-  List<Member> _birthdayMembers = [];
+  List<Person> _birthdayPeople = [];
   bool _loadingBirthdays = false;
 
   static const _prefKey = 'agenda_show_birthdays';
@@ -45,7 +45,7 @@ class _AgendaTabState extends State<AgendaTab> {
     final saved = prefs.getBool(_prefKey) ?? false;
     if (saved != _showBirthdays) {
       setState(() => _showBirthdays = saved);
-      if (_showBirthdays && _birthdayMembers.isEmpty) _loadBirthdays();
+      if (_showBirthdays && _birthdayPeople.isEmpty) _loadBirthdays();
     }
   }
 
@@ -68,11 +68,11 @@ class _AgendaTabState extends State<AgendaTab> {
   Map<DateTime, List<_Birthday>> _groupBirthdays() {
     final map = <DateTime, List<_Birthday>>{};
     if (!_showBirthdays) return map;
-    for (final m in _birthdayMembers) {
-      if (m.birthDate == null) continue;
-      final key = DateTime(_focusedDay.year, m.birthDate!.month, m.birthDate!.day);
+    for (final p in _birthdayPeople) {
+      if (p.birthDate == null) continue;
+      final key = DateTime(_focusedDay.year, p.birthDate!.month, p.birthDate!.day);
       map.putIfAbsent(_normalizeDay(key), () => []).add(
-        _Birthday(name: m.name, date: m.birthDate!),
+        _Birthday(name: p.name, date: p.birthDate!),
       );
     }
     return map;
@@ -92,10 +92,10 @@ class _AgendaTabState extends State<AgendaTab> {
     if (_loadingBirthdays) return;
     setState(() => _loadingBirthdays = true);
     final auth = context.read<AuthProvider>();
-    final members = await _service.getAllMembersForBirthdays(churchId: auth.churchId);
+    final people = await _service.getAllPeopleForBirthdays(churchId: auth.churchId);
     if (mounted) {
       setState(() {
-        _birthdayMembers = members.where((m) => m.birthDate != null).toList();
+        _birthdayPeople = people;
         _loadingBirthdays = false;
       });
     }
@@ -105,7 +105,7 @@ class _AgendaTabState extends State<AgendaTab> {
     setState(() => _showBirthdays = !_showBirthdays);
     final prefs = await SharedPreferences.getInstance();
     prefs.setBool(_prefKey, _showBirthdays);
-    if (_showBirthdays && _birthdayMembers.isEmpty) {
+    if (_showBirthdays && _birthdayPeople.isEmpty) {
       _loadBirthdays();
     }
   }

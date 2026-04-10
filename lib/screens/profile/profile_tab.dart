@@ -93,6 +93,45 @@ class ProfileTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Edit profile
+                  GestureDetector(
+                    onTap: () async {
+                      await Navigator.pushNamed(context, '/edit-profile');
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.edit_rounded,
+                                color: primaryColor, size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Visualizar perfil',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Logout
                   GestureDetector(
                     onTap: () {

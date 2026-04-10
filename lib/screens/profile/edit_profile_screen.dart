@@ -20,6 +20,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _birthDateExpanded = false;
   bool _saving = false;
   bool _initialized = false;
+  bool _editing = false;
+
+  String _origName = '';
+  String _origGender = 'M';
+  DateTime? _origBirthDate;
+
+  bool get _hasChanges =>
+      _nameController.text.trim() != _origName ||
+      _gender != _origGender ||
+      _birthDate != _origBirthDate;
 
   @override
   void didChangeDependencies() {
@@ -31,6 +41,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _emailController.text = user.email;
         _gender = user.gender ?? 'M';
         _birthDate = user.birthDate;
+
+        _origName = user.name;
+        _origGender = user.gender ?? 'M';
+        _origBirthDate = user.birthDate;
       }
       _initialized = true;
     }
@@ -41,6 +55,98 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _confirmSave() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!_hasChanges) {
+      setState(() => _editing = false);
+      return;
+    }
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.save_rounded,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Salvar alterações?',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Seus dados serão atualizados.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      side: BorderSide(color: Colors.grey[300]!),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+    await _save();
   }
 
   Future<void> _save() async {
@@ -84,7 +190,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Perfil')),
+      appBar: AppBar(
+        title: Text(_editing ? 'Editar Perfil' : 'Meu Perfil'),
+        actions: [
+          if (!_editing)
+            IconButton(
+              icon: const Icon(Icons.edit_rounded),
+              tooltip: 'Editar',
+              onPressed: () => setState(() => _editing = true),
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -95,9 +211,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
+                readOnly: !_editing,
+                decoration: InputDecoration(
                   labelText: 'Nome',
-                  prefixIcon: Icon(Icons.person_outlined),
+                  prefixIcon: const Icon(Icons.person_outlined),
+                  suffixIcon: !_editing
+                      ? Icon(Icons.lock_outline,
+                          size: 18, color: Colors.grey[400])
+                      : null,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -124,7 +245,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               Text('Sexo', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
-              Row(
+              IgnorePointer(
+                ignoring: !_editing,
+                child: Opacity(
+                  opacity: !_editing ? 0.6 : 1.0,
+                  child: Row(
                 children: [
                   Expanded(
                     child: _GenderOption(
@@ -143,12 +268,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       onTap: () => setState(() => _gender = 'F'),
                     ),
                   ),
-                ],
+                  ],
+                ),
+              ),
               ),
 
               const SizedBox(height: 24),
 
-              Card(
+              IgnorePointer(
+                ignoring: !_editing,
+                child: Opacity(
+                  opacity: !_editing ? 0.6 : 1.0,
+                  child: Card(
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
@@ -212,14 +343,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
                 ),
               ),
+              ),
+              ),
 
               const SizedBox(height: 32),
 
+              if (_editing)
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton.icon(
-                  onPressed: _saving ? null : _save,
+                  onPressed: _saving ? null : _confirmSave,
                   icon: _saving
                       ? const SizedBox(
                           width: 20,

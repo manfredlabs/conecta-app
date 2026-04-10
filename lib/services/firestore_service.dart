@@ -221,14 +221,16 @@ class FirestoreService {
   }
 
   /// Todos os membros (ativos + inativos) exceto visitantes — para aniversários
-  Future<List<Member>> getAllMembersForBirthdays({String? churchId}) async {
-    Query<Map<String, dynamic>> query = _db.collection('members')
-        .where('isVisitor', isEqualTo: false);
+  Future<List<Person>> getAllPeopleForBirthdays({String? churchId}) async {
+    Query<Map<String, dynamic>> query = _db.collection('people');
     if (churchId != null) {
       query = query.where('churchId', isEqualTo: churchId);
     }
     final snap = await query.get();
-    return snap.docs.map((d) => Member.fromFirestore(d)).toList();
+    return snap.docs
+        .map((d) => Person.fromFirestore(d))
+        .where((p) => p.birthDate != null)
+        .toList();
   }
 
   Future<List<CellGroup>> getCellListByCongregation(String congregationId) async {
@@ -442,6 +444,23 @@ class FirestoreService {
   Future<void> updatePersonAndSync(
       String personId, Map<String, dynamic> data) async {
     await updatePerson(personId, data);
+
+    // Get person's userId for syncing to users collection
+    final personDoc = await _db.collection('people').doc(personId).get();
+    final userId = personDoc.data()?['userId'] as String?;
+
+    // Sync relevant fields to users collection
+    if (userId != null) {
+      final userUpdate = <String, dynamic>{};
+      if (data.containsKey('name')) userUpdate['name'] = data['name'];
+      if (data.containsKey('gender')) userUpdate['gender'] = data['gender'];
+      if (data.containsKey('birthDate')) userUpdate['birthDate'] = data['birthDate'];
+      if (data.containsKey('email')) userUpdate['email'] = data['email'];
+      if (userUpdate.isNotEmpty) {
+        await _db.collection('users').doc(userId).update(userUpdate);
+      }
+    }
+
     if (data.containsKey('name')) {
       final newName = data['name'] as String;
 
@@ -453,10 +472,6 @@ class FirestoreService {
       for (final doc in snap.docs) {
         await doc.reference.update({'personName': newName});
       }
-
-      // Get person's userId for main leader / supervisor checks
-      final personDoc = await _db.collection('people').doc(personId).get();
-      final userId = personDoc.data()?['userId'] as String?;
 
       if (userId != null) {
         // Sync leaderName on cells where this person is MAIN leader
@@ -475,6 +490,15 @@ class FirestoreService {
             .get();
         for (final doc in supSnap.docs) {
           await doc.reference.update({'supervisorName': newName});
+        }
+
+        // Sync pastorName on congregations where this person is pastor
+        final congSnap = await _db
+            .collection('congregations')
+            .where('pastorId', isEqualTo: userId)
+            .get();
+        for (final doc in congSnap.docs) {
+          await doc.reference.update({'pastorName': newName});
         }
       }
     }
@@ -593,6 +617,15 @@ class FirestoreService {
           .get();
       for (final doc in supSnap.docs) {
         await doc.reference.update({'supervisorName': userData['name']});
+      }
+
+      // Update pastorName on congregations
+      final congSnap = await _db
+          .collection('congregations')
+          .where('pastorId', isEqualTo: userId)
+          .get();
+      for (final doc in congSnap.docs) {
+        await doc.reference.update({'pastorName': userData['name']});
       }
     }
   }
