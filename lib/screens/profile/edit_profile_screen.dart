@@ -64,6 +64,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -87,13 +89,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 Icons.save_rounded,
                 size: 28,
-                color: Theme.of(context).colorScheme.primary,
+                color: primaryColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -188,6 +190,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -201,171 +204,286 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.words,
-                readOnly: !_editing,
-                decoration: InputDecoration(
-                  labelText: 'Nome',
-                  prefixIcon: const Icon(Icons.person_outlined),
-                  suffixIcon: !_editing
-                      ? Icon(Icons.lock_outline,
-                          size: 18, color: Colors.grey[400])
-                      : null,
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe o nome';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: _emailController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'E-mail',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  suffixIcon: Icon(Icons.lock_outline,
-                      size: 18, color: Colors.grey[400]),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Text('Sexo', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              IgnorePointer(
-                ignoring: !_editing,
-                child: Opacity(
-                  opacity: !_editing ? 0.6 : 1.0,
-                  child: Row(
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 children: [
-                  Expanded(
-                    child: _GenderOption(
-                      label: 'Masculino',
-                      icon: Icons.male_rounded,
-                      selected: _gender == 'M',
-                      onTap: () => setState(() => _gender = 'M'),
+                  // ── Nome ──
+                  Text(
+                    'Nome',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _GenderOption(
-                      label: 'Feminino',
-                      icon: Icons.female_rounded,
-                      selected: _gender == 'F',
-                      onTap: () => setState(() => _gender = 'F'),
+                  const SizedBox(height: 8),
+                  Card(
+                    margin: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  ],
-                ),
-              ),
-              ),
-
-              const SizedBox(height: 24),
-
-              IgnorePointer(
-                ignoring: !_editing,
-                child: Opacity(
-                  opacity: !_editing ? 0.6 : 1.0,
-                  child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(
-                        Icons.cake_outlined,
-                        color: _birthDate != null
-                            ? theme.colorScheme.primary
-                            : Colors.grey[400],
-                      ),
-                      title: const Text('Data de Nascimento'),
-                      subtitle: Text(
-                        _birthDate != null
-                            ? '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}'
-                            : 'Opcional',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: _birthDate != null
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: _birthDate != null
-                              ? theme.colorScheme.primary
-                              : Colors.grey[500],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextFormField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        readOnly: !_editing,
+                        decoration: InputDecoration(
+                          hintText: 'Seu nome',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[400],
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          suffixIcon: !_editing
+                              ? Icon(Icons.lock_outline,
+                                  size: 18, color: Colors.grey[400])
+                              : null,
                         ),
-                      ),
-                      trailing: _birthDate != null
-                          ? IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () => setState(() {
-                                _birthDate = null;
-                                _birthDateExpanded = false;
-                              }),
-                            )
-                          : Icon(
-                              _birthDateExpanded
-                                  ? Icons.keyboard_arrow_up_rounded
-                                  : Icons.keyboard_arrow_down_rounded,
-                              color: Colors.grey[400],
-                            ),
-                      onTap: () => setState(
-                          () => _birthDateExpanded = !_birthDateExpanded),
-                    ),
-                    AnimatedCrossFade(
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: CalendarDatePicker(
-                        initialDate: _birthDate ?? DateTime(2000, 1, 1),
-                        firstDate: DateTime(1920),
-                        lastDate: DateTime.now(),
-                        onDateChanged: (date) {
-                          setState(() {
-                            _birthDate = date;
-                            _birthDateExpanded = false;
-                          });
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Informe o nome';
+                          }
+                          return null;
                         },
                       ),
-                      crossFadeState: _birthDateExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      duration: const Duration(milliseconds: 200),
                     ),
-                  ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── E-mail (read-only) ──
+                  Text(
+                    'E-mail',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Card(
+                    margin: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _emailController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          suffixIcon: Icon(Icons.lock_outline,
+                              size: 18, color: Colors.grey[400]),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Sexo ──
+                  Text(
+                    'Sexo',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  IgnorePointer(
+                    ignoring: !_editing,
+                    child: Opacity(
+                      opacity: !_editing ? 0.6 : 1.0,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _GenderOption(
+                              label: 'Masculino',
+                              icon: Icons.male_rounded,
+                              selected: _gender == 'M',
+                              onTap: () => setState(() => _gender = 'M'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _GenderOption(
+                              label: 'Feminino',
+                              icon: Icons.female_rounded,
+                              selected: _gender == 'F',
+                              onTap: () => setState(() => _gender = 'F'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Data de Nascimento ──
+                  Text(
+                    'Data de Nascimento',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  IgnorePointer(
+                    ignoring: !_editing,
+                    child: Opacity(
+                      opacity: !_editing ? 0.6 : 1.0,
+                      child: Card(
+                        margin: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: () => setState(
+                                  () => _birthDateExpanded = !_birthDateExpanded),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: _birthDate != null
+                                            ? primaryColor
+                                                .withValues(alpha: 0.1)
+                                            : Colors.grey[100],
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.cake_outlined,
+                                        color: _birthDate != null
+                                            ? primaryColor
+                                            : Colors.grey[400],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Text(
+                                        _birthDate != null
+                                            ? '${_birthDate!.day.toString().padLeft(2, '0')}/${_birthDate!.month.toString().padLeft(2, '0')}/${_birthDate!.year}'
+                                            : 'Opcional',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: _birthDate != null
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                          color: _birthDate != null
+                                              ? primaryColor
+                                              : Colors.grey[500],
+                                        ),
+                                      ),
+                                    ),
+                                    if (_birthDate != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.close, size: 20),
+                                        onPressed: () => setState(() {
+                                          _birthDate = null;
+                                          _birthDateExpanded = false;
+                                        }),
+                                      )
+                                    else
+                                      Icon(
+                                        _birthDateExpanded
+                                            ? Icons.keyboard_arrow_up_rounded
+                                            : Icons.keyboard_arrow_down_rounded,
+                                        color: Colors.grey[400],
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            AnimatedCrossFade(
+                              firstChild: const SizedBox.shrink(),
+                              secondChild: CalendarDatePicker(
+                                initialDate:
+                                    _birthDate ?? DateTime(2000, 1, 1),
+                                firstDate: DateTime(1920),
+                                lastDate: DateTime.now(),
+                                onDateChanged: (date) {
+                                  setState(() {
+                                    _birthDate = date;
+                                    _birthDateExpanded = false;
+                                  });
+                                },
+                              ),
+                              crossFadeState: _birthDateExpanded
+                                  ? CrossFadeState.showSecond
+                                  : CrossFadeState.showFirst,
+                              duration: const Duration(milliseconds: 200),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Botão Salvar fixo no bottom ──
+            if (_editing)
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackgroundColor,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _confirmSave,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.check_rounded),
+                    label: Text(
+                      _saving ? 'Salvando...' : 'Salvar',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              ),
-              ),
-
-              const SizedBox(height: 32),
-
-              if (_editing)
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _saving ? null : _confirmSave,
-                  icon: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.check_rounded),
-                  label: const Text('Salvar'),
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -392,6 +510,7 @@ class _GenderOption extends StatelessWidget {
         : Colors.grey[400]!;
 
     return Card(
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
