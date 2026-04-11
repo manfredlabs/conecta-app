@@ -20,6 +20,16 @@ class ConectaApp extends StatelessWidget {
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {
+          // Wait for init() to complete before routing
+          if (!auth.initialized) {
+            return const MaterialApp(
+              debugShowCheckedModeBanner: false,
+              home: Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+
           // Decide initial route based on auth + church state
           String initialRoute;
           if (auth.isLoggedIn) {

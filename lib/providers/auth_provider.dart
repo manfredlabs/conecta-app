@@ -9,12 +9,14 @@ class AuthProvider extends ChangeNotifier {
   AppUser? _appUser;
   String? _churchId;
   bool _isLoading = false;
+  bool _initialized = false;
   String? _error;
 
   AppUser? get appUser => _appUser;
   String? get churchId => _churchId ?? _appUser?.churchId;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _appUser != null;
+  bool get initialized => _initialized;
   String? get error => _error;
   User? get firebaseUser => _authService.currentUser;
   bool get hasChurch => churchId != null && churchId!.isNotEmpty;
@@ -29,8 +31,10 @@ class AuthProvider extends ChangeNotifier {
       if (_appUser?.churchId != null) {
         _churchId = _appUser!.churchId;
       }
-      notifyListeners();
     }
+
+    _initialized = true;
+    notifyListeners();
   }
 
   Future<void> setChurchId(String churchId) async {
