@@ -68,18 +68,13 @@ class _ChurchSelectionScreenState extends State<ChurchSelectionScreen> {
                 children: [
                   // ── Header ──
                   Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Icon(Icons.church_rounded,
-                          size: 40, color: primaryColor),
+                    child: Image.asset(
+                      'assets/images/tree.png',
+                      width: 130,
+                      height: 130,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 2),
                   Center(
                     child: Text(
                       'Conecta',
