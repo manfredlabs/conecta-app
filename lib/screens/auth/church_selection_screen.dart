@@ -56,82 +56,130 @@ class _ChurchSelectionScreenState extends State<ChurchSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.church_rounded,
-                  size: 80,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Conecta',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+                children: [
+                  // ── Header ──
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(Icons.church_rounded,
+                          size: 40, color: primaryColor),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Gestão de Células',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      'Conecta',
+                      style: theme.textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 48),
-                Text(
-                  'Informe o código da sua igreja',
-                  style: theme.textTheme.titleMedium,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _codeController,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _findChurch(),
-                  decoration: const InputDecoration(
-                    labelText: 'Código da igreja',
-                    prefixIcon: Icon(Icons.key_rounded),
-                    hintText: 'Ex: maranata-sp',
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      'Gestão de Células',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[500],
+                      ),
+                    ),
                   ),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 40),
+
+                  // ── Código da igreja ──
                   Text(
-                    _error!,
-                    style: TextStyle(color: theme.colorScheme.error),
+                    'Código da Igreja',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  Card(
+                    margin: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: TextField(
+                        controller: _codeController,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _findChurch(),
+                        decoration: InputDecoration(
+                          hintText: 'Ex: maranata-sp',
+                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          prefixIcon: Icon(Icons.key_rounded,
+                              color: primaryColor, size: 20),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ── Erro ──
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                            color: theme.colorScheme.error, fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _findChurch,
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Continuar',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // ── Botão fixo ──
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200, width: 1),
+                ),
+              ),
+              child: FilledButton.icon(
+                onPressed: _loading ? null : _findChurch,
+                icon: _loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.arrow_forward_rounded, size: 20),
+                label: Text(_loading ? 'Buscando...' : 'Continuar'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  textStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
