@@ -211,15 +211,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: FilledButton.icon(
-                      onPressed: auth.isLoading ? null : _handleLogin,
-                      icon: auth.isLoading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.login_rounded, size: 20),
+                      onPressed: auth.isLoading ? () {} : _handleLogin,
+                      icon: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: auth.isLoading
+                            ? const CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white)
+                            : const Icon(Icons.login_rounded, size: 20),
+                      ),
                       label: Text(auth.isLoading ? 'Entrando...' : 'Entrar'),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(double.infinity, 52),

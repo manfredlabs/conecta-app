@@ -155,15 +155,15 @@ class _ChurchSelectionScreenState extends State<ChurchSelectionScreen> {
                 ),
               ),
               child: FilledButton.icon(
-                onPressed: _loading ? null : _findChurch,
-                icon: _loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.arrow_forward_rounded, size: 20),
+                onPressed: _loading ? () {} : _findChurch,
+                icon: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: _loading
+                      ? const CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white)
+                      : const Icon(Icons.arrow_forward_rounded, size: 20),
+                ),
                 label: Text(_loading ? 'Buscando...' : 'Continuar'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
