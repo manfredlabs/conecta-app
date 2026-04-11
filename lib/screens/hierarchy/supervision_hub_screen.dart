@@ -120,7 +120,7 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
           body: CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: 180,
+                expandedHeight: 220,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
@@ -129,7 +129,7 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                     ),
                     child: SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 48, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.start,
