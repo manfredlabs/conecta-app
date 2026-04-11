@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  static const primary = Color(0xFF2563EB);
-  static const secondary = Color(0xFF00B894);
-  static const tertiary = Color(0xFFFF7675);
+  static const primary = Color(0xFF5D3A1A);
+  static const secondary = Color(0xFFA8763E);
+  static const tertiary = Color(0xFF2E7D32);
   static const textDark = Color(0xFF2D3436);
   static const textBody = Color(0xFF636E72);
-  static const scaffold = Color(0xFFF8F9FA);
-  static const border = Color(0xFFE0E0E0);
-  static const divider = Color(0xFFF0F0F0);
+  static const scaffold = Color(0xFFF8F4F0);
+  static const border = Color(0xFFE0D5CC);
+  static const divider = Color(0xFFF0EBE5);
 }
 
 class AppTheme {
