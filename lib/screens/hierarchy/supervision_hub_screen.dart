@@ -43,9 +43,15 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
     final activeDocs = membersSnap.docs
         .where((d) => (d.data())['isActive'] != false)
         .toList();
-    final visitors = activeDocs
-        .where((d) => (d.data())['isVisitor'] == true)
-        .length;
+    final uniquePersonIds = activeDocs
+        .map((d) => d.data()['personId'] as String?)
+        .whereType<String>()
+        .toSet();
+    final uniqueVisitorIds = activeDocs
+        .where((d) => d.data()['isVisitor'] == true)
+        .map((d) => d.data()['personId'] as String?)
+        .whereType<String>()
+        .toSet();
 
     Query<Map<String, dynamic>> cellsQuery = _db
         .collection('cells')
@@ -81,8 +87,8 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
 
     if (mounted) {
       setState(() {
-        _memberCount = activeDocs.length - visitors;
-        _visitorCount = visitors;
+        _memberCount = uniquePersonIds.length - uniqueVisitorIds.length;
+        _visitorCount = uniqueVisitorIds.length;
         _totalCells = cellsSnap.size;
         _cellsMet = cellsMetThisWeek.length;
         _loading = false;

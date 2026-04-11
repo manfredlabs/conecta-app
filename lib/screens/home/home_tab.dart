@@ -211,9 +211,15 @@ class _HomeTabState extends State<HomeTab> {
         final activeDocs = membersSnap.docs
             .where((d) => (d.data())['isActive'] != false)
             .toList();
-        final supVisitors = activeDocs
-            .where((d) => (d.data())['isVisitor'] == true)
-            .length;
+        final uniquePersonIds = activeDocs
+            .map((d) => d.data()['personId'] as String?)
+            .whereType<String>()
+            .toSet();
+        final uniqueVisitorIds = activeDocs
+            .where((d) => d.data()['isVisitor'] == true)
+            .map((d) => d.data()['personId'] as String?)
+            .whereType<String>()
+            .toSet();
 
         Query<Map<String, dynamic>> supMeetingsQuery = _db
             .collection('meetings')
@@ -242,8 +248,8 @@ class _HomeTabState extends State<HomeTab> {
           'supId': supId,
           'supName': supName,
           'supCells': supCells,
-          'supMembers': activeDocs.length - supVisitors,
-          'supVisitors': supVisitors,
+          'supMembers': uniquePersonIds.length - uniqueVisitorIds.length,
+          'supVisitors': uniqueVisitorIds.length,
           'supCellsMet': cellsMetThisWeek.length,
         });
       }
@@ -285,11 +291,17 @@ class _HomeTabState extends State<HomeTab> {
       final activeCongDocs = membersSnap.docs
           .where((d) => (d.data())['isActive'] != false)
           .toList();
-      final congVisitors = activeCongDocs
-          .where((d) => (d.data())['isVisitor'] == true)
-          .length;
-      stats['congMembers'] = activeCongDocs.length - congVisitors;
-      stats['congVisitors'] = congVisitors;
+      final uniqueCongPersonIds = activeCongDocs
+          .map((d) => d.data()['personId'] as String?)
+          .whereType<String>()
+          .toSet();
+      final uniqueCongVisitorIds = activeCongDocs
+          .where((d) => d.data()['isVisitor'] == true)
+          .map((d) => d.data()['personId'] as String?)
+          .whereType<String>()
+          .toSet();
+      stats['congMembers'] = uniqueCongPersonIds.length - uniqueCongVisitorIds.length;
+      stats['congVisitors'] = uniqueCongVisitorIds.length;
 
       Query<Map<String, dynamic>> congMeetingsQuery = _db
           .collection('meetings')
@@ -354,9 +366,15 @@ class _HomeTabState extends State<HomeTab> {
         final activeDocs = membersSnap.docs
             .where((d) => (d.data())['isActive'] != false)
             .toList();
-        final visitors = activeDocs
-            .where((d) => (d.data())['isVisitor'] == true)
-            .length;
+        final uniquePersonIds = activeDocs
+            .map((d) => d.data()['personId'] as String?)
+            .whereType<String>()
+            .toSet();
+        final uniqueVisitorIds = activeDocs
+            .where((d) => d.data()['isVisitor'] == true)
+            .map((d) => d.data()['personId'] as String?)
+            .whereType<String>()
+            .toSet();
 
         Query<Map<String, dynamic>> meetingsQ = _db
             .collection('meetings')
@@ -383,8 +401,8 @@ class _HomeTabState extends State<HomeTab> {
           'name': congName,
           'supervisions': supsSnap.size,
           'cells': cellsSnap.size,
-          'members': activeDocs.length - visitors,
-          'visitors': visitors,
+          'members': uniquePersonIds.length - uniqueVisitorIds.length,
+          'visitors': uniqueVisitorIds.length,
           'cellsMet': cellsMet.length,
         });
       }

@@ -80,8 +80,15 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
     final activeDocs = membersSnap.docs
         .where((d) => (d.data())['isActive'] != false)
         .toList();
-    final visitors =
-        activeDocs.where((d) => (d.data())['isVisitor'] == true).length;
+    final uniquePersonIds = activeDocs
+        .map((d) => d.data()['personId'] as String?)
+        .whereType<String>()
+        .toSet();
+    final uniqueVisitorIds = activeDocs
+        .where((d) => d.data()['isVisitor'] == true)
+        .map((d) => d.data()['personId'] as String?)
+        .whereType<String>()
+        .toSet();
 
     // Reuniões esta semana
     final now = DateTime.now();
@@ -112,8 +119,8 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
       setState(() {
         _supervisionCount = supSnap.size;
         _cellCount = cellsSnap.size;
-        _memberCount = activeDocs.length - visitors;
-        _visitorCount = visitors;
+        _memberCount = uniquePersonIds.length - uniqueVisitorIds.length;
+        _visitorCount = uniqueVisitorIds.length;
         _cellsMet = cellsMetThisWeek.length;
         _loading = false;
       });
