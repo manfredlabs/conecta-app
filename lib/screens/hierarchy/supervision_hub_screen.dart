@@ -144,6 +144,8 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                                 Expanded(
                                   child: Text(
                                     supervision.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.headlineSmall
                                         ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
@@ -155,6 +157,23 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
+                                if (supervision.congregationId.isNotEmpty)
+                                  FutureBuilder<DocumentSnapshot>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('congregations')
+                                        .doc(supervision.congregationId)
+                                        .get(),
+                                    builder: (context, snap) {
+                                      final name = (snap.data?.data()
+                                          as Map<String, dynamic>?)?['name'] as String?;
+                                      if (name == null || name.isEmpty) return const SizedBox.shrink();
+                                      return _HeaderChip(
+                                        icon: Icons.church_rounded,
+                                        label: name,
+                                        color: primaryColor,
+                                      );
+                                    },
+                                  ),
                                 _HeaderChip(
                                   icon: Icons.groups_rounded,
                                   label: '${cells.length} células',
@@ -366,30 +385,34 @@ class _HeaderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
+    final maxWidth = MediaQuery.of(context).size.width * 0.55;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -14,8 +14,8 @@ class Permissions {
         user.congregationId == cell.congregationId) {
       return true;
     }
-    if (user.role == UserRole.supervisor &&
-        user.supervisionId == cell.supervisionId) {
+    // Anyone who supervises this cell's supervision can edit
+    if (user.supervisedSupervisionIds.contains(cell.supervisionId)) {
       return true;
     }
     if (user.role == UserRole.leader && user.cellId == cell.id) {
@@ -38,6 +38,11 @@ class Permissions {
     if (user.role == UserRole.pastor &&
         user.congregationId != null &&
         user.congregationId == congregationId) {
+      return true;
+    }
+    // Supervisor of this supervision can create cells in it
+    if (supervisionId != null &&
+        user.supervisedSupervisionIds.contains(supervisionId)) {
       return true;
     }
     return false;
@@ -63,8 +68,7 @@ class Permissions {
         user.congregationId == cell.congregationId) {
       return true;
     }
-    if (user.role == UserRole.supervisor &&
-        user.supervisionId == cell.supervisionId) {
+    if (user.supervisedSupervisionIds.contains(cell.supervisionId)) {
       return true;
     }
     if (user.role == UserRole.leader && user.id == cell.leaderId) {
@@ -93,8 +97,8 @@ class Permissions {
         user.congregationId == supervision.congregationId) {
       return true;
     }
-    if (user.role == UserRole.supervisor &&
-        user.supervisionId == supervision.id) {
+    // Anyone who is the supervisor of this supervision can edit it
+    if (supervision.supervisorId == user.id) {
       return true;
     }
     return false;

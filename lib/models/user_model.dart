@@ -14,6 +14,7 @@ class AppUser {
   final String? personId;
   final String? gender;
   final DateTime? birthDate;
+  final List<String> supervisedSupervisionIds;
 
   AppUser({
     required this.id,
@@ -27,6 +28,7 @@ class AppUser {
     this.personId,
     this.gender,
     this.birthDate,
+    this.supervisedSupervisionIds = const [],
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -52,7 +54,7 @@ class AppUser {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'name': name,
       'email': email,
       'role': role.name,
@@ -63,6 +65,8 @@ class AppUser {
       'gender': gender,
       'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
     };
+    if (personId != null) map['personId'] = personId;
+    return map;
   }
 
   String get roleDisplayName {

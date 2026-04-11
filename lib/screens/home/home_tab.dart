@@ -176,66 +176,78 @@ class _HomeTabState extends State<HomeTab> {
 
     stats['myCells'] = myCells;
 
-    // ── Minha Supervisão (supervisor ou pastor com supervisionId) ──
-    if (user.supervisionId != null &&
-        (user.role == UserRole.supervisor || user.role == UserRole.pastor || user.role == UserRole.admin)) {
-      final supDoc = await _db.collection('supervisions').doc(user.supervisionId).get();
-      if (supDoc.exists) {
-        stats['supName'] = (supDoc.data() as Map<String, dynamic>)['name'] ?? 'Supervisão';
-      }
-
-      Query<Map<String, dynamic>> supCellsQuery = _db
-          .collection('cells')
-          .where('supervisionId', isEqualTo: user.supervisionId);
+    // ── Minhas Supervisões (query supervisions where supervisorId == userId) ──
+    if (user.role == UserRole.supervisor || user.role == UserRole.pastor || user.role == UserRole.admin) {
+      Query<Map<String, dynamic>> supsQuery = _db
+          .collection('supervisions')
+          .where('supervisorId', isEqualTo: user.id);
       if (churchId != null) {
-        supCellsQuery = supCellsQuery.where('churchId', isEqualTo: churchId);
+        supsQuery = supsQuery.where('churchId', isEqualTo: churchId);
       }
-      final cellsSnap = await supCellsQuery.get();
-      stats['supCells'] = cellsSnap.size;
+      final supsSnap = await supsQuery.get();
 
-      Query<Map<String, dynamic>> supMembersQuery = _db
-          .collection('cell_members')
-          .where('supervisionId', isEqualTo: user.supervisionId);
-      if (churchId != null) {
-        supMembersQuery = supMembersQuery.where('churchId', isEqualTo: churchId);
-      }
-      final membersSnap = await supMembersQuery.get();
-      final activeDocs = membersSnap.docs
-          .where((d) => (d.data())['isActive'] != false)
-          .toList();
-      final supVisitors = activeDocs
-          .where((d) => (d.data())['isVisitor'] == true)
-          .length;
-      stats['supMembers'] = activeDocs.length - supVisitors;
-      stats['supVisitors'] = supVisitors;
+      final mySupervisions = <Map<String, dynamic>>[];
+      for (final supDoc in supsSnap.docs) {
+        final supData = supDoc.data();
+        final supId = supDoc.id;
+        final supName = supData['name'] ?? 'Supervisão';
 
-      // Semáforo: quantas células reuniram esta semana
-      final now = DateTime.now();
-      final weekStart = now.subtract(Duration(days: now.weekday - 1));
-      final weekCutoff = DateTime(weekStart.year, weekStart.month, weekStart.day);
-
-      Query<Map<String, dynamic>> supMeetingsQuery = _db
-          .collection('meetings')
-          .where('supervisionId', isEqualTo: user.supervisionId);
-      if (churchId != null) {
-        supMeetingsQuery = supMeetingsQuery.where('churchId', isEqualTo: churchId);
-      }
-      final meetingsSnap = await supMeetingsQuery.get();
-      stats['supWeeklyMeetings'] = _countRecentMeetings(meetingsSnap.docs);
-
-      // Contar células distintas que reuniram esta semana
-      final cellsMetThisWeek = <String>{};
-      for (final mDoc in meetingsSnap.docs) {
-        final data = mDoc.data() as Map<String, dynamic>;
-        final ts = data['date'];
-        if (ts == null || ts is! Timestamp) continue;
-        final date = ts.toDate();
-        if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
-          final cellId = data['cellId'] as String? ?? '';
-          if (cellId.isNotEmpty) cellsMetThisWeek.add(cellId);
+        Query<Map<String, dynamic>> supCellsQuery = _db
+            .collection('cells')
+            .where('supervisionId', isEqualTo: supId);
+        if (churchId != null) {
+          supCellsQuery = supCellsQuery.where('churchId', isEqualTo: churchId);
         }
+        final cellsSnap = await supCellsQuery.get();
+        final supCells = cellsSnap.size;
+
+        Query<Map<String, dynamic>> supMembersQuery = _db
+            .collection('cell_members')
+            .where('supervisionId', isEqualTo: supId);
+        if (churchId != null) {
+          supMembersQuery = supMembersQuery.where('churchId', isEqualTo: churchId);
+        }
+        final membersSnap = await supMembersQuery.get();
+        final activeDocs = membersSnap.docs
+            .where((d) => (d.data())['isActive'] != false)
+            .toList();
+        final supVisitors = activeDocs
+            .where((d) => (d.data())['isVisitor'] == true)
+            .length;
+
+        Query<Map<String, dynamic>> supMeetingsQuery = _db
+            .collection('meetings')
+            .where('supervisionId', isEqualTo: supId);
+        if (churchId != null) {
+          supMeetingsQuery = supMeetingsQuery.where('churchId', isEqualTo: churchId);
+        }
+        final meetingsSnap = await supMeetingsQuery.get();
+
+        final now = DateTime.now();
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        final weekCutoff = DateTime(weekStart.year, weekStart.month, weekStart.day);
+        final cellsMetThisWeek = <String>{};
+        for (final mDoc in meetingsSnap.docs) {
+          final data = mDoc.data() as Map<String, dynamic>;
+          final ts = data['date'];
+          if (ts == null || ts is! Timestamp) continue;
+          final date = ts.toDate();
+          if (date.isAfter(weekCutoff) || date.isAtSameMomentAs(weekCutoff)) {
+            final cellId = data['cellId'] as String? ?? '';
+            if (cellId.isNotEmpty) cellsMetThisWeek.add(cellId);
+          }
+        }
+
+        mySupervisions.add({
+          'supId': supId,
+          'supName': supName,
+          'supCells': supCells,
+          'supMembers': activeDocs.length - supVisitors,
+          'supVisitors': supVisitors,
+          'supCellsMet': cellsMetThisWeek.length,
+        });
       }
-      stats['supCellsMet'] = cellsMetThisWeek.length;
+      stats['mySupervisions'] = mySupervisions;
     }
 
     // ── Congregação (pastor) ──
@@ -425,13 +437,11 @@ class _HomeTabState extends State<HomeTab> {
     if (mounted) _loadStats();
   }
 
-  Future<void> _navigateToMySupervisionHub() async {
-    final user = context.read<AuthProvider>().appUser;
+  Future<void> _navigateToMySupervisionHub(String supervisionId) async {
     final hierarchyProvider = context.read<HierarchyProvider>();
     final cellProvider = context.read<CellProvider>();
-    if (user == null || user.supervisionId == null) return;
 
-    final supDoc = await _db.collection('supervisions').doc(user.supervisionId).get();
+    final supDoc = await _db.collection('supervisions').doc(supervisionId).get();
     if (!mounted || !supDoc.exists) return;
     final supervision = Supervision.fromFirestore(supDoc);
     hierarchyProvider.selectSupervision(supervision);
@@ -695,14 +705,15 @@ class _HomeTabState extends State<HomeTab> {
     ];
   }
 
-  List<Widget> _buildMinhaSupervicaoSection() {
+  List<Widget> _buildMinhaSupervicaoCard(Map<String, dynamic> supStats) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final supName = _stats['supName'] ?? 'Supervisão';
-    final supCells = _stats['supCells'] ?? 0;
-    final supMembers = _stats['supMembers'] ?? 0;
-    final supVisitors = _stats['supVisitors'] ?? 0;
-    final supCellsMet = _stats['supCellsMet'] ?? 0;
+    final supId = supStats['supId'] as String;
+    final supName = supStats['supName'] ?? 'Supervisão';
+    final supCells = supStats['supCells'] ?? 0;
+    final supMembers = supStats['supMembers'] ?? 0;
+    final supVisitors = supStats['supVisitors'] ?? 0;
+    final supCellsMet = supStats['supCellsMet'] ?? 0;
 
     // Semáforo: cor baseada em % de células que reuniram
     Color semaphoreColor;
@@ -720,14 +731,13 @@ class _HomeTabState extends State<HomeTab> {
     }
 
     return [
-      _sectionTitle('Sua supervisão'),
       Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _navigateToMySupervisionHub(),
+          onTap: () => _navigateToMySupervisionHub(supId),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -1085,11 +1095,17 @@ class _HomeTabState extends State<HomeTab> {
       sections.addAll(_buildMinhaCelulaSection());
     }
 
-    // Minha Supervisão (supervisor ou pastor com supervisionId)
-    if (user.supervisionId != null &&
-        (user.role == UserRole.supervisor || user.role == UserRole.pastor || user.role == UserRole.admin)) {
+    // Minha(s) Supervisão(ões)
+    final mySupervisions = (_stats['mySupervisions'] as List<Map<String, dynamic>>?) ?? [];
+    if (mySupervisions.isNotEmpty) {
       if (sections.isNotEmpty) sections.add(const SizedBox(height: 28));
-      sections.addAll(_buildMinhaSupervicaoSection());
+      sections.add(_sectionTitle(
+        mySupervisions.length == 1 ? 'Sua supervisão' : 'Suas supervisões',
+      ));
+      for (var i = 0; i < mySupervisions.length; i++) {
+        if (i > 0) sections.add(const SizedBox(height: 12));
+        sections.addAll(_buildMinhaSupervicaoCard(mySupervisions[i]));
+      }
     }
 
     // Congregação (pastor)

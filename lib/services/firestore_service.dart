@@ -164,16 +164,35 @@ class FirestoreService {
 
   /// Returns a map of member name (lowercase) → user role for all users
   Future<Map<String, String>> getUserRolesByPersonId({String? churchId}) async {
-    Query<Map<String, dynamic>> query = _db.collection('users');
+    Query<Map<String, dynamic>> usersQuery = _db.collection('users');
     if (churchId != null) {
-      query = query.where('churchId', isEqualTo: churchId);
+      usersQuery = usersQuery.where('churchId', isEqualTo: churchId);
     }
-    final snap = await query.get();
+    final usersSnap = await usersQuery.get();
+
+    // Build userId → personId from people collection (fallback)
+    Query<Map<String, dynamic>> peopleQuery = _db.collection('people');
+    if (churchId != null) {
+      peopleQuery = peopleQuery.where('churchId', isEqualTo: churchId);
+    }
+    final peopleSnap = await peopleQuery.get();
+    final userIdToPersonId = <String, String>{};
+    for (final doc in peopleSnap.docs) {
+      final userId = doc.data()['userId'] as String?;
+      if (userId != null && userId.isNotEmpty) {
+        userIdToPersonId[userId] = doc.id;
+      }
+    }
+
     final map = <String, String>{};
-    for (final doc in snap.docs) {
+    for (final doc in usersSnap.docs) {
       final data = doc.data();
-      final personId = data['personId'] as String? ?? '';
       final role = (data['role'] as String?) ?? 'leader';
+      // Try personId from user doc first, fallback to people cross-ref
+      var personId = data['personId'] as String? ?? '';
+      if (personId.isEmpty) {
+        personId = userIdToPersonId[doc.id] ?? '';
+      }
       if (personId.isNotEmpty) map[personId] = role;
     }
     return map;

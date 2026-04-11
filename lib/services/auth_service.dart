@@ -50,7 +50,7 @@ class AuthService {
   Future<AppUser?> getAppUser(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (doc.exists) {
-      final appUser = AppUser.fromFirestore(doc);
+      var appUser = AppUser.fromFirestore(doc);
 
       // Save churchId to local storage
       if (appUser.churchId != null) {
@@ -65,7 +65,12 @@ class AuthService {
             .limit(1)
             .get();
         if (personSnap.docs.isNotEmpty) {
-          return AppUser(
+          final resolvedPersonId = personSnap.docs.first.id;
+          // Persist back to Firestore for future lookups
+          await _firestore.collection('users').doc(uid).update({
+            'personId': resolvedPersonId,
+          });
+          appUser = AppUser(
             id: appUser.id,
             name: appUser.name,
             email: appUser.email,
@@ -74,12 +79,37 @@ class AuthService {
             congregationId: appUser.congregationId,
             supervisionId: appUser.supervisionId,
             cellId: appUser.cellId,
-            personId: personSnap.docs.first.id,
+            personId: resolvedPersonId,
             gender: appUser.gender,
             birthDate: appUser.birthDate,
           );
         }
       }
+
+      // Load supervised supervision IDs
+      final supsSnap = await _firestore
+          .collection('supervisions')
+          .where('supervisorId', isEqualTo: uid)
+          .get();
+      final supIds = supsSnap.docs.map((d) => d.id).toList();
+
+      if (supIds.isNotEmpty) {
+        appUser = AppUser(
+          id: appUser.id,
+          name: appUser.name,
+          email: appUser.email,
+          role: appUser.role,
+          churchId: appUser.churchId,
+          congregationId: appUser.congregationId,
+          supervisionId: appUser.supervisionId,
+          cellId: appUser.cellId,
+          personId: appUser.personId,
+          gender: appUser.gender,
+          birthDate: appUser.birthDate,
+          supervisedSupervisionIds: supIds,
+        );
+      }
+
       return appUser;
     }
     return null;
