@@ -368,32 +368,48 @@ class _AgendaTabState extends State<AgendaTab> {
 
     if (totalItems == 0) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_busy_outlined, size: 48, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            Text(
-              'Nenhum evento neste dia',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[400],
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Column(
+            key: const ValueKey('empty'),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.event_busy_outlined, size: 48, color: Colors.grey[300]),
+              const SizedBox(height: 12),
+              Text(
+                'Nenhum evento neste dia',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[400],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
 
+    // Key changes when day changes, triggering fresh animations
+    final dayKey = ValueKey(
+        '${_selectedDay.year}-${_selectedDay.month}-${_selectedDay.day}');
+
     return ListView.separated(
+      key: dayKey,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
       itemCount: totalItems,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
-        if (i < dayBirthdays.length) {
-          return _buildBirthdayCard(dayBirthdays[i], theme);
-        }
-        return _buildEventCard(
-            dayEvents[i - dayBirthdays.length], isAdmin, theme, primaryColor);
+        final child = i < dayBirthdays.length
+            ? _buildBirthdayCard(dayBirthdays[i], theme)
+            : _buildEventCard(
+                dayEvents[i - dayBirthdays.length], isAdmin, theme, primaryColor);
+
+        // Staggered delay: each card enters 60ms after the previous
+        final delay = Duration(milliseconds: 60 * i);
+        return _StaggeredFadeSlide(
+          key: ValueKey('${dayKey.value}_$i'),
+          delay: delay,
+          child: child,
+        );
       },
     );
   }
@@ -1099,6 +1115,63 @@ class _AgendaTabState extends State<AgendaTab> {
           },
         );
       },
+    );
+  }
+}
+
+/// Staggered fade + slide animation for agenda event cards.
+class _StaggeredFadeSlide extends StatefulWidget {
+  final Duration delay;
+  final Widget child;
+
+  const _StaggeredFadeSlide({
+    super.key,
+    required this.delay,
+    required this.child,
+  });
+
+  @override
+  State<_StaggeredFadeSlide> createState() => _StaggeredFadeSlideState();
+}
+
+class _StaggeredFadeSlideState extends State<_StaggeredFadeSlide>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _offset,
+        child: widget.child,
+      ),
     );
   }
 }
