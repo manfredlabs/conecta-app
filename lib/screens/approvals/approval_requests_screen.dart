@@ -84,9 +84,9 @@ class _RequestCardState extends State<_RequestCard> {
       subtitle:
           '${widget.request.personName} será promovido(a) a membro da célula ${widget.request.cellName}.',
       icon: Icons.check_circle_rounded,
-      iconColor: const Color(0xFF00B894),
+      iconColor: Theme.of(context).colorScheme.secondary,
       confirmLabel: 'Aprovar',
-      confirmColor: const Color(0xFF00B894),
+      confirmColor: Theme.of(context).colorScheme.secondary,
     );
     if (confirmed != true) return;
 
@@ -355,7 +355,7 @@ class _RequestCardState extends State<_RequestCard> {
                       icon: const Icon(Icons.check_rounded, size: 18),
                       label: const Text('Aprovar'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF00B894),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

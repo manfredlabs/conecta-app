@@ -150,11 +150,11 @@ class ProfileTab extends StatelessWidget {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF7675).withValues(alpha: 0.1),
+                              color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.logout_rounded,
-                                color: Color(0xFFFF7675), size: 22),
+                            child: Icon(Icons.logout_rounded,
+                                color: theme.colorScheme.tertiary, size: 22),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -162,7 +162,7 @@ class ProfileTab extends StatelessWidget {
                               'Sair da conta',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFFFF7675),
+                                color: theme.colorScheme.tertiary,
                               ),
                             ),
                           ),
@@ -207,13 +207,13 @@ class ProfileTab extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF7675).withValues(alpha: 0.1),
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.logout_rounded,
                 size: 28,
-                color: Color(0xFFFF7675),
+                color: theme.colorScheme.tertiary,
               ),
             ),
             const SizedBox(height: 16),
@@ -255,7 +255,7 @@ class ProfileTab extends StatelessWidget {
                       });
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF7675),
+                      backgroundColor: theme.colorScheme.tertiary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

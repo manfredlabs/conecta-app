@@ -148,7 +148,7 @@ class _AgendaTabState extends State<AgendaTab> {
                     onPressed: _toggleBirthdays,
                     icon: Icon(
                       Icons.cake_outlined,
-                      color: _showBirthdays ? const Color(0xFFFF7675) : Colors.grey[400],
+                      color: _showBirthdays ? Theme.of(context).colorScheme.tertiary : Colors.grey[400],
                     ),
                     tooltip: 'Aniversários',
                     padding: EdgeInsets.zero,
@@ -316,7 +316,7 @@ class _AgendaTabState extends State<AgendaTab> {
                     ? primaryColor
                     : primaryColor.withValues(alpha: 0.7);
 
-            const birthdayColor = Color(0xFFFF7675);
+            final birthdayColor = Theme.of(context).colorScheme.tertiary;
 
             final dots = <Widget>[];
             if (hasEvent) {
@@ -415,7 +415,7 @@ class _AgendaTabState extends State<AgendaTab> {
   }
 
   Widget _buildBirthdayCard(_Birthday birthday, ThemeData theme) {
-    const birthdayColor = Color(0xFFFF7675);
+    final birthdayColor = theme.colorScheme.tertiary;
     final age = _focusedDay.year - birthday.date.year;
 
     return GestureDetector(
@@ -435,7 +435,7 @@ class _AgendaTabState extends State<AgendaTab> {
                 color: birthdayColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.cake_outlined, color: birthdayColor, size: 24),
+              child: Icon(Icons.cake_outlined, color: birthdayColor, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
