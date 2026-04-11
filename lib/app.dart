@@ -6,6 +6,9 @@ import 'config/routes.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cell_provider.dart';
 import 'providers/hierarchy_provider.dart';
+import 'screens/auth/church_selection_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/shell/main_shell.dart';
 
 class ConectaApp extends StatelessWidget {
   const ConectaApp({super.key});
@@ -20,24 +23,17 @@ class ConectaApp extends StatelessWidget {
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {
-          // Wait for init() to complete before routing
+          Widget home;
           if (!auth.initialized) {
-            return const MaterialApp(
-              debugShowCheckedModeBanner: false,
-              home: Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
+            home = const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             );
-          }
-
-          // Decide initial route based on auth + church state
-          String initialRoute;
-          if (auth.isLoggedIn) {
-            initialRoute = AppRoutes.home;
+          } else if (auth.isLoggedIn) {
+            home = const MainShell();
           } else if (auth.hasChurch) {
-            initialRoute = AppRoutes.login;
+            home = const LoginScreen();
           } else {
-            initialRoute = AppRoutes.churchSelection;
+            home = const ChurchSelectionScreen();
           }
 
           return MaterialApp(
@@ -51,7 +47,7 @@ class ConectaApp extends StatelessWidget {
             ],
             supportedLocales: const [Locale('pt', 'BR')],
             locale: const Locale('pt', 'BR'),
-            initialRoute: initialRoute,
+            home: home,
             routes: AppRoutes.routes,
           );
         },
