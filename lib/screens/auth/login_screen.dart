@@ -55,11 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     Center(
                       child: Image.asset(
                         'assets/images/logo.png',
-                        width: 110,
-                        height: 110,
+                        width: 130,
+                        height: 130,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     Center(
                       child: Text(
                         'Conecta',
