@@ -235,7 +235,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         decoration: InputDecoration(
                           hintText: 'Seu nome',
                           hintStyle: TextStyle(
-                            fontSize: 14,
                             color: Colors.grey[400],
                           ),
                           border: InputBorder.none,

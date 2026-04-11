@@ -67,7 +67,6 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nome do visitante',
                           hintStyle: TextStyle(
-                            fontSize: 14,
                             color: Colors.grey[400],
                           ),
                           border: InputBorder.none,

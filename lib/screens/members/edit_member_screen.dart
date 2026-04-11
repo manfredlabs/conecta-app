@@ -1261,7 +1261,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nome completo',
                           hintStyle: TextStyle(
-                            fontSize: 14,
                             color: Colors.grey[400],
                           ),
                           border: InputBorder.none,

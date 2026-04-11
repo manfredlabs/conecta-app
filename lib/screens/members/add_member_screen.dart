@@ -338,7 +338,6 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           decoration: InputDecoration(
                             hintText: 'Nome completo',
                             hintStyle: TextStyle(
-                              fontSize: 14,
                               color: Colors.grey[400],
                             ),
                             border: InputBorder.none,
@@ -614,7 +613,6 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             decoration: InputDecoration(
                               hintText: 'Digite o nome do membro',
                               hintStyle: TextStyle(
-                                fontSize: 14,
                                 color: Colors.grey[400],
                               ),
                               border: InputBorder.none,

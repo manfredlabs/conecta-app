@@ -301,7 +301,6 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                             hintText:
                                 'Pedidos de oração, testemunhos, observações...',
                             hintStyle: TextStyle(
-                              fontSize: 14,
                               color: Colors.grey[400],
                             ),
                             filled: false,

@@ -574,7 +574,6 @@ class _EditCellScreenState extends State<EditCellScreen> {
                             decoration: InputDecoration(
                               hintText: 'Nome da célula',
                               hintStyle: TextStyle(
-                                fontSize: 14,
                                 color: Colors.grey[400],
                               ),
                               border: InputBorder.none,
@@ -673,7 +672,6 @@ class _EditCellScreenState extends State<EditCellScreen> {
                         decoration: InputDecoration(
                           hintText: 'Digite o nome do líder',
                           hintStyle: TextStyle(
-                            fontSize: 14,
                             color: Colors.grey[400],
                           ),
                           border: InputBorder.none,

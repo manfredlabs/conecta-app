@@ -451,7 +451,6 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                             decoration: InputDecoration(
                               hintText: 'Nome da supervisão',
                               hintStyle: TextStyle(
-                                fontSize: 14,
                                 color: Colors.grey[400],
                               ),
                               border: InputBorder.none,
@@ -551,7 +550,6 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                         decoration: InputDecoration(
                           hintText: 'Digite o nome do supervisor',
                           hintStyle: TextStyle(
-                            fontSize: 14,
                             color: Colors.grey[400],
                           ),
                           border: InputBorder.none,

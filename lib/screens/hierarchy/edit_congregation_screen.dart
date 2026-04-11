@@ -120,7 +120,6 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                             decoration: InputDecoration(
                               hintText: 'Nome da congregação',
                               hintStyle: TextStyle(
-                                fontSize: 14,
                                 color: Colors.grey[400],
                               ),
                               border: InputBorder.none,
