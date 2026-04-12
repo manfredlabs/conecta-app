@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/hierarchy_provider.dart';
 import '../../providers/cell_provider.dart';
+import '../../config/theme.dart';
 
 class SupervisionListScreen extends StatelessWidget {
   const SupervisionListScreen({super.key});
@@ -27,11 +28,11 @@ class SupervisionListScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.workspaces_outline, size: 64, color: Colors.grey),
+            Icon(Icons.workspaces_outline, size: 64, color: AppColors.neutral500),
             SizedBox(height: 16),
             Text(
               'Nenhuma supervisão encontrada',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: TextStyle(color: AppColors.neutral500, fontSize: 16),
             ),
           ],
         ),
@@ -94,12 +95,12 @@ class SupervisionListScreen extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
-                              ?.copyWith(color: Colors.grey[500]),
+                              ?.copyWith(color: AppColors.neutral500),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  const Icon(Icons.chevron_right, color: AppColors.neutral400),
                 ],
               ),
             ),

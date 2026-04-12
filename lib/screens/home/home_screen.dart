@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/hierarchy_provider.dart';
 import '../../models/user_model.dart';
+import '../../config/theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -110,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             user.roleDisplayName,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
+                  color: AppColors.neutral600,
                 ),
           ),
         ],
@@ -128,11 +129,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.account_balance, size: 64, color: Colors.grey),
+                Icon(Icons.account_balance, size: 64, color: AppColors.neutral500),
                 SizedBox(height: 16),
                 Text(
                   'Nenhuma congregação encontrada',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: AppColors.neutral500, fontSize: 16),
                 ),
               ],
             ),
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.tertiary,
-                  child: const Icon(Icons.account_balance, color: Colors.white),
+                  child: const Icon(Icons.account_balance, color: AppColors.white),
                 ),
                 title: Text(
                   congregation.name,
@@ -179,11 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.workspaces_outline, size: 64, color: Colors.grey),
+                Icon(Icons.workspaces_outline, size: 64, color: AppColors.neutral500),
                 SizedBox(height: 16),
                 Text(
                   'Nenhuma supervisão encontrada',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: AppColors.neutral500, fontSize: 16),
                 ),
               ],
             ),
@@ -200,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.secondary,
-                  child: const Icon(Icons.group_work, color: Colors.white),
+                  child: const Icon(Icons.group_work, color: AppColors.white),
                 ),
                 title: Text(
                   supervision.name,
@@ -234,11 +235,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.group_off, size: 64, color: Colors.grey),
+                Icon(Icons.group_off, size: 64, color: AppColors.neutral500),
                 SizedBox(height: 16),
                 Text(
                   'Nenhuma célula encontrada',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: AppColors.neutral500, fontSize: 16),
                 ),
               ],
             ),
@@ -255,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: const Icon(Icons.groups, color: Colors.white),
+                  child: const Icon(Icons.groups, color: AppColors.white),
                 ),
                 title: Text(
                   cell.name,

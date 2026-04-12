@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/bulletin_model.dart';
 import '../../models/user_model.dart';
+import '../../config/theme.dart';
 
 class BulletinTab extends StatefulWidget {
   const BulletinTab({super.key});
@@ -64,7 +65,7 @@ class _BulletinTabState extends State<BulletinTab> {
                 heroTag: 'bulletin_fab',
                 onPressed: () => _showUploadModal(context),
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 shape: const CircleBorder(),
                 child: const Icon(Icons.add, size: 28),
               )
@@ -78,16 +79,17 @@ class _BulletinTabState extends State<BulletinTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.article_outlined, size: 64, color: Colors.grey[300]),
+          Icon(Icons.article_outlined, size: 64, color: AppColors.neutral300),
+          
           const SizedBox(height: 16),
           Text(
             'Nenhum documento disponível',
-            style: TextStyle(color: Colors.grey[400], fontSize: 16),
+            style: const TextStyle(color: AppColors.neutral400, fontSize: 16),
           ),
           const SizedBox(height: 4),
           Text(
             'O admin pode enviar documentos',
-            style: TextStyle(color: Colors.grey[350], fontSize: 13),
+            style: const TextStyle(color: AppColors.neutral500, fontSize: 13),
           ),
         ],
       ),
@@ -109,7 +111,7 @@ class _BulletinTabState extends State<BulletinTab> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               'Nenhum documento esta semana',
-              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              style: const TextStyle(color: AppColors.neutral400, fontSize: 14),
             ),
           ),
         ...thisWeek.asMap().entries.map((e) {
@@ -139,7 +141,7 @@ class _BulletinTabState extends State<BulletinTab> {
       title,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.grey[600],
+        color: AppColors.neutral600,
           ),
     );
   }
@@ -148,7 +150,7 @@ class _BulletinTabState extends State<BulletinTab> {
   Widget _buildBulletinCard(Bulletin bulletin, bool isAdmin, {bool highlighted = false}) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final iconColor = highlighted ? primaryColor : Colors.grey[600]!;
+    final iconColor = highlighted ? primaryColor : AppColors.neutral600;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -190,20 +192,20 @@ class _BulletinTabState extends State<BulletinTab> {
                     ),
                     Text(
                       '${_formatDate(bulletin.createdAt)}  ·  ${bulletin.fileType.toUpperCase()}',
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+                      style: theme.textTheme.bodySmall?.copyWith(color: AppColors.neutral500),
                     ),
                   ],
                 ),
               ),
               if (isAdmin)
                 IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 22),
+                  icon: const Icon(Icons.more_vert, color: AppColors.neutral400, size: 22),
                   onPressed: () => _showAdminActions(bulletin),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
               if (!isAdmin)
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),
@@ -228,7 +230,7 @@ class _BulletinTabState extends State<BulletinTab> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -323,7 +325,7 @@ class _BulletinTabState extends State<BulletinTab> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.neutral300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -360,8 +362,8 @@ class _BulletinTabState extends State<BulletinTab> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.grey[700],
-                            side: BorderSide(color: Colors.grey[300]!),
+                            foregroundColor: AppColors.neutral700,
+                            side: const BorderSide(color: AppColors.neutral300),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -402,7 +404,7 @@ class _BulletinTabState extends State<BulletinTab> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                   ),
                                 )
                               : const Text('Salvar'),
@@ -435,7 +437,7 @@ class _BulletinTabState extends State<BulletinTab> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -444,13 +446,13 @@ class _BulletinTabState extends State<BulletinTab> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
                 Icons.delete_outline,
                 size: 28,
-                color: Colors.red,
+                color: AppColors.error,
               ),
             ),
             const SizedBox(height: 16),
@@ -462,7 +464,7 @@ class _BulletinTabState extends State<BulletinTab> {
             Text(
               'Tem certeza que deseja excluir "${bulletin.title}"? Esta ação não pode ser desfeita.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -471,8 +473,8 @@ class _BulletinTabState extends State<BulletinTab> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -502,7 +504,7 @@ class _BulletinTabState extends State<BulletinTab> {
                       }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: AppColors.error,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -586,7 +588,7 @@ class _BulletinTabState extends State<BulletinTab> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.neutral300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -612,7 +614,7 @@ class _BulletinTabState extends State<BulletinTab> {
                   const SizedBox(height: 8),
                   Text(
                     'PDF ou Word',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -639,9 +641,9 @@ class _BulletinTabState extends State<BulletinTab> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE0E0E0)),
+                        border: Border.all(color: AppColors.neutral300),
                         borderRadius: BorderRadius.circular(12),
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                       child: Row(
                         children: [
@@ -651,7 +653,7 @@ class _BulletinTabState extends State<BulletinTab> {
                                 : Icons.attach_file_rounded,
                             color: selectedFile != null
                                 ? primaryColor
-                                : Colors.grey[500],
+                              : AppColors.neutral500,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -659,14 +661,14 @@ class _BulletinTabState extends State<BulletinTab> {
                               selectedFile?.name ?? 'Selecionar arquivo',
                               style: TextStyle(
                                 color: selectedFile != null
-                                    ? const Color(0xFF2D3436)
-                                    : Colors.grey[500],
+                                    ? AppColors.textDark
+                                    : AppColors.neutral500,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (selectedFile != null)
-                            Icon(Icons.check_circle, color: Colors.green[400], size: 20),
+                            const Icon(Icons.check_circle, color: AppColors.success, size: 20),
                         ],
                       ),
                     ),
@@ -678,8 +680,8 @@ class _BulletinTabState extends State<BulletinTab> {
                         child: OutlinedButton(
                           onPressed: uploading ? null : () => Navigator.pop(ctx),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.grey[700],
-                            side: BorderSide(color: Colors.grey[300]!),
+                            foregroundColor: AppColors.neutral700,
+                            side: const BorderSide(color: AppColors.neutral300),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -717,7 +719,7 @@ class _BulletinTabState extends State<BulletinTab> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                   ),
                                 )
                               : const Text('Enviar'),
@@ -785,7 +787,7 @@ class _BulletinTabState extends State<BulletinTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Erro ao enviar: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -814,7 +816,7 @@ class _BulletinTabState extends State<BulletinTab> {
               Text(
                 'Abrindo documento...',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF2D3436),
+                  color: AppColors.textDark,
                 ),
               ),
             ],

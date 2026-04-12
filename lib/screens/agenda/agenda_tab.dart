@@ -8,6 +8,7 @@ import '../../services/firestore_service.dart';
 import '../../models/event_model.dart';
 import '../../models/person_model.dart';
 import '../../models/user_model.dart';
+import '../../config/theme.dart';
 
 /// Representa um aniversário mapeado para o mês exibido
 class _Birthday {
@@ -148,7 +149,7 @@ class _AgendaTabState extends State<AgendaTab> {
                     onPressed: _toggleBirthdays,
                     icon: Icon(
                       Icons.cake_outlined,
-                      color: _showBirthdays ? Theme.of(context).colorScheme.tertiary : Colors.grey[400],
+                      color: _showBirthdays ? Theme.of(context).colorScheme.tertiary : AppColors.neutral400,
                     ),
                     tooltip: 'Aniversários',
                     padding: EdgeInsets.zero,
@@ -199,7 +200,7 @@ class _AgendaTabState extends State<AgendaTab> {
                 heroTag: 'agenda_fab',
                 onPressed: () => _showEventModal(context),
                 backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 shape: const CircleBorder(),
                 child: const Icon(Icons.add, size: 28),
               )
@@ -220,7 +221,7 @@ class _AgendaTabState extends State<AgendaTab> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TableCalendar<ChurchEvent>(
@@ -267,12 +268,12 @@ class _AgendaTabState extends State<AgendaTab> {
           weekdayStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[400],
+            color: AppColors.neutral400,
           ),
           weekendStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[400],
+            color: AppColors.neutral400,
           ),
         ),
         calendarStyle: CalendarStyle(
@@ -292,7 +293,7 @@ class _AgendaTabState extends State<AgendaTab> {
             shape: BoxShape.circle,
           ),
           selectedTextStyle: const TextStyle(
-            color: Colors.white,
+            color: AppColors.white,
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -311,7 +312,7 @@ class _AgendaTabState extends State<AgendaTab> {
             final isToday = isSameDay(day, DateTime.now());
 
             Color eventDotColor = isSelected
-                ? Colors.white
+                ? AppColors.white
                 : isToday
                     ? primaryColor
                     : primaryColor.withValues(alpha: 0.7);
@@ -336,7 +337,7 @@ class _AgendaTabState extends State<AgendaTab> {
                 height: 5,
                 margin: const EdgeInsets.symmetric(horizontal: 1),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : birthdayColor,
+                  color: isSelected ? AppColors.white : birthdayColor,
                   shape: BoxShape.circle,
                 ),
               ));
@@ -374,12 +375,13 @@ class _AgendaTabState extends State<AgendaTab> {
             key: const ValueKey('empty'),
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.event_busy_outlined, size: 48, color: Colors.grey[300]),
+              const Icon(Icons.event_busy_outlined, size: 48, color: AppColors.neutral300),
+              
               const SizedBox(height: 12),
               Text(
                 'Nenhum evento neste dia',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[400],
+                  color: AppColors.neutral400,
                 ),
               ),
             ],
@@ -453,7 +455,7 @@ class _AgendaTabState extends State<AgendaTab> {
                   Text(
                     age > 0 ? 'Aniversário · $age anos' : 'Aniversário',
                     style: theme.textTheme.bodySmall
-                        ?.copyWith(color: Colors.grey[500]),
+                        ?.copyWith(color: AppColors.neutral500),
                   ),
                 ],
               ),
@@ -473,7 +475,7 @@ class _AgendaTabState extends State<AgendaTab> {
     final now = DateTime.now();
     final isToday = _normalizeDay(event.dateTime) == _normalizeDay(now);
     final isFuture = event.dateTime.isAfter(now);
-    final iconColor = (isToday || isFuture) ? primaryColor : Colors.grey;
+    final iconColor = (isToday || isFuture) ? primaryColor : AppColors.neutral600;
 
     final hour =
         '${event.dateTime.hour.toString().padLeft(2, '0')}:${event.dateTime.minute.toString().padLeft(2, '0')}';
@@ -483,7 +485,7 @@ class _AgendaTabState extends State<AgendaTab> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isToday ? primaryColor.withValues(alpha: 0.04) : Colors.white,
+          color: isToday ? primaryColor.withValues(alpha: 0.04) : AppColors.white,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -512,23 +514,23 @@ class _AgendaTabState extends State<AgendaTab> {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                      const Icon(Icons.access_time, size: 13, color: AppColors.neutral500),
                       const SizedBox(width: 4),
                       Text(
                         hour,
                         style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.grey[500]),
+                            ?.copyWith(color: AppColors.neutral500),
                       ),
                       if (event.location.isNotEmpty) ...[
                         const SizedBox(width: 10),
-                        Icon(Icons.location_on_outlined,
-                            size: 13, color: Colors.grey[500]),
+                        const Icon(Icons.location_on_outlined,
+                            size: 13, color: AppColors.neutral500),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             event.location,
                             style: theme.textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[500]),
+                                ?.copyWith(color: AppColors.neutral500),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -541,13 +543,13 @@ class _AgendaTabState extends State<AgendaTab> {
             ),
             if (isAdmin)
               IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 20),
+                icon: const Icon(Icons.more_vert, color: AppColors.neutral400, size: 20),
                 onPressed: () => _showAdminActions(event),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               )
             else
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
           ],
         ),
       ),
@@ -579,7 +581,7 @@ class _AgendaTabState extends State<AgendaTab> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -614,7 +616,7 @@ class _AgendaTabState extends State<AgendaTab> {
                 child: Text(
                   event.description,
                   style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: Colors.grey[600]),
+                      ?.copyWith(color: AppColors.neutral600),
                 ),
               ),
             ],
@@ -624,8 +626,8 @@ class _AgendaTabState extends State<AgendaTab> {
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(ctx),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey[700],
-                  side: BorderSide(color: Colors.grey[300]!),
+                  foregroundColor: AppColors.neutral700,
+                  side: const BorderSide(color: AppColors.neutral300),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -644,13 +646,13 @@ class _AgendaTabState extends State<AgendaTab> {
   Widget _detailRow(IconData icon, String text, ThemeData theme) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey[500]),
+        Icon(icon, size: 18, color: AppColors.neutral500),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF2D3436),
+              color: AppColors.textDark,
             ),
           ),
         ),
@@ -675,7 +677,7 @@ class _AgendaTabState extends State<AgendaTab> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -756,7 +758,7 @@ class _AgendaTabState extends State<AgendaTab> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -783,7 +785,7 @@ class _AgendaTabState extends State<AgendaTab> {
             Text(
               'Tem certeza que deseja excluir "${event.title}"?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -792,8 +794,8 @@ class _AgendaTabState extends State<AgendaTab> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -875,7 +877,7 @@ class _AgendaTabState extends State<AgendaTab> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: AppColors.neutral300,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -904,7 +906,7 @@ class _AgendaTabState extends State<AgendaTab> {
                       isEdit
                           ? 'Altere as informações do evento'
                           : 'Preencha as informações do evento',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
                     ),
                     const SizedBox(height: 20),
                     TextField(
@@ -934,8 +936,8 @@ class _AgendaTabState extends State<AgendaTab> {
                               child: Row(
                                 children: [
                                   Expanded(child: Text(dateTxt)),
-                                  Icon(Icons.calendar_today,
-                                      size: 18, color: Colors.grey[500]),
+                                  const Icon(Icons.calendar_today,
+                                      size: 18, color: AppColors.neutral500),
                                 ],
                               ),
                             ),
@@ -959,8 +961,8 @@ class _AgendaTabState extends State<AgendaTab> {
                               child: Row(
                                 children: [
                                   Expanded(child: Text(timeTxt)),
-                                  Icon(Icons.access_time,
-                                      size: 18, color: Colors.grey[500]),
+                                  const Icon(Icons.access_time,
+                                      size: 18, color: AppColors.neutral500),
                                 ],
                               ),
                             ),
@@ -990,8 +992,8 @@ class _AgendaTabState extends State<AgendaTab> {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(modalCtx),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.grey[700],
-                              side: BorderSide(color: Colors.grey[300]!),
+                              foregroundColor: AppColors.neutral700,
+                              side: const BorderSide(color: AppColors.neutral300),
                               padding:
                                   const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -1099,7 +1101,7 @@ class _AgendaTabState extends State<AgendaTab> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                     ),
                                   )
                                 : Text(isEdit ? 'Salvar' : 'Criar'),

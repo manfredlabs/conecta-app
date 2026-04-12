@@ -7,6 +7,7 @@ import '../../models/cell_member_model.dart';
 import '../../models/person_model.dart';
 import '../../models/meeting_model.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class EditMeetingScreen extends StatefulWidget {
   const EditMeetingScreen({super.key});
@@ -185,7 +186,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                                         Text(
                                           'Data da Reunião',
                                           style: theme.textTheme.bodySmall
-                                              ?.copyWith(color: Colors.grey[500]),
+                                              ?.copyWith(color: AppColors.neutral500),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
@@ -202,7 +203,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                                     _dateExpanded
                                         ? Icons.keyboard_arrow_up_rounded
                                         : Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.grey[400],
+                                    color: AppColors.neutral400,
                                   ),
                                 ],
                               ),
@@ -241,7 +242,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                           'Presença',
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
+                            color: AppColors.neutral600,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -285,7 +286,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                       'Observações',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -301,7 +302,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                             hintText:
                                 'Pedidos de oração, testemunhos, observações...',
                             hintStyle: TextStyle(
-                              color: Colors.grey[400],
+                              color: AppColors.neutral400,
                             ),
                             filled: false,
                             border: InputBorder.none,
@@ -324,7 +325,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                 decoration: BoxDecoration(
                   color: theme.scaffoldBackgroundColor,
                   border: Border(
-                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    top: const BorderSide(color: AppColors.neutral200, width: 1),
                   ),
                 ),
                 child: SizedBox(
@@ -338,7 +339,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           )
                         : const Icon(Icons.check_rounded),
@@ -465,7 +466,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: (isPresent ? roleColor : Colors.grey)
+                  color: (isPresent ? roleColor : AppColors.neutral600)
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(11),
                 ),
@@ -477,7 +478,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 17,
-                      color: isPresent ? roleColor : Colors.grey[400],
+                      color: isPresent ? roleColor : AppColors.neutral400,
                     ),
                   ),
                 ),
@@ -492,7 +493,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isPresent ? null : Colors.grey[500],
+                        color: isPresent ? null : AppColors.neutral500,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -500,7 +501,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (isPresent ? roleColor : Colors.grey)
+                        color: (isPresent ? roleColor : AppColors.neutral600)
                             .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -509,7 +510,7 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isPresent ? roleColor : Colors.grey[400],
+                          color: isPresent ? roleColor : AppColors.neutral400,
                         ),
                       ),
                     ),
@@ -520,9 +521,9 @@ class _EditMeetingScreenState extends State<EditMeetingScreen> {
                 isPresent
                     ? Icons.check_circle_rounded
                     : Icons.radio_button_unchecked_rounded,
-                color: isPresent
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey[300],
+                  color: isPresent
+                      ? Theme.of(context).colorScheme.primary
+                      : AppColors.neutral300,
                 size: 26,
               ),
             ],

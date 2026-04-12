@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/hierarchy_provider.dart';
+import '../../config/theme.dart';
 
 class EditCongregationScreen extends StatefulWidget {
   const EditCongregationScreen({super.key});
@@ -93,7 +94,7 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                   'Nome',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
+                    color: AppColors.neutral600,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -119,8 +120,8 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                             textCapitalization: TextCapitalization.words,
                             decoration: InputDecoration(
                               hintText: 'Nome da congregação',
-                              hintStyle: TextStyle(
-                                color: Colors.grey[400],
+                              hintStyle: const TextStyle(
+                                color: AppColors.neutral400,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -143,7 +144,7 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                     'Pastor',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -185,7 +186,7 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                                 Text(
                                   'Pastor',
                                   style: theme.textTheme.bodySmall
-                                      ?.copyWith(color: Colors.grey[500]),
+                                      ?.copyWith(color: AppColors.neutral500),
                                 ),
                               ],
                             ),
@@ -205,7 +206,7 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               border: Border(
-                top: BorderSide(color: Colors.grey[200]!, width: 1),
+                top: const BorderSide(color: AppColors.neutral200, width: 1),
               ),
             ),
             child: SizedBox(
@@ -219,7 +220,7 @@ class _EditCongregationScreenState extends State<EditCongregationScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : const Icon(Icons.check_rounded),

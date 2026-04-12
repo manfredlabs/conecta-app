@@ -9,6 +9,7 @@ import '../../models/cell_model.dart';
 import '../../models/supervision_model.dart';
 import '../../models/congregation_model.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class HomeTab extends StatefulWidget {
   final void Function(int)? onSwitchTab;
@@ -554,7 +555,7 @@ class _HomeTabState extends State<HomeTab> {
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: AppColors.neutral600,
             ),
       ),
     );
@@ -589,13 +590,13 @@ class _HomeTabState extends State<HomeTab> {
 
     Color meetingIconColor;
     if (lastMeetingDays < 0) {
-      meetingIconColor = Colors.grey;
+      meetingIconColor = AppColors.neutral600;
     } else if (lastMeetingDays <= 7) {
-      meetingIconColor = Colors.green;
+      meetingIconColor = AppColors.success;
     } else if (lastMeetingDays <= 14) {
-      meetingIconColor = Colors.orange;
+      meetingIconColor = AppColors.warning;
     } else {
-      meetingIconColor = Colors.red;
+      meetingIconColor = AppColors.error;
     }
 
     final schedule = [
@@ -646,12 +647,12 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   schedule,
                                   style: theme.textTheme.bodySmall
-                                      ?.copyWith(color: Colors.grey[500]),
+                                      ?.copyWith(color: AppColors.neutral500),
                                 ),
                             ],
                           ),
                         ),
-                        Icon(Icons.chevron_right, color: Colors.grey[400]),
+                        const Icon(Icons.chevron_right, color: AppColors.neutral400),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -662,12 +663,12 @@ class _HomeTabState extends State<HomeTab> {
                         _StatChip(
                           icon: Icons.people_rounded,
                           label: '$members membros',
-                          color: Colors.grey[600]!,
+                          color: AppColors.neutral600,
                         ),
                         _StatChip(
                           icon: Icons.person_add_rounded,
                           label: '$visitors visitantes',
-                          color: Colors.grey[600]!,
+                          color: AppColors.neutral600,
                         ),
                       ],
                     ),
@@ -688,7 +689,7 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
             // Divider
-            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+            const Divider(height: 1, thickness: 1, color: AppColors.neutral200),
             // Registrar Reunião button inside card
             Material(
               color: primaryColor,
@@ -701,17 +702,17 @@ class _HomeTabState extends State<HomeTab> {
                   child: Row(
                     children: [
                       Icon(Icons.edit_note_rounded,
-                          color: Colors.white, size: 20),
+                          color: AppColors.white, size: 20),
                       const SizedBox(width: 10),
                       Text(
                         'Registrar Reunião',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                       const Spacer(),
-                      Icon(Icons.chevron_right, color: Colors.white70, size: 20),
+                      Icon(Icons.chevron_right, color: AppColors.white70, size: 20),
                     ],
                   ),
                 ),
@@ -736,15 +737,15 @@ class _HomeTabState extends State<HomeTab> {
     // Semáforo: cor baseada em % de células que reuniram
     Color semaphoreColor;
     if (supCells == 0) {
-      semaphoreColor = Colors.grey;
+      semaphoreColor = AppColors.neutral600;
     } else {
       final pct = supCellsMet / supCells;
       if (pct >= 0.75) {
-        semaphoreColor = Colors.green;
+        semaphoreColor = AppColors.success;
       } else if (pct >= 0.50) {
-        semaphoreColor = Colors.orange;
+        semaphoreColor = AppColors.warning;
       } else {
-        semaphoreColor = Colors.red;
+        semaphoreColor = AppColors.error;
       }
     }
 
@@ -786,12 +787,12 @@ class _HomeTabState extends State<HomeTab> {
                           Text(
                             '$supCells células',
                             style: theme.textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[500]),
+                                ?.copyWith(color: AppColors.neutral500),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                    const Icon(Icons.chevron_right, color: AppColors.neutral400),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -802,12 +803,12 @@ class _HomeTabState extends State<HomeTab> {
                     _StatChip(
                       icon: Icons.people_rounded,
                       label: '$supMembers membros',
-                      color: Colors.grey[600]!,
+                      color: AppColors.neutral600,
                     ),
                     _StatChip(
                       icon: Icons.person_add_rounded,
                       label: '$supVisitors visitantes',
-                      color: Colors.grey[600]!,
+                      color: AppColors.neutral600,
                     ),
                   ],
                 ),
@@ -838,15 +839,15 @@ class _HomeTabState extends State<HomeTab> {
     // Semáforo: cor baseada em % de células que reuniram
     Color semaphoreColor;
     if (congCells == 0) {
-      semaphoreColor = Colors.grey;
+      semaphoreColor = AppColors.neutral600;
     } else {
       final pct = congCellsMet / congCells;
       if (pct >= 0.75) {
-        semaphoreColor = Colors.green;
+        semaphoreColor = AppColors.success;
       } else if (pct >= 0.50) {
-        semaphoreColor = Colors.orange;
+        semaphoreColor = AppColors.warning;
       } else {
-        semaphoreColor = Colors.red;
+        semaphoreColor = AppColors.error;
       }
     }
 
@@ -889,12 +890,12 @@ class _HomeTabState extends State<HomeTab> {
                           Text(
                             '$congSupervisions supervisões · $congCells células',
                             style: theme.textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[500]),
+                                ?.copyWith(color: AppColors.neutral500),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                    const Icon(Icons.chevron_right, color: AppColors.neutral400),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -905,12 +906,12 @@ class _HomeTabState extends State<HomeTab> {
                     _StatChip(
                       icon: Icons.people_rounded,
                       label: '$congMembers membros',
-                      color: Colors.grey[600]!,
+                      color: AppColors.neutral600,
                     ),
                     _StatChip(
                       icon: Icons.person_add_rounded,
                       label: '$congVisitors visitantes',
-                      color: Colors.grey[600]!,
+                      color: AppColors.neutral600,
                     ),
                   ],
                 ),
@@ -930,7 +931,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _buildPendingApprovalsCard(int count) {
     final theme = Theme.of(context);
-    const orangeColor = Color(0xFFE17055);
+    const orangeColor = AppColors.attention;
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -968,7 +969,7 @@ class _HomeTabState extends State<HomeTab> {
                     Text(
                       'Aguardando aprovação',
                       style: theme.textTheme.bodySmall
-                          ?.copyWith(color: Colors.grey[500]),
+                          ?.copyWith(color: AppColors.neutral500),
                     ),
                   ],
                 ),
@@ -983,14 +984,14 @@ class _HomeTabState extends State<HomeTab> {
                 child: Text(
                   '$count',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),
@@ -1011,15 +1012,15 @@ class _HomeTabState extends State<HomeTab> {
 
     Color semaphoreColor;
     if (cells == 0) {
-      semaphoreColor = Colors.grey;
+      semaphoreColor = AppColors.neutral600;
     } else {
       final pct = cellsMet / cells;
       if (pct >= 0.75) {
-        semaphoreColor = Colors.green;
+        semaphoreColor = AppColors.success;
       } else if (pct >= 0.50) {
-        semaphoreColor = Colors.orange;
+        semaphoreColor = AppColors.warning;
       } else {
-        semaphoreColor = Colors.red;
+        semaphoreColor = AppColors.error;
       }
     }
 
@@ -1066,12 +1067,12 @@ class _HomeTabState extends State<HomeTab> {
                         Text(
                           '$sups supervisões · $cells células',
                           style: theme.textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey[500]),
+                              ?.copyWith(color: AppColors.neutral500),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  const Icon(Icons.chevron_right, color: AppColors.neutral400),
                 ],
               ),
               const SizedBox(height: 14),
@@ -1082,12 +1083,12 @@ class _HomeTabState extends State<HomeTab> {
                   _StatChip(
                     icon: Icons.people_rounded,
                     label: '$members membros',
-                    color: Colors.grey[600]!,
+                    color: AppColors.neutral600,
                   ),
                   _StatChip(
                     icon: Icons.person_add_rounded,
                     label: '$visitors visitantes',
-                    color: Colors.grey[600]!,
+                    color: AppColors.neutral600,
                   ),
                 ],
               ),
@@ -1219,14 +1220,14 @@ class _StatTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
+                            color: AppColors.neutral500,
                           ),
                     ),
                   ],
                 ),
               ),
               if (onTap != null)
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),

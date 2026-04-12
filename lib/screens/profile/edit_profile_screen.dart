@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../config/theme.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -80,7 +81,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -107,7 +108,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Text(
               'Seus dados serão atualizados.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -116,8 +117,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -217,7 +218,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'Nome',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -235,7 +236,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         decoration: InputDecoration(
                           hintText: 'Seu nome',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: AppColors.neutral400,
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -244,7 +245,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               const EdgeInsets.symmetric(vertical: 14),
                           suffixIcon: !_editing
                               ? Icon(Icons.lock_outline,
-                                  size: 18, color: Colors.grey[400])
+                                  size: 18, color: AppColors.neutral400)
                               : null,
                         ),
                         validator: (value) {
@@ -264,7 +265,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'E-mail',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -285,7 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 14),
                           suffixIcon: Icon(Icons.lock_outline,
-                              size: 18, color: Colors.grey[400]),
+                              size: 18, color: AppColors.neutral400),
                         ),
                       ),
                     ),
@@ -298,7 +299,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'Sexo',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -337,7 +338,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     'Data de Nascimento',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -367,7 +368,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         color: _birthDate != null
                                             ? primaryColor
                                                 .withValues(alpha: 0.1)
-                                            : Colors.grey[100],
+                                            : AppColors.neutral200,
                                         borderRadius:
                                             BorderRadius.circular(12),
                                       ),
@@ -375,7 +376,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         Icons.cake_outlined,
                                         color: _birthDate != null
                                             ? primaryColor
-                                            : Colors.grey[400],
+                                            : AppColors.neutral400,
                                       ),
                                     ),
                                     const SizedBox(width: 14),
@@ -391,7 +392,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                               : FontWeight.normal,
                                           color: _birthDate != null
                                               ? primaryColor
-                                              : Colors.grey[500],
+                                              : AppColors.neutral500,
                                         ),
                                       ),
                                     ),
@@ -408,7 +409,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         _birthDateExpanded
                                             ? Icons.keyboard_arrow_up_rounded
                                             : Icons.keyboard_arrow_down_rounded,
-                                        color: Colors.grey[400],
+                                        color: AppColors.neutral400,
                                       ),
                                   ],
                                 ),
@@ -449,7 +450,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: BoxDecoration(
                   color: theme.scaffoldBackgroundColor,
                   border: Border(
-                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    top: BorderSide(color: AppColors.neutral200, width: 1),
                   ),
                 ),
                 child: SizedBox(
@@ -463,7 +464,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           )
                         : const Icon(Icons.check_rounded),
@@ -506,7 +507,7 @@ class _GenderOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = selected
         ? Theme.of(context).colorScheme.primary
-        : Colors.grey[400]!;
+        : AppColors.neutral400;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -515,13 +516,13 @@ class _GenderOption extends StatelessWidget {
         side: BorderSide(
           color: selected
               ? Theme.of(context).colorScheme.primary
-              : const Color(0xFFE0E0E0),
+              : AppColors.neutral300,
           width: selected ? 2 : 1,
         ),
       ),
       color: selected
           ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)
-          : Colors.white,
+          : AppColors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
@@ -545,3 +546,4 @@ class _GenderOption extends StatelessWidget {
     );
   }
 }
+

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import '../models/cell_member_model.dart';
 
 /// Centralized role colors used across the app.
 /// Leader uses theme primary, so it requires a ThemeData parameter.
 class RoleColors {
   static Color leader(ThemeData theme) => theme.colorScheme.primary;
-  static const Color helper = Colors.teal;
-  static const Color member = Colors.indigo;
-  static const Color visitor = Colors.purple;
-  static const Color inactive = Colors.grey;
+  static const Color helper = AppColors.roleHelper;
+  static const Color member = AppColors.roleMember;
+  static const Color visitor = AppColors.roleVisitor;
+  static const Color inactive = AppColors.neutral500;
 
   /// Returns the role color for a member based on their flags.
   static Color forMember({

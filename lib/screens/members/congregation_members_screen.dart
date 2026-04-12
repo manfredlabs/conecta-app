@@ -6,6 +6,7 @@ import '../../providers/cell_provider.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/cell_model.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class CongregationMembersScreen extends StatefulWidget {
   const CongregationMembersScreen({super.key});
@@ -216,12 +217,12 @@ class _CongregationMembersScreenState
                                   selected ? FontWeight.w600 : FontWeight.w400,
                               color: selected
                                   ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey[600],
+                                  : AppColors.neutral600,
                             ),
                             side: BorderSide(
                               color: selected
                                   ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey[300]!,
+                                  : AppColors.neutral300,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -278,12 +279,12 @@ class _CongregationMembersScreenState
                                     selected ? FontWeight.w600 : FontWeight.w400,
                                 color: selected
                                     ? Theme.of(context).colorScheme.tertiary
-                                    : Colors.grey[600],
+                                    : AppColors.neutral600,
                               ),
                               side: BorderSide(
                                 color: selected
                                     ? Theme.of(context).colorScheme.tertiary
-                                    : Colors.grey[300]!,
+                                    : AppColors.neutral300,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
@@ -304,7 +305,7 @@ class _CongregationMembersScreenState
                       '${_filteredMembers.length} participantes',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[500],
+                        color: AppColors.neutral500,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -318,12 +319,12 @@ class _CongregationMembersScreenState
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.people_outline,
-                                  size: 64, color: Colors.grey[300]),
+                                  size: 64, color: AppColors.neutral300),
                               const SizedBox(height: 16),
                               Text(
                                 'Nenhum membro encontrado',
                                 style: TextStyle(
-                                    color: Colors.grey[400], fontSize: 16),
+                                    color: AppColors.neutral400, fontSize: 16),
                               ),
                             ],
                           ),
@@ -470,7 +471,7 @@ class _MemberCard extends StatelessWidget {
                                 : cellName,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[500],
+                              color: AppColors.neutral500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -480,7 +481,7 @@ class _MemberCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),

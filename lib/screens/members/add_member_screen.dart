@@ -5,6 +5,7 @@ import '../../providers/cell_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/cell_member_model.dart';
 import '../../models/person_model.dart';
+import '../../config/theme.dart';
 
 class AddMemberScreen extends StatefulWidget {
   const AddMemberScreen({super.key});
@@ -282,7 +283,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                     'Tipo',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -325,7 +326,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       'Nome',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -338,7 +339,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           decoration: InputDecoration(
                             hintText: 'Nome completo',
                             hintStyle: TextStyle(
-                              color: Colors.grey[400],
+                              color: AppColors.neutral400,
                             ),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
@@ -366,7 +367,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       'Sexo',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -401,7 +402,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                       'Data de Nascimento',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -422,7 +423,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                     decoration: BoxDecoration(
                                       color: (_birthDate != null
                                               ? primaryColor
-                                              : Colors.grey)
+                                              : AppColors.neutral600)
                                           .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -430,7 +431,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                       Icons.cake_rounded,
                                       color: _birthDate != null
                                           ? primaryColor
-                                          : Colors.grey[400],
+                                          : AppColors.neutral400,
                                       size: 22,
                                     ),
                                   ),
@@ -444,7 +445,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                           'Opcional',
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
-                                                  color: Colors.grey[500]),
+                                                  color: AppColors.neutral500),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
@@ -456,7 +457,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                             fontWeight: FontWeight.w600,
                                             color: _birthDate != null
                                                 ? primaryColor
-                                                : Colors.grey[400],
+                                                : AppColors.neutral400,
                                           ),
                                         ),
                                       ],
@@ -465,7 +466,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                   if (_birthDate != null)
                                     IconButton(
                                       icon: Icon(Icons.close,
-                                          size: 20, color: Colors.grey[400]),
+                                          size: 20, color: AppColors.neutral400),
                                       onPressed: () => setState(() {
                                         _birthDate = null;
                                         _birthDateExpanded = false;
@@ -476,7 +477,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                       _birthDateExpanded
                                           ? Icons.keyboard_arrow_up_rounded
                                           : Icons.keyboard_arrow_down_rounded,
-                                      color: Colors.grey[400],
+                                      color: AppColors.neutral400,
                                     ),
                                 ],
                               ),
@@ -515,7 +516,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                         'Membro selecionado',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
+                          color: AppColors.neutral600,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -557,7 +558,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                           : 'Sem célula',
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
-                                              color: Colors.grey[500]),
+                                              color: AppColors.neutral500),
                                     ),
                                     if (_getRoleBadge(_selectedMember!) != null)
                                       Padding(
@@ -586,7 +587,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.close_rounded,
-                                    color: Colors.grey[400]),
+                                    color: AppColors.neutral400),
                                 onPressed: _clearSelection,
                               ),
                             ],
@@ -599,7 +600,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                         'Buscar membro',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
+                          color: AppColors.neutral600,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -613,7 +614,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             decoration: InputDecoration(
                               hintText: 'Digite o nome do membro',
                               hintStyle: TextStyle(
-                                color: Colors.grey[400],
+                                color: AppColors.neutral400,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -621,13 +622,13 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                               contentPadding:
                                   const EdgeInsets.symmetric(vertical: 14),
                               prefixIcon: Icon(Icons.search_rounded,
-                                  color: Colors.grey[400], size: 22),
+                                  color: AppColors.neutral400, size: 22),
                               prefixIconConstraints: const BoxConstraints(
                                   minWidth: 36, minHeight: 0),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
                                       icon: Icon(Icons.close,
-                                          size: 18, color: Colors.grey[400]),
+                                          size: 18, color: AppColors.neutral400),
                                       onPressed: _clearSelection,
                                     )
                                   : null,
@@ -642,12 +643,12 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           child: Column(
                             children: [
                               Icon(Icons.person_search_rounded,
-                                  size: 48, color: Colors.grey[300]),
+                                  size: 48, color: AppColors.neutral300),
                               const SizedBox(height: 8),
                               Text(
                                 'Digite pelo menos 2 letras para buscar',
                                 style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: AppColors.neutral500,
                                   fontSize: 14,
                                 ),
                               ),
@@ -664,12 +665,12 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           child: Column(
                             children: [
                               Icon(Icons.person_search_rounded,
-                                  size: 48, color: Colors.grey[300]),
+                                  size: 48, color: AppColors.neutral300),
                               const SizedBox(height: 8),
                               Text(
                                 'Nenhum membro encontrado',
                                 style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: AppColors.neutral500,
                                   fontSize: 14,
                                 ),
                               ),
@@ -726,7 +727,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                                 subtitle,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.grey[500],
+                                                  color: AppColors.neutral500,
                                                 ),
                                               ),
                                           ],
@@ -753,7 +754,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                                         ),
                                       const SizedBox(width: 4),
                                       Icon(Icons.add_circle_outline_rounded,
-                                          color: Colors.grey[400], size: 22),
+                                          color: AppColors.neutral400, size: 22),
                                     ],
                                   ),
                                 ),
@@ -775,7 +776,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                 decoration: BoxDecoration(
                   color: theme.scaffoldBackgroundColor,
                   border: Border(
-                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    top: BorderSide(color: AppColors.neutral200, width: 1),
                   ),
                 ),
                 child: SizedBox(
@@ -789,7 +790,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           )
                         : const Icon(Icons.check_rounded),
@@ -837,7 +838,7 @@ class _TypeOption extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: selected ? color : const Color(0xFFE0E0E0),
+          color: selected ? color : AppColors.neutral300,
           width: selected ? 2 : 1,
         ),
       ),
@@ -849,12 +850,12 @@ class _TypeOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              Icon(icon, color: selected ? color : Colors.grey[400], size: 28),
+              Icon(icon, color: selected ? color : AppColors.neutral400, size: 28),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? color : Colors.grey[400],
+                  color: selected ? color : AppColors.neutral400,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
@@ -865,3 +866,4 @@ class _TypeOption extends StatelessWidget {
     );
   }
 }
+

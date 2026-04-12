@@ -10,6 +10,7 @@ import '../../providers/cell_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/permissions.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class EditMemberScreen extends StatefulWidget {
   const EditMemberScreen({super.key});
@@ -184,7 +185,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -215,7 +216,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'Visitante será promovido(a) a membro da célula.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -224,8 +225,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -300,7 +301,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -331,7 +332,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'A solicitação será enviada ao administrador para aprovação.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -340,8 +341,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -433,7 +434,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -466,7 +467,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               Text(
                 'Membros inativos não aparecem na lista principal.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 13, color: AppColors.neutral500),
               ),
             ],
             const SizedBox(height: 24),
@@ -476,8 +477,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -572,7 +573,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -603,7 +604,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'Essa ação não pode ser desfeita.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -612,8 +613,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -690,7 +691,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -723,7 +724,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               Text(
                 'Auxiliares ajudam o líder na condução da célula.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                style: TextStyle(fontSize: 13, color: AppColors.neutral500),
               ),
             ],
             const SizedBox(height: 24),
@@ -733,8 +734,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -826,7 +827,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -857,7 +858,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'Esta pessoa passará a co-liderar esta célula.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -866,8 +867,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -950,7 +951,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -981,7 +982,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'Esta pessoa voltará a ser membro da célula.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -990,8 +991,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1101,7 +1102,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1128,7 +1129,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
             Text(
               'As mudanças serão aplicadas em todos os registros.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -1137,8 +1138,8 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1247,7 +1248,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     'Nome',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1261,7 +1262,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nome completo',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: AppColors.neutral400,
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -1270,7 +1271,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                               const EdgeInsets.symmetric(vertical: 14),
                           suffixIcon: !_canEditPersonalData
                               ? Icon(Icons.lock_outline,
-                                  size: 18, color: Colors.grey[400])
+                                  size: 18, color: AppColors.neutral400)
                               : null,
                         ),
                         validator: (value) {
@@ -1290,7 +1291,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     'Sexo',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1331,7 +1332,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     'Data de Nascimento',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1356,7 +1357,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                   decoration: BoxDecoration(
                                     color: (_birthDate != null
                                             ? primaryColor
-                                            : Colors.grey)
+                                            : AppColors.neutral600)
                                         .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -1364,7 +1365,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                     Icons.cake_rounded,
                                     color: _birthDate != null
                                         ? primaryColor
-                                        : Colors.grey[400],
+                                        : AppColors.neutral400,
                                     size: 22,
                                   ),
                                 ),
@@ -1378,7 +1379,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                         'Opcional',
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
-                                                color: Colors.grey[500]),
+                                                color: AppColors.neutral500),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -1390,7 +1391,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                           fontWeight: FontWeight.w600,
                                           color: _birthDate != null
                                               ? primaryColor
-                                              : Colors.grey[400],
+                                              : AppColors.neutral400,
                                         ),
                                       ),
                                     ],
@@ -1399,7 +1400,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                 if (_birthDate != null)
                                   IconButton(
                                     icon: Icon(Icons.close,
-                                        size: 20, color: Colors.grey[400]),
+                                        size: 20, color: AppColors.neutral400),
                                     onPressed: () => setState(() {
                                       _birthDate = null;
                                       _birthDateExpanded = false;
@@ -1410,7 +1411,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                     _birthDateExpanded
                                         ? Icons.keyboard_arrow_up_rounded
                                         : Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.grey[400],
+                                    color: AppColors.neutral400,
                                   ),
                               ],
                             ),
@@ -1490,7 +1491,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                                     Text(
                                       'Solicitação enviada ao administrador',
                                       style: theme.textTheme.bodySmall?.copyWith(
-                                        color: Colors.grey[500],
+                                        color: AppColors.neutral500,
                                       ),
                                     ),
                                   ],
@@ -1756,7 +1757,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
               decoration: BoxDecoration(
                 color: theme.scaffoldBackgroundColor,
                 border: Border(
-                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  top: BorderSide(color: AppColors.neutral200, width: 1),
                 ),
               ),
               child: SizedBox(
@@ -1770,7 +1771,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                         )
                       : const Icon(Icons.check_rounded),
@@ -1818,7 +1819,7 @@ class _TypeOption extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: selected ? color : const Color(0xFFE0E0E0),
+          color: selected ? color : AppColors.neutral300,
           width: selected ? 2 : 1,
         ),
       ),
@@ -1830,12 +1831,12 @@ class _TypeOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              Icon(icon, color: selected ? color : Colors.grey[400], size: 28),
+              Icon(icon, color: selected ? color : AppColors.neutral400, size: 28),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? color : Colors.grey[400],
+                  color: selected ? color : AppColors.neutral400,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
@@ -1928,7 +1929,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.neutral300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1954,7 +1955,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                   const SizedBox(height: 4),
                   Text(
                     'Quem será o novo líder desta célula?',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                    style: TextStyle(fontSize: 13, color: AppColors.neutral500),
                   ),
                   const SizedBox(height: 16),
                   // Search
@@ -2035,11 +2036,11 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                         child: Column(
                           children: [
                             Icon(Icons.search_off_rounded,
-                                size: 48, color: Colors.grey[300]),
+                                size: 48, color: AppColors.neutral300),
                             const SizedBox(height: 8),
                             Text(
                               'Nenhum membro encontrado',
-                              style: TextStyle(color: Colors.grey[500]),
+                              style: TextStyle(color: AppColors.neutral500),
                             ),
                           ],
                         ),
@@ -2063,7 +2064,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Colors.grey[500],
+          color: AppColors.neutral500,
           letterSpacing: 0.5,
         ),
       ),
@@ -2117,7 +2118,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                           subtitle,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: AppColors.neutral500,
                           ),
                         ),
                     ],
@@ -2141,7 +2142,7 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
                     ),
                   ),
                 const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+                Icon(Icons.chevron_right, color: AppColors.neutral400, size: 20),
               ],
             ),
           ),
@@ -2150,3 +2151,5 @@ class _NewLeaderSelectorState extends State<_NewLeaderSelector> {
     );
   }
 }
+
+

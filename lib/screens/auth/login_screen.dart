@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../config/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'Gestão de Células',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[500],
+                          color: AppColors.neutral500,
                         ),
                       ),
                     ),
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'E-mail',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -101,7 +102,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             hintText: 'seu@email.com',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            hintStyle:
+                                const TextStyle(color: AppColors.neutral400),
                             prefixIcon: Icon(Icons.email_outlined,
                                 color: primaryColor, size: 20),
                             border: InputBorder.none,
@@ -131,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Senha',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -147,7 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             hintText: 'Sua senha',
-                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            hintStyle:
+                                const TextStyle(color: AppColors.neutral400),
                             prefixIcon: Icon(Icons.lock_outlined,
                                 color: primaryColor, size: 20),
                             suffixIcon: IconButton(
@@ -155,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _obscurePassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: Colors.grey[400],
+                                color: AppColors.neutral400,
                                 size: 20,
                               ),
                               onPressed: () => setState(
@@ -206,8 +209,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: theme.scaffoldBackgroundColor,
                       border: Border(
-                        top: BorderSide(
-                            color: Colors.grey.shade200, width: 1),
+                        top: const BorderSide(
+                            color: AppColors.neutral200, width: 1),
                       ),
                     ),
                     child: FilledButton.icon(
@@ -217,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 20,
                         child: auth.isLoading
                             ? const CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white)
+                                strokeWidth: 2, color: AppColors.white)
                             : const Icon(Icons.login_rounded, size: 20),
                       ),
                       label: Text(auth.isLoading ? 'Entrando...' : 'Entrar'),

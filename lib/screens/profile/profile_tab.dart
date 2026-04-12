@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../config/theme.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -38,7 +39,7 @@ class ProfileTab extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -71,7 +72,7 @@ class ProfileTab extends StatelessWidget {
                         Text(
                           user.email,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[500],
+                            color: AppColors.neutral500,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -102,7 +103,7 @@ class ProfileTab extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -126,7 +127,7 @@ class ProfileTab extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                          const Icon(Icons.chevron_right, color: AppColors.neutral400),
                         ],
                       ),
                     ),
@@ -141,7 +142,7 @@ class ProfileTab extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -166,7 +167,7 @@ class ProfileTab extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                          const Icon(Icons.chevron_right, color: AppColors.neutral400),
                         ],
                       ),
                     ),
@@ -198,7 +199,7 @@ class ProfileTab extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -224,7 +225,7 @@ class ProfileTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Tem certeza que deseja sair?',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -233,8 +234,8 @@ class ProfileTab extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/permissions.dart';
+import '../../config/theme.dart';
 
 class CellHubScreen extends StatelessWidget {
   const CellHubScreen({super.key});
@@ -214,18 +215,18 @@ class CellHubScreen extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(Icons.edit_outlined,
-                              size: 18, color: Colors.grey[400]),
+                              size: 18, color: AppColors.neutral400),
                           const SizedBox(width: 10),
                           Text(
                             'Editar célula',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[500],
+                              color: AppColors.neutral500,
                             ),
                           ),
                           const Spacer(),
                           Icon(Icons.chevron_right,
-                              size: 18, color: Colors.grey[300]),
+                              size: 18, color: AppColors.neutral300),
                         ],
                       ),
                     ),
@@ -314,7 +315,7 @@ class _HubTile extends StatelessWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: Colors.grey[500]),
+                          ?.copyWith(color: AppColors.neutral500),
                     ),
                   ],
                 ),
@@ -324,7 +325,7 @@ class _HubTile extends StatelessWidget {
                 trailing!,
               ],
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),

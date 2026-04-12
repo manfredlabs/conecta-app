@@ -6,6 +6,7 @@ import '../../models/person_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/hierarchy_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../config/theme.dart';
 
 class EditSupervisionScreen extends StatefulWidget {
   const EditSupervisionScreen({super.key});
@@ -228,7 +229,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -259,7 +260,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
             Text(
               'O supervisor atual será removido e $firstName assumirá esta supervisão.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -268,8 +269,8 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -424,7 +425,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                   'Nome',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
+                    color: AppColors.neutral600,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -451,7 +452,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                             decoration: InputDecoration(
                               hintText: 'Nome da supervisão',
                               hintStyle: TextStyle(
-                                color: Colors.grey[400],
+                                color: AppColors.neutral400,
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -473,7 +474,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                   'Supervisor',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
+                    color: AppColors.neutral600,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -518,14 +519,14 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                                 Text(
                                   'Supervisor',
                                   style: theme.textTheme.bodySmall
-                                      ?.copyWith(color: Colors.grey[500]),
+                                      ?.copyWith(color: AppColors.neutral500),
                                 ),
                               ],
                             ),
                           ),
                           IconButton(
                             icon: Icon(Icons.swap_horiz_rounded,
-                                color: Colors.grey[400]),
+                                color: AppColors.neutral400),
                             tooltip: 'Trocar supervisor',
                             onPressed: _startSearch,
                           ),
@@ -550,7 +551,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                         decoration: InputDecoration(
                           hintText: 'Digite o nome do supervisor',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: AppColors.neutral400,
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -558,13 +559,13 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                           contentPadding:
                               const EdgeInsets.symmetric(vertical: 14),
                           prefixIcon: Icon(Icons.search_rounded,
-                              color: Colors.grey[400], size: 22),
+                              color: AppColors.neutral400, size: 22),
                           prefixIconConstraints:
                               const BoxConstraints(minWidth: 36, minHeight: 0),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: Icon(Icons.close,
-                                      size: 18, color: Colors.grey[400]),
+                                      size: 18, color: AppColors.neutral400),
                                   onPressed: () {
                                     _searchController.clear();
                                     _filterMembers('');
@@ -574,7 +575,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                                       _selectedSupervisorName != null)
                                   ? IconButton(
                                       icon: Icon(Icons.close,
-                                          size: 18, color: Colors.grey[400]),
+                                          size: 18, color: AppColors.neutral400),
                                       onPressed: _clearSearch,
                                     )
                                   : null,
@@ -589,12 +590,12 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.person_search_rounded,
-                              size: 48, color: Colors.grey[300]),
+                              size: 48, color: AppColors.neutral300),
                           const SizedBox(height: 8),
                           Text(
                             'Digite pelo menos 2 letras para buscar',
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: AppColors.neutral500,
                               fontSize: 14,
                             ),
                           ),
@@ -611,12 +612,12 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                       child: Column(
                         children: [
                           Icon(Icons.person_search_rounded,
-                              size: 48, color: Colors.grey[300]),
+                              size: 48, color: AppColors.neutral300),
                           const SizedBox(height: 8),
                           Text(
                             'Nenhum membro encontrado',
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: AppColors.neutral500,
                               fontSize: 14,
                             ),
                           ),
@@ -676,7 +677,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                                             subtitle,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey[500],
+                                              color: AppColors.neutral500,
                                             ),
                                           ),
                                       ],
@@ -702,7 +703,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                                     ),
                                   const SizedBox(width: 4),
                                   Icon(Icons.arrow_forward_ios_rounded,
-                                      color: Colors.grey[400], size: 16),
+                                      color: AppColors.neutral400, size: 16),
                                 ],
                               ),
                             ),
@@ -722,7 +723,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               border: Border(
-                top: BorderSide(color: Colors.grey[200]!, width: 1),
+                top: BorderSide(color: AppColors.neutral200, width: 1),
               ),
             ),
             child: SizedBox(
@@ -745,7 +746,7 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : const Icon(Icons.check_rounded),
@@ -769,3 +770,4 @@ class _EditSupervisionScreenState extends State<EditSupervisionScreen> {
     );
   }
 }
+

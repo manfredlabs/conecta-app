@@ -6,6 +6,7 @@ import '../../providers/cell_provider.dart';
 import '../../providers/hierarchy_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/supervision_model.dart';
+import '../../config/theme.dart';
 
 class CellsTab extends StatefulWidget {
   const CellsTab({super.key});
@@ -177,11 +178,11 @@ class _CellsTabState extends State<CellsTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: Colors.grey[300]),
+          Icon(icon, size: 64, color: AppColors.neutral300),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(color: Colors.grey[400], fontSize: 16),
+            style: const TextStyle(color: AppColors.neutral400, fontSize: 16),
           ),
         ],
       ),
@@ -251,12 +252,12 @@ class _HierarchyCard extends StatelessWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: Colors.grey[500]),
+                          ?.copyWith(color: AppColors.neutral500),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),

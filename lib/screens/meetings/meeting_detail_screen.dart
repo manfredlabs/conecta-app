@@ -6,6 +6,7 @@ import '../../utils/permissions.dart';
 import '../../utils/role_colors.dart';
 import '../../models/meeting_model.dart';
 import '../../models/cell_member_model.dart';
+import '../../config/theme.dart';
 
 class MeetingDetailScreen extends StatelessWidget {
   const MeetingDetailScreen({super.key});
@@ -25,7 +26,7 @@ class MeetingDetailScreen extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -34,11 +35,11 @@ class MeetingDetailScreen extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(Icons.delete_outline_rounded,
-                  size: 28, color: Colors.red[400]),
+                  size: 28, color: AppColors.error),
             ),
             const SizedBox(height: 16),
             Text(
@@ -50,7 +51,7 @@ class MeetingDetailScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Essa ação não pode ser desfeita.',
-              style: TextStyle(color: Colors.grey[500], fontSize: 13),
+              style: TextStyle(color: AppColors.neutral500, fontSize: 13),
             ),
             const SizedBox(height: 24),
             Row(
@@ -59,8 +60,8 @@ class MeetingDetailScreen extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -73,7 +74,7 @@ class MeetingDetailScreen extends StatelessWidget {
                 Expanded(
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red[400],
+                      backgroundColor: AppColors.error,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -123,7 +124,7 @@ class MeetingDetailScreen extends StatelessWidget {
   }
 
   Color _roleColor(CellMember m, ThemeData theme) {
-    return Colors.grey[600]!;
+    return AppColors.neutral600;
   }
 
   @override
@@ -215,11 +216,11 @@ class MeetingDetailScreen extends StatelessWidget {
             children: [
               _Badge(
                   label: '${presentMembers.length} presentes',
-                  color: Colors.green[600]!),
+                  color: AppColors.success),
               const SizedBox(width: 8),
               _Badge(
                   label: '${absentMembers.length} ausentes',
-                  color: Colors.red[400]!),
+                  color: AppColors.error),
             ],
           ),
 
@@ -233,7 +234,7 @@ class MeetingDetailScreen extends StatelessWidget {
                 'Presentes',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: AppColors.neutral600,
                 ),
               ),
             ),
@@ -254,7 +255,7 @@ class MeetingDetailScreen extends StatelessWidget {
                       Divider(
                           height: 1,
                           indent: 56,
-                          color: Colors.grey[100]),
+                          color: AppColors.neutral200),
                   ],
                 ],
               ),
@@ -272,7 +273,7 @@ class MeetingDetailScreen extends StatelessWidget {
                 'Ausentes',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: AppColors.neutral600,
                 ),
               ),
             ),
@@ -293,7 +294,7 @@ class MeetingDetailScreen extends StatelessWidget {
                       Divider(
                           height: 1,
                           indent: 56,
-                          color: Colors.grey[100]),
+                          color: AppColors.neutral200),
                   ],
                 ],
               ),
@@ -310,7 +311,7 @@ class MeetingDetailScreen extends StatelessWidget {
                 'Observações',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: AppColors.neutral600,
                 ),
               ),
             ),
@@ -348,13 +349,13 @@ class MeetingDetailScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.edit_outlined,
-                                size: 18, color: Colors.grey[600]),
+                                size: 18, color: AppColors.neutral600),
                             const SizedBox(width: 6),
                             Text(
                               'Editar',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                                color: AppColors.neutral600,
                               ),
                             ),
                           ],
@@ -375,13 +376,13 @@ class MeetingDetailScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.delete_outline_rounded,
-                                size: 18, color: Colors.red[400]),
+                                size: 18, color: AppColors.error),
                             const SizedBox(width: 6),
                             Text(
                               'Excluir',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: Colors.red[400],
+                                color: AppColors.error,
                               ),
                             ),
                           ],
@@ -441,7 +442,7 @@ class _MemberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isPresent ? roleColor : Colors.grey;
+    final color = isPresent ? roleColor : AppColors.neutral500;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -459,7 +460,7 @@ class _MemberRow extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: isPresent ? roleColor : Colors.grey[400],
+                  color: isPresent ? roleColor : AppColors.neutral400,
                 ),
               ),
             ),
@@ -470,7 +471,7 @@ class _MemberRow extends StatelessWidget {
               name,
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: isPresent ? null : Colors.grey[400],
+                color: isPresent ? null : AppColors.neutral400,
               ),
             ),
           ),
@@ -485,7 +486,7 @@ class _MemberRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: isPresent ? roleColor : Colors.grey[400],
+                color: isPresent ? roleColor : AppColors.neutral400,
               ),
             ),
           ),
@@ -494,3 +495,4 @@ class _MemberRow extends StatelessWidget {
     );
   }
 }
+

@@ -6,6 +6,7 @@ import '../../models/cell_member_model.dart';
 import '../../models/person_model.dart';
 import '../../models/meeting_model.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class CreateMeetingScreen extends StatefulWidget {
   const CreateMeetingScreen({super.key});
@@ -185,7 +186,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                                     Text(
                                       'Data da Reunião',
                                       style: theme.textTheme.bodySmall
-                                          ?.copyWith(color: Colors.grey[500]),
+                                          ?.copyWith(color: AppColors.neutral500),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
@@ -203,7 +204,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                                 _dateExpanded
                                     ? Icons.keyboard_arrow_up_rounded
                                     : Icons.keyboard_arrow_down_rounded,
-                                color: Colors.grey[400],
+                                color: AppColors.neutral400,
                               ),
                             ],
                           ),
@@ -242,7 +243,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                           'Presença',
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
+                            color: AppColors.neutral600,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -284,12 +285,12 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                           child: Column(
                             children: [
                               Icon(Icons.people_outline,
-                                  size: 48, color: Colors.grey[300]),
+                                  size: 48, color: AppColors.neutral300),
                               const SizedBox(height: 12),
                               Text(
                                 'Nenhum membro cadastrado',
                                 style: TextStyle(
-                                    color: Colors.grey[400], fontSize: 14),
+                                    color: AppColors.neutral400, fontSize: 14),
                               ),
                             ],
                           ),
@@ -313,7 +314,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       'Observações',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -331,7 +332,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                             hintText:
                                 'Pedidos de oração, testemunhos, observações...',
                             hintStyle: TextStyle(
-                              color: Colors.grey[400],
+                              color: AppColors.neutral400,
                             ),
                             filled: false,
                             border: InputBorder.none,
@@ -354,7 +355,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                 decoration: BoxDecoration(
                   color: theme.scaffoldBackgroundColor,
                   border: Border(
-                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    top: BorderSide(color: AppColors.neutral200, width: 1),
                   ),
                 ),
                 child: SizedBox(
@@ -368,7 +369,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           )
                         : const Icon(Icons.check_rounded),
@@ -476,7 +477,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: (isPresent ? roleColor : Colors.grey)
+                  color: (isPresent ? roleColor : AppColors.neutral600)
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -488,7 +489,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 17,
-                      color: isPresent ? roleColor : Colors.grey[400],
+                      color: isPresent ? roleColor : AppColors.neutral400,
                     ),
                   ),
                 ),
@@ -503,7 +504,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isPresent ? null : Colors.grey[500],
+                        color: isPresent ? null : AppColors.neutral500,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -511,7 +512,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (isPresent ? roleColor : Colors.grey)
+                        color: (isPresent ? roleColor : AppColors.neutral600)
                             .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -520,7 +521,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isPresent ? roleColor : Colors.grey[400],
+                          color: isPresent ? roleColor : AppColors.neutral400,
                         ),
                       ),
                     ),
@@ -533,7 +534,7 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
                     : Icons.radio_button_unchecked_rounded,
                 color: isPresent
                     ? Theme.of(context).colorScheme.primary
-                    : Colors.grey[300],
+                    : AppColors.neutral300,
                 size: 26,
               ),
             ],
@@ -543,3 +544,4 @@ class _CreateMeetingScreenState extends State<CreateMeetingScreen> {
     );
   }
 }
+

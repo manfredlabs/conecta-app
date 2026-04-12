@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cell_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/meeting_model.dart';
+import '../../config/theme.dart';
 
 enum _MeetingFilter {
   all('Tudo'),
@@ -164,12 +165,12 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
                           selected ? FontWeight.w600 : FontWeight.w400,
                       color: selected
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[600],
+                          : AppColors.neutral600,
                     ),
                     side: BorderSide(
                       color: selected
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[300]!,
+                          : AppColors.neutral300,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -207,12 +208,12 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
                             selected ? FontWeight.w600 : FontWeight.w400,
                         color: selected
                             ? Theme.of(context).colorScheme.tertiary
-                            : Colors.grey[600],
+                            : AppColors.neutral600,
                       ),
                       side: BorderSide(
                         color: selected
                             ? Theme.of(context).colorScheme.tertiary
-                            : Colors.grey[300]!,
+                            : AppColors.neutral300,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -233,12 +234,12 @@ class _SupervisionMeetingsScreenState extends State<SupervisionMeetingsScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.event_note_outlined,
-                                size: 64, color: Colors.grey[300]),
+                                size: 64, color: AppColors.neutral300),
                             const SizedBox(height: 16),
                             Text(
                               'Nenhuma reunião neste período',
                               style: TextStyle(
-                                  color: Colors.grey[400], fontSize: 16),
+                                  color: AppColors.neutral400, fontSize: 16),
                             ),
                           ],
                         ),
@@ -333,7 +334,7 @@ class _MeetingCard extends StatelessWidget {
                       Text(
                         cellName,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[500],
+                          color: AppColors.neutral500,
                         ),
                       ),
                     ],
@@ -344,7 +345,7 @@ class _MeetingCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
+                            color: AppColors.neutral600.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -352,7 +353,7 @@ class _MeetingCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey[600],
+                              color: AppColors.neutral600,
                             ),
                           ),
                         ),
@@ -360,14 +361,14 @@ class _MeetingCard extends StatelessWidget {
                             meeting.observations!.isNotEmpty) ...[
                           const SizedBox(width: 6),
                           Icon(Icons.notes_rounded,
-                              size: 14, color: Colors.grey[400]),
+                              size: 14, color: AppColors.neutral400),
                         ],
                       ],
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),

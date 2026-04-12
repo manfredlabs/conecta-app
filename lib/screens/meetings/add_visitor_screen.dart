@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/meeting_model.dart';
+import '../../config/theme.dart';
 
 class AddVisitorScreen extends StatefulWidget {
   const AddVisitorScreen({super.key});
@@ -54,7 +55,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                     'Nome',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -67,7 +68,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nome do visitante',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: AppColors.neutral400,
                           ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -95,7 +96,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                     'Sexo',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -128,7 +129,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                     'Data de Nascimento',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -149,7 +150,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                   decoration: BoxDecoration(
                                     color: (_birthDate != null
                                             ? primaryColor
-                                            : Colors.grey)
+                                            : AppColors.neutral600)
                                         .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -157,7 +158,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                     Icons.cake_rounded,
                                     color: _birthDate != null
                                         ? primaryColor
-                                        : Colors.grey[400],
+                                        : AppColors.neutral400,
                                     size: 22,
                                   ),
                                 ),
@@ -171,7 +172,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                         'Opcional',
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
-                                                color: Colors.grey[500]),
+                                                color: AppColors.neutral500),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -183,7 +184,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                           fontWeight: FontWeight.w600,
                                           color: _birthDate != null
                                               ? primaryColor
-                                              : Colors.grey[400],
+                                              : AppColors.neutral400,
                                         ),
                                       ),
                                     ],
@@ -192,7 +193,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                 if (_birthDate != null)
                                   IconButton(
                                     icon: Icon(Icons.close,
-                                        size: 20, color: Colors.grey[400]),
+                                        size: 20, color: AppColors.neutral400),
                                     onPressed: () => setState(() {
                                       _birthDate = null;
                                       _birthDateExpanded = false;
@@ -203,7 +204,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
                                     _birthDateExpanded
                                         ? Icons.keyboard_arrow_up_rounded
                                         : Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.grey[400],
+                                    color: AppColors.neutral400,
                                   ),
                               ],
                             ),
@@ -241,7 +242,7 @@ class _AddVisitorScreenState extends State<AddVisitorScreen> {
               decoration: BoxDecoration(
                 color: theme.scaffoldBackgroundColor,
                 border: Border(
-                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  top: const BorderSide(color: AppColors.neutral200, width: 1),
                 ),
               ),
               child: SizedBox(
@@ -288,14 +289,14 @@ class _GenderOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final color = selected ? primaryColor : Colors.grey[400]!;
+    final color = selected ? primaryColor : AppColors.neutral400;
 
     return Card(
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: selected ? primaryColor : const Color(0xFFE0E0E0),
+          color: selected ? primaryColor : AppColors.neutral300,
           width: selected ? 2 : 1,
         ),
       ),

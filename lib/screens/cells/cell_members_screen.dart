@@ -6,6 +6,7 @@ import '../../models/user_model.dart';
 import '../../utils/permissions.dart';
 import '../../utils/role_colors.dart';
 import '../../models/cell_member_model.dart';
+import '../../config/theme.dart';
 
 class CellMembersScreen extends StatelessWidget {
   const CellMembersScreen({super.key});
@@ -52,12 +53,12 @@ class CellMembersScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.person_add_outlined,
-                          size: 64, color: Colors.grey[300]),
+                          size: 64, color: AppColors.neutral300),
                       const SizedBox(height: 16),
                       Text(
                         'Nenhum participante cadastrado',
                         style:
-                            TextStyle(color: Colors.grey[400], fontSize: 16),
+                            TextStyle(color: AppColors.neutral400, fontSize: 16),
                       ),
                       if (canManage) ...[
                         const SizedBox(height: 16),
@@ -133,19 +134,19 @@ class CellMembersScreen extends StatelessWidget {
                         child: Row(
                           children: [
                             Icon(Icons.person_off_outlined,
-                                size: 18, color: Colors.grey[400]),
+                              size: 18, color: AppColors.neutral400),
                             const SizedBox(width: 8),
                             Text(
                               'Inativos',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[400],
+                                color: AppColors.neutral400,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Divider(color: Colors.grey[300]),
+                              child: const Divider(color: AppColors.neutral300),
                             ),
                           ],
                         ),
@@ -187,7 +188,7 @@ class _MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = inactive ? Colors.grey[400]! : _roleColor(theme);
+    final color = inactive ? AppColors.neutral400 : _roleColor(theme);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -264,7 +265,7 @@ class _MemberCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.grey[200],
+                                color: AppColors.neutral200,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -272,7 +273,7 @@ class _MemberCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey[500],
+                                  color: AppColors.neutral500,
                                 ),
                               ),
                             ),
@@ -283,9 +284,9 @@ class _MemberCard extends StatelessWidget {
                   ),
                 ),
                 if (locked)
-                  Icon(Icons.lock_outline_rounded, size: 18, color: Colors.grey[300])
+                  const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.neutral300)
                 else
-                  Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  const Icon(Icons.chevron_right, color: AppColors.neutral400),
               ],
             ),
           ),

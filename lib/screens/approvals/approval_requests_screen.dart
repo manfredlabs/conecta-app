@@ -4,6 +4,7 @@ import '../../models/approval_request_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/role_colors.dart';
+import '../../config/theme.dart';
 
 class ApprovalRequestsScreen extends StatelessWidget {
   const ApprovalRequestsScreen({super.key});
@@ -30,12 +31,12 @@ class ApprovalRequestsScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.check_circle_outline_rounded,
-                      size: 64, color: Colors.grey[300]),
+                      size: 64, color: AppColors.neutral300),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhuma solicitação pendente',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[500],
+                      color: AppColors.neutral500,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -43,7 +44,7 @@ class ApprovalRequestsScreen extends StatelessWidget {
                   Text(
                     'Tudo em dia!',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[400],
+                      color: AppColors.neutral400,
                     ),
                   ),
                 ],
@@ -112,9 +113,9 @@ class _RequestCardState extends State<_RequestCard> {
       subtitle:
           '${widget.request.personName} continuará como visitante na célula ${widget.request.cellName}.',
       icon: Icons.cancel_rounded,
-      iconColor: Colors.red[400]!,
+      iconColor: AppColors.error,
       confirmLabel: 'Rejeitar',
-      confirmColor: Colors.red[400]!,
+      confirmColor: AppColors.error,
     );
     if (confirmed != true) return;
 
@@ -154,7 +155,7 @@ class _RequestCardState extends State<_RequestCard> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.neutral300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -181,7 +182,7 @@ class _RequestCardState extends State<_RequestCard> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              style: const TextStyle(fontSize: 13, color: AppColors.neutral500),
             ),
             const SizedBox(height: 24),
             Row(
@@ -190,8 +191,8 @@ class _RequestCardState extends State<_RequestCard> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      foregroundColor: AppColors.neutral700,
+                      side: const BorderSide(color: AppColors.neutral300),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -280,7 +281,7 @@ class _RequestCardState extends State<_RequestCard> {
                 Text(
                   timeText,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[400],
+                    color: AppColors.neutral400,
                   ),
                 ),
               ],
@@ -289,30 +290,30 @@ class _RequestCardState extends State<_RequestCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: AppColors.neutral200,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
                   Icon(Icons.church_rounded,
-                      size: 16, color: Colors.grey[500]),
+                      size: 16, color: AppColors.neutral500),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       req.cellName,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: AppColors.neutral600,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                   Icon(Icons.person_outline_rounded,
-                      size: 16, color: Colors.grey[500]),
+                      size: 16, color: AppColors.neutral500),
                   const SizedBox(width: 4),
                   Text(
                     req.requestedByName,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
+                      color: AppColors.neutral500,
                     ),
                   ),
                 ],
@@ -339,8 +340,8 @@ class _RequestCardState extends State<_RequestCard> {
                       icon: const Icon(Icons.close_rounded, size: 18),
                       label: const Text('Rejeitar'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red[400],
-                        side: BorderSide(color: Colors.red[200]!),
+                        foregroundColor: AppColors.error,
+                        side: BorderSide(color: AppColors.error.withValues(alpha: 0.35)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

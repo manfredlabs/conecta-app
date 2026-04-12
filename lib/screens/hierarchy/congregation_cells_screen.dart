@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cell_provider.dart';
 import '../../models/cell_model.dart';
+import '../../config/theme.dart';
 
 class CongregationCellsScreen extends StatefulWidget {
   const CongregationCellsScreen({super.key});
@@ -77,11 +78,11 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.group_off, size: 64, color: Colors.grey[300]),
+                      Icon(Icons.group_off, size: 64, color: AppColors.neutral300),
                       const SizedBox(height: 16),
                       Text(
                         'Nenhuma célula encontrada',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 16),
+                        style: const TextStyle(color: AppColors.neutral400, fontSize: 16),
                       ),
                     ],
                   ),
@@ -120,7 +121,7 @@ class _CongregationCellsScreenState extends State<CongregationCellsScreen> {
                 supName,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: AppColors.neutral600,
                     ),
               ),
             ),
@@ -193,12 +194,12 @@ class _CellCard extends StatelessWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: Colors.grey[500]),
+                          ?.copyWith(color: AppColors.neutral500),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const Icon(Icons.chevron_right, color: AppColors.neutral400),
             ],
           ),
         ),
