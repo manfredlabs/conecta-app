@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cell_provider.dart';
@@ -57,10 +58,17 @@ class CellHubScreen extends StatelessWidget {
               SliverAppBar(
                 expandedHeight: 220,
                 pinned: true,
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.04),
+                      color: primaryColor,
                     ),
                     child: SafeArea(
                       child: Padding(
@@ -75,11 +83,11 @@ class CellHubScreen extends StatelessWidget {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: primaryColor.withValues(alpha: 0.1),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Icon(Icons.groups_rounded,
-                                      color: primaryColor, size: 26),
+                                      color: Colors.white, size: 26),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -88,7 +96,7 @@ class CellHubScreen extends StatelessWidget {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                        ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -138,13 +146,13 @@ class CellHubScreen extends StatelessWidget {
                                             _HeaderChip(
                                               icon: Icons.church_rounded,
                                               label: congName,
-                                              color: primaryColor,
+                                              color: Colors.white,
                                             ),
                                           if (supName.isNotEmpty)
                                             _HeaderChip(
                                               icon: Icons.account_balance_rounded,
                                               label: supName,
-                                              color: primaryColor,
+                                              color: Colors.white,
                                             ),
                                         ],
                                       );
@@ -154,13 +162,13 @@ class CellHubScreen extends StatelessWidget {
                                   _HeaderChip(
                                     icon: Icons.schedule_rounded,
                                     label: scheduleText,
-                                    color: primaryColor,
+                                    color: Colors.white,
                                   ),
                                 if (cell.leaderName != null)
                                   _HeaderChip(
                                     icon: Icons.person_rounded,
                                     label: cell.leaderName!,
-                                    color: primaryColor,
+                                    color: Colors.white,
                                   ),
                               ],
                             ),

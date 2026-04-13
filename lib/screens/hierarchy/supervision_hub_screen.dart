@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/cell_provider.dart';
@@ -123,10 +124,17 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
               SliverAppBar(
                 expandedHeight: 220,
                 pinned: true,
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.04),
+                      color: primaryColor,
                     ),
                     child: SafeArea(
                       child: Padding(
@@ -141,11 +149,11 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: primaryColor.withValues(alpha: 0.1),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Icon(Icons.account_balance_rounded,
-                                      color: primaryColor, size: 26),
+                                      color: Colors.white, size: 26),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -154,7 +162,7 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                        ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -177,20 +185,20 @@ class _SupervisionHubScreenState extends State<SupervisionHubScreen> {
                                       return _HeaderChip(
                                         icon: Icons.church_rounded,
                                         label: name,
-                                        color: primaryColor,
+                                        color: Colors.white,
                                       );
                                     },
                                   ),
                                 _HeaderChip(
                                   icon: Icons.groups_rounded,
                                   label: '${cells.length} células',
-                                  color: primaryColor,
+                                  color: Colors.white,
                                 ),
                                 if (supervision.supervisorName != null)
                                   _HeaderChip(
                                     icon: Icons.person_rounded,
                                     label: supervision.supervisorName!,
-                                    color: primaryColor,
+                                    color: Colors.white,
                                   ),
                               ],
                             ),

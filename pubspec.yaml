@@ -47,8 +47,6 @@ dependencies:
   open_filex: ^4.6.0
   path_provider: ^2.1.5
   table_calendar: ^3.2.0
-  flutter_native_splash: ^2.4.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -59,19 +57,12 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "icon.png"
+  image_path: "conecta.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#2563EB"
-  adaptive_icon_foreground: "icon.png"
+  adaptive_icon_background: "#6B1F00"
+  adaptive_icon_foreground: "conecta.png"
 
-flutter_native_splash:
-  background_image: assets/splash/splash_android.png
-  background_image_ios: assets/splash/splash_ios.png
-  android: true
-  ios: true
-  fullscreen: true
-
-# For information on the generic Dart part of this file, see the
+# For informationon the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.

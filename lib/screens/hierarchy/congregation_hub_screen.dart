@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/hierarchy_provider.dart';
@@ -151,10 +152,17 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.04),
+                  color: primaryColor,
                 ),
                 child: SafeArea(
                   child: Padding(
@@ -169,11 +177,11 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: 0.1),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(Icons.church_rounded,
-                                  color: primaryColor, size: 26),
+                                  color: Colors.white, size: 26),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -182,7 +190,7 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                    ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
                               ),
                             ),
                           ],
@@ -195,18 +203,18 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
                             _HeaderChip(
                               icon: Icons.account_balance_rounded,
                               label: '$_supervisionCount supervisões',
-                              color: primaryColor,
+                              color: Colors.white,
                             ),
                             _HeaderChip(
                               icon: Icons.groups_rounded,
                               label: '$_cellCount células',
-                              color: primaryColor,
+                              color: Colors.white,
                             ),
                             if (congregation.pastorName != null)
                               _HeaderChip(
                                 icon: Icons.person_rounded,
                                 label: congregation.pastorName!,
-                                color: primaryColor,
+                                color: Colors.white,
                               ),
                           ],
                         ),
