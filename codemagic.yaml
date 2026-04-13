@@ -1,0 +1,22 @@
+workflows:
+  ios-release:
+    name: iOS Release Build
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        provisioning_profiles:
+          - ios_provisioning_profile_var
+        certificates:
+          - ios_certificate_var
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Build
+        script: |
+          flutter build ipa --release
+    artifacts:
+      - build/ios/ipa/**/*.ipa
