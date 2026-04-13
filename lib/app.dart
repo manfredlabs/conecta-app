@@ -40,6 +40,7 @@ class ConectaApp extends StatelessWidget {
             title: 'Conecta',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
+            themeMode: ThemeMode.light,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,

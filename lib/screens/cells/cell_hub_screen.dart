@@ -60,7 +60,7 @@ class CellHubScreen extends StatelessWidget {
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.10),
+                      color: primaryColor.withValues(alpha: 0.04),
                     ),
                     child: SafeArea(
                       child: Padding(
