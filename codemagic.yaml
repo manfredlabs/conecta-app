@@ -17,9 +17,15 @@ workflows:
         - pattern: main
           include: true
     scripts:
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles \
+            --project ios/Runner.xcodeproj
       - name: Build
         script: |
           flutter build ipa --release \
-            --export-method=app-store
+            --export-method=app-store \
+            --code-sign-identity="Apple Distribution" \
+            --provisioning-profile-specifier="conecta"
     artifacts:
       - build/ios/ipa/**/*.ipa
