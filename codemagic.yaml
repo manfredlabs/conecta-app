@@ -7,7 +7,7 @@ workflows:
         provisioning_profiles:
           - conecta
         certificates:
-          - conecta-distribution
+          - conecta-ios
     triggering:
       events:
         - push
