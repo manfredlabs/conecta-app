@@ -5,9 +5,9 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - ios_provisioning_profile_var
+          - conecta
         certificates:
-          - ios_certificate_var
+          - conecta-distribution
     triggering:
       events:
         - push
