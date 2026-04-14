@@ -23,8 +23,3 @@ workflows:
             --export-method=app-store
     artifacts:
       - build/ios/ipa/**/*.ipa
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        submitting:
-          submission_enabled: false
