@@ -4,6 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: 3.41.6
+      xcode: latest
       ios_signing:
         provisioning_profiles:
           - conecta
@@ -18,6 +19,12 @@ workflows:
     scripts:
       - name: Build
         script: |
-          flutter build ipa --release
+          flutter build ipa --release \
+            --export-method=app-store
     artifacts:
       - build/ios/ipa/**/*.ipa
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_API_KEY
+        submitting:
+          submission_enabled: false
