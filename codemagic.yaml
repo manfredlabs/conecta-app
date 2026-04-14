@@ -2,6 +2,7 @@ workflows:
   ios-release:
     name: iOS Release Build
     instance_type: mac_mini_m2
+    flutter: 3.41.6
     environment:
       ios_signing:
         provisioning_profiles:
