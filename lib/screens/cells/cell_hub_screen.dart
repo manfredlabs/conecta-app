@@ -7,8 +7,34 @@ import '../../providers/auth_provider.dart';
 import '../../utils/permissions.dart';
 import '../../config/theme.dart';
 
-class CellHubScreen extends StatelessWidget {
+class CellHubScreen extends StatefulWidget {
   const CellHubScreen({super.key});
+
+  @override
+  State<CellHubScreen> createState() => _CellHubScreenState();
+}
+
+class _CellHubScreenState extends State<CellHubScreen> {
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ));
+  }
+
+  @override
+  void dispose() {
+    // Restaura estilo padrão ao sair
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
