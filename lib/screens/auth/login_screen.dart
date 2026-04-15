@@ -149,7 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: _obscurePassword,
                           enableSuggestions: false,
                           autocorrect: false,
-                          keyboardType: TextInputType.visiblePassword,
                           decoration: InputDecoration(
                             hintText: 'Sua senha',
                             hintStyle:

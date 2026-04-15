@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
@@ -36,20 +37,27 @@ class ConectaApp extends StatelessWidget {
             home = const ChurchSelectionScreen();
           }
 
-          return MaterialApp(
-            title: 'Conecta',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            themeMode: ThemeMode.light,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('pt', 'BR')],
-            locale: const Locale('pt', 'BR'),
-            home: home,
-            routes: AppRoutes.routes,
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarBrightness: Brightness.light,     // iOS: dark icons on light bg
+              statusBarIconBrightness: Brightness.dark,  // Android
+            ),
+            child: MaterialApp(
+              title: 'Conecta',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              themeMode: ThemeMode.light,
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('pt', 'BR')],
+              locale: const Locale('pt', 'BR'),
+              home: home,
+              routes: AppRoutes.routes,
+            ),
           );
         },
       ),

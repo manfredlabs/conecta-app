@@ -12,6 +12,8 @@ void main() async {
   ]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
+    statusBarBrightness: Brightness.light,      // iOS: dark icons on light bg
+    statusBarIconBrightness: Brightness.dark,   // Android: dark icons
   ));
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

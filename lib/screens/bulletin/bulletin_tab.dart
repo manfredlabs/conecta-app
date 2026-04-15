@@ -20,7 +20,6 @@ class _BulletinTabState extends State<BulletinTab> {
   final _service = FirestoreService();
 
   @override
-  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.appUser;
@@ -743,6 +742,9 @@ class _BulletinTabState extends State<BulletinTab> {
     final userId = auth.appUser?.id ?? '';
 
     try {
+      if (platformFile.path == null) {
+        throw Exception('Não foi possível acessar o caminho do arquivo.');
+      }
       final file = File(platformFile.path!);
       final fileName = platformFile.name;
       final ext = platformFile.extension ?? 'pdf';

@@ -6,6 +6,8 @@
 		<true/>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>O Conecta usa sua biblioteca de fotos para que você possa selecionar imagens de perfil e documentos.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>O Conecta precisa de acesso à sua biblioteca de fotos para salvar documentos.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>O Conecta usa a câmera para capturar fotos de perfil e documentos.</string>
 		<key>CFBundleDevelopmentRegion</key>
@@ -73,6 +75,6 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
-		<false/>
+		<true/>
 	</dict>
 </plist>
