@@ -31,7 +31,7 @@ workflows:
       - build/ios/ipa/**/*.ipa
     publishing:
       app_store_connect:
-        api_key: conecta
         key_id: 66688K36LJ
         issuer_id: 7efa127e-f0c6-44cd-8636-19080f38a227
+        api_key: $APP_STORE_CONNECT_PUBLISHER_PRIVATE_KEY
         submit_to_testflight: false
