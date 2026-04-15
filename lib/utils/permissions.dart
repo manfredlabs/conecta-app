@@ -118,12 +118,16 @@ class Permissions {
 
   // ── Congregation ──
 
-  static bool canEditCongregation(AppUser user, {String? congregationId}) {
+  static bool canEditCongregation(AppUser user, {String? congregationId, String? pastorId}) {
     if (user.role == UserRole.admin) {
       return true;
     }
     if (user.role == UserRole.pastor &&
         user.congregationId == congregationId) {
+      return true;
+    }
+    // Pastor assigned to this congregation via pastorId
+    if (pastorId != null && pastorId == user.id) {
       return true;
     }
     return false;

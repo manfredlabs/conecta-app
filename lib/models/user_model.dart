@@ -50,6 +50,9 @@ class AppUser {
       birthDate: data['birthDate'] != null
           ? (data['birthDate'] as Timestamp).toDate()
           : null,
+      supervisedSupervisionIds: data['supervisedSupervisionIds'] != null
+          ? List<String>.from(data['supervisedSupervisionIds'])
+          : const [],
     );
   }
 

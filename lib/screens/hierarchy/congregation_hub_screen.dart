@@ -27,7 +27,22 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ));
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ));
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -144,22 +159,22 @@ class _CongregationHubScreenState extends State<CongregationHubScreen> {
 
     final user = context.read<AuthProvider>().appUser;
     final canEdit = user != null &&
-        Permissions.canEditCongregation(user, congregationId: congregation.id);
+        Permissions.canEditCongregation(user, congregationId: congregation.id, pastorId: congregation.pastorId);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-            systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness: Brightness.light,
-              statusBarBrightness: Brightness.dark,
-            ),
-            flexibleSpace: FlexibleSpaceBar(
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 220,
+              pinned: true,
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              ),
+              flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
                   color: primaryColor,
