@@ -4,6 +4,10 @@
 	<dict>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>O Conecta usa sua biblioteca de fotos para que você possa selecionar imagens de perfil e documentos.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>O Conecta usa a câmera para capturar fotos de perfil e documentos.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
