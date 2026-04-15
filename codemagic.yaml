@@ -27,3 +27,9 @@ workflows:
             --export-options-plist=ios/ExportOptions.plist
     artifacts:
       - build/ios/ipa/**/*.ipa
+    publishing:
+      app_store_connect:
+        api_key: conecta
+        key_id: 66688K36LJ
+        issuer_id: 7efa127e-f0c6-44cd-8636-19080f38a227
+        submit_to_testflight: false
