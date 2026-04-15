@@ -5,6 +5,8 @@ workflows:
     environment:
       flutter: 3.41.6
       xcode: latest
+      groups:
+        - ios_credentials
       ios_signing:
         provisioning_profiles:
           - conecta
