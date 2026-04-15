@@ -14,12 +14,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -146,6 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: TextFormField(
                           controller: _passwordController,
+                          focusNode: _passwordFocusNode,
+                          onTap: () => _passwordFocusNode.requestFocus(),
                           obscureText: _obscurePassword,
                           enableSuggestions: false,
                           autocorrect: false,
