@@ -149,7 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: TextFormField(
                           controller: _passwordController,
                           focusNode: _passwordFocusNode,
-                          onTap: () => _passwordFocusNode.requestFocus(),
                           obscureText: _obscurePassword,
                           enableSuggestions: false,
                           autocorrect: false,
